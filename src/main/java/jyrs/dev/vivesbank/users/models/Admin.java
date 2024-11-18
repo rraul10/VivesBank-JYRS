@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.users;
+package jyrs.dev.vivesbank.users.models;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

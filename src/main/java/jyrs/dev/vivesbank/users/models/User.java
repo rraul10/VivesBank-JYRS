@@ -1,6 +1,5 @@
-package jyrs.dev.vivesbank.users;
+package jyrs.dev.vivesbank.users.models;
 
-import com.mongodb.lang.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

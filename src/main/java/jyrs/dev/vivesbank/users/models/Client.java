@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.users;
+package jyrs.dev.vivesbank.users.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
