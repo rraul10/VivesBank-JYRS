@@ -18,7 +18,8 @@ public class Client extends User {
     @Column(nullable = false)
     @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
-
+    @Embedded
+    private Direction direccion;
     @Column(nullable = false)
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
     private String apellidos;
@@ -26,9 +27,6 @@ public class Client extends User {
     @Column(nullable = false)
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
-    @Column(nullable = false)
-    @NotBlank(message = "La dirección no puede estar vacía")
-    private String direccion;
 
     @Column(nullable = false)
     @NotBlank(message = "El número de teléfono no puede estar vacío")
