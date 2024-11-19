@@ -1,12 +1,21 @@
-package jyrs.dev.vivesbank.users;
+package jyrs.dev.vivesbank.users.clients.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jyrs.dev.vivesbank.users.User;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Entity
 @Table(name = "Clients")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Client extends User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,9 +35,9 @@ public class Client extends User {
     @Column(nullable = false)
     @NotBlank(message = "La foto del DNI no puede estar vacía")
     private String fotoDni;
-    @Column(nullable = false)
-    @NotBlank(message = "La dirección no puede estar vacía")
-    private String direccion;
+
+    @Embedded
+    private Address direccion;
 
     @Column(nullable = false)
     @NotBlank(message = "El número de teléfono no puede estar vacío")
