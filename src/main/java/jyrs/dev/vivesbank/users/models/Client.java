@@ -40,4 +40,8 @@ public class Client extends User {
 
     @ElementCollection
     private List<String> cuentas; //TODO Cambiar string por clase cuentas
+
+    public void setUsername() {
+        this.email = username;
+    }
 }

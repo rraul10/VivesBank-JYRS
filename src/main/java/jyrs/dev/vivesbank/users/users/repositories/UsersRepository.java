@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.users;
+package jyrs.dev.vivesbank.users.users.repositories;
 
 import jyrs.dev.vivesbank.users.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
