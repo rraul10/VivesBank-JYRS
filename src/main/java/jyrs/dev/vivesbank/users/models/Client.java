@@ -7,13 +7,16 @@ import java.util.List;
 
 @Entity
 @Table(name = "Clients")
-public class Client extends User {
+public class Client{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id_Cliente;
     @Column(nullable = false)
     @NotBlank(message = "El DNI no puede estar vacío")
     private String dni;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false)
     @NotBlank(message = "El nombre no puede estar vacío")
@@ -40,6 +43,6 @@ public class Client extends User {
     private List<String> cuentas; //TODO Cambiar string por clase cuentas
 
     public void setUsername() {
-        this.email = username;
+        this.email = user.username;
     }
 }

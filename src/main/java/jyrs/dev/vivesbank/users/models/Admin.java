@@ -1,12 +1,13 @@
 package jyrs.dev.vivesbank.users.models;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
-public class Admin extends User{
+@Entity
+public class Admin {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id_Admin;
-
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

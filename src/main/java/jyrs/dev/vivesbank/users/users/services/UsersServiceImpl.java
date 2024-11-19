@@ -49,7 +49,7 @@ public class UsersServiceImpl implements UsersService {
     @Override
     public User getUserByName(String name) {
         log.info("Obteniendo user por name: " + name);
-        var result =  usersRepository.findByName(name);
+        var result =  usersRepository.findByUsername(name);
         if(result == null){
             throw new UserExceptions.UserNotFound("No se ha encontrado user con name: " + name);
         }
