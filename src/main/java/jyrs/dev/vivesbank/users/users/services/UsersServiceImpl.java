@@ -10,6 +10,7 @@ import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -80,6 +81,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+    @CacheEvict(value = "usersCache", key = "#id")
     public void deleteUser(Long id) {
         log.info("Borrando usuario con id: " + id);
         var result = usersRepository.findById(id).orElseThrow(() -> new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id));

@@ -1,6 +1,5 @@
 package jyrs.dev.vivesbank.users.models;
 
-import com.mongodb.lang.Nullable;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;

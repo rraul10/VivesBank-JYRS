@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
      public User fromUserDto(UserRequestDto userRequestDto) {
          var user = new User();
-         user.setUsername(userRequestDto.username());
-         user.setPassword(userRequestDto.password());
-         user.setFotoPerfil(userRequestDto.fotoPerfil());
-         user.setIsDeleted(userRequestDto.isDeleted());
+         user.setUsername(userRequestDto.getUsername());
+         user.setPassword(userRequestDto.getPassword());
+         user.setFotoPerfil(userRequestDto.getFotoPerfil());
+         user.setIsDeleted(userRequestDto.getIsDeleted());
          return user;
      }
      public UserResponseDto toUserResponse(User user){
@@ -27,10 +27,10 @@ public class UserMapper {
      public User toUser(UserRequestDto userRequest, User user){
          return User.builder()
                  .id(user.getId())
-                 .username(userRequest.username())
-                 .password(userRequest.password())
-                 .fotoPerfil(userRequest.fotoPerfil())
-                 .isDeleted(userRequest.isDeleted())
+                 .username(userRequest.getUsername())
+                 .password(userRequest.getPassword())
+                 .fotoPerfil(userRequest.getFotoPerfil())
+                 .isDeleted(userRequest.getIsDeleted())
                  .build();
      }
 

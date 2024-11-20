@@ -8,6 +8,7 @@ import jyrs.dev.vivesbank.users.users.mappers.UserMapper;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
 import jyrs.dev.vivesbank.utils.PageResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ import java.util.Optional;
 @RequestMapping("${api.path:/api}/${api.version:/v1}/users")
 public class UsersController {
     private final UsersService usersService;
-
+    @Autowired
     public UsersController(UsersService usersService) {
         this.usersService = usersService;
     }
