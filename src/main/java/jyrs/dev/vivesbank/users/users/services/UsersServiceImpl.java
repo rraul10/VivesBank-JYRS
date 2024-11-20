@@ -2,7 +2,10 @@ package jyrs.dev.vivesbank.users.users.services;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jyrs.dev.vivesbank.users.models.User;
+import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
+import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
+import jyrs.dev.vivesbank.users.users.mappers.UserMapper;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +23,16 @@ import java.util.Optional;
 @Slf4j
 @CacheConfig(cacheNames = {"Users"})
 public class UsersServiceImpl implements UsersService {
+    private final UserMapper userMapper;
     private final UsersRepository usersRepository;
     @Autowired
-    public UsersServiceImpl(UsersRepository usersRepository) {
+    public UsersServiceImpl(UserMapper userMapper, UsersRepository usersRepository) {
+        this.userMapper = userMapper;
         this.usersRepository = usersRepository;
     }
 
     @Override
-    public Page<User> getAllUsers(Optional<String> username, Optional<Boolean> isDeleted, Pageable pageable) {
+    public Page<UserResponseDto> getAllUsers(Optional<String> username, Optional<Boolean> isDeleted, Pageable pageable) {
         log.info("Getting all users");
         Specification<User> specUserName = ((root, query, criteriaBuilder) ->
                 username.map(u -> criteriaBuilder.like(criteriaBuilder.lower(root.get("username")), "%" + u.toLowerCase() + "%"))
@@ -35,45 +40,43 @@ public class UsersServiceImpl implements UsersService {
         Specification<User> specIsDeleted = ((root, query, criteriaBuilder) ->
                 isDeleted.map(d -> criteriaBuilder.equal(root.get("isDeleted"), d))
                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true))));
+
         Specification<User> criterio = Specification.where(specUserName).and(specIsDeleted);
-        return usersRepository.findAll(criterio, pageable);
+
+        return usersRepository.findAll(criterio, pageable).map(userMapper::toUserResponse);
     }
 
     @Override
     @Cacheable
-    public User getUserById(Long id) {
+    public UserResponseDto getUserById(Long id) {
         log.info("Obteniendo user por id: " + id);
-        return usersRepository.findById(id).orElseThrow(() -> new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id));
+        return userMapper.toUserResponse(usersRepository.findById(id).orElseThrow(() -> new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id)));
     }
 
     @Override
-    public User getUserByName(String name) {
+    public UserResponseDto getUserByName(String name) {
         log.info("Obteniendo user por name: " + name);
         var result =  usersRepository.findByUsername(name);
         if(result == null){
             throw new UserExceptions.UserNotFound("No se ha encontrado user con name: " + name);
         }
-        return result;
+        return userMapper.toUserResponse(result);
     }
 
 
     @Override
     @CachePut(key = "#result.id")
-    public User saveUser(User user) {
+    public UserResponseDto saveUser(UserRequestDto user) {
         log.info("Guardando user: " + user);
-        return usersRepository.save(user);
+        return userMapper.toUserResponse(usersRepository.save(userMapper.fromUserDto(user)));
     }
 
     @Override
-    public User updateUser(Long id, User user) {
+    public UserResponseDto updateUser(Long id, UserRequestDto user) {
         log.info("actualizando usuario con id: " + id + " user: " + user);
         var result = usersRepository.findById(id).orElseThrow(() -> new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id));
-        result.setUsername(user.getUsername());
-        result.setPassword(user.getPassword());
-        result.setFotoPerfil(user.getFotoPerfil());
-        result.setUpdatedAt(LocalDateTime.now());
-        result.setIsDeleted(user.getIsDeleted());
-        return usersRepository.save(result);
+        var userUpdated = usersRepository.save(userMapper.toUser(user, result));
+        return userMapper.toUserResponse(userUpdated);
     }
 
     @Override

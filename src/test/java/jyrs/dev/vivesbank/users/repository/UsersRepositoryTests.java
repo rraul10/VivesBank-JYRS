@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.users;
+package jyrs.dev.vivesbank.users.repository;
 
 import jyrs.dev.vivesbank.users.models.Direction;
 import jyrs.dev.vivesbank.users.models.Role;
