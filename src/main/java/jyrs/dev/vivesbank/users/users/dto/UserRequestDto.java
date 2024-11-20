@@ -1,8 +1,12 @@
 package jyrs.dev.vivesbank.users.users.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
 
+@Builder
 public record UserRequestDto(
+        @Email(regexp = ".*@.*\\..*", message = "User name debe ser válido")
         @NotBlank(message = "El nombre de usuario no puede estar vacío")
         String username,
         @NotBlank(message = "La contraseña no puede estar vacía")
