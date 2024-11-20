@@ -1,7 +1,8 @@
 package jyrs.dev.vivesbank.users.clients.mappers;
 
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
-import jyrs.dev.vivesbank.users.clients.dto.ClientRequest;
+import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
+import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
@@ -11,19 +12,35 @@ import org.springframework.stereotype.Component;
 public class ClientMapper {
 
 
-    public Client toClient(ClientRequest clientRequest) {
-        if (clientRequest == null) {
+    public Client toClientCreate(ClientRequestCreate clientRequestCreate) {
+        if (clientRequestCreate == null) {
             return null;
         }
 
         return Client.builder()
-                .dni(clientRequest.getDni())
-                .nombre(clientRequest.getNombre())
-                .apellidos(clientRequest.getApellidos())
-                .fotoDni(clientRequest.getFotoDni())
-                .numTelefono(clientRequest.getNumTelefono())
-                .email(clientRequest.getEmail())
-                .direccion(toAdress(clientRequest.getDireccion()))
+                .dni(clientRequestCreate.getDni())
+                .nombre(clientRequestCreate.getNombre())
+                .apellidos(clientRequestCreate.getApellidos())
+                .fotoDni(clientRequestCreate.getFotoDni())
+                .numTelefono(clientRequestCreate.getNumTelefono())
+                .email(clientRequestCreate.getEmail())
+                .direccion(toAdress(clientRequestCreate.getDireccion()))
+                .build();
+
+    }
+
+    public Client toClientUpdate(ClientRequestUpdate clientRequestUpdate) {
+        if (clientRequestUpdate == null) {
+            return null;
+        }
+
+        return Client.builder()
+                .nombre(clientRequestUpdate.getNombre())
+                .apellidos(clientRequestUpdate.getApellidos())
+                .fotoDni(clientRequestUpdate.getFotoDni())
+                .numTelefono(clientRequestUpdate.getNumTelefono())
+                .email(clientRequestUpdate.getEmail())
+                .direccion(toAdress(clientRequestUpdate.getDireccion()))
                 .build();
 
     }

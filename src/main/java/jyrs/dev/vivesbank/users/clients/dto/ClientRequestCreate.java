@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientRequest {
+public class ClientRequestCreate {
 
     @NotBlank(message = "El DNI no puede estar vacío")
     private String dni;

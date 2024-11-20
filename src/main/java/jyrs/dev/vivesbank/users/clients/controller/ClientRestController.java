@@ -1,14 +1,10 @@
 package jyrs.dev.vivesbank.users.clients.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jyrs.dev.vivesbank.users.clients.dto.ClientRequest;
+import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
+import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
-import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +13,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/clientes")
@@ -87,12 +81,12 @@ public class ClientRestController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClientResponse> createCliente(
-            @Valid @RequestBody ClientRequest clientRequest,
+            @Valid @RequestBody ClientRequestCreate clientRequestCreate,
             @RequestPart("file") MultipartFile file
     ) {
         if (!file.isEmpty()) {
 
-            ClientResponse cliente = service.create(clientRequest,file);
+            ClientResponse cliente = service.create(clientRequestCreate,file);
             return ResponseEntity.status(HttpStatus.CREATED).body(cliente);
 
         } else {
@@ -102,8 +96,8 @@ public class ClientRestController {
     }
 
     @PutMapping(value="{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ClientResponse> updateCliente(@PathVariable Long id, @RequestBody ClientRequest clientRequest, @RequestPart("file") MultipartFile file) {
-        var result= service.update(id,clientRequest,file);
+    public ResponseEntity<ClientResponse> updateCliente(@PathVariable Long id, @RequestBody ClientRequestUpdate clientRequest, @RequestPart("file") MultipartFile file) {
+        var result= service.update(id, clientRequest,file);
         return ResponseEntity.ok(result);
     }
 

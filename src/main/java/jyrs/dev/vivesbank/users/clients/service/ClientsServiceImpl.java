@@ -1,7 +1,8 @@
 package jyrs.dev.vivesbank.users.clients.service;
 
 
-import jyrs.dev.vivesbank.users.clients.dto.ClientRequest;
+import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
+import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
@@ -90,8 +91,8 @@ public class ClientsServiceImpl implements ClientsService{
     }
 
     @Override
-    public ClientResponse create(ClientRequest clienteRequest, MultipartFile image) {
-        var cliente= mapper.toClient(clienteRequest);
+    public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image) {
+        var cliente= mapper.toClientCreate(clienteRequest);
 
         var tipo = "DNI-"+cliente.getUsername();
         String imageStored = storageService.store(image,tipo);
@@ -105,8 +106,8 @@ public class ClientsServiceImpl implements ClientsService{
     }
 
     @Override
-    public ClientResponse update(Long id, ClientRequest clienteRequest,MultipartFile image) {
-        var cliente = mapper.toClient(clienteRequest);
+    public ClientResponse update(Long id, ClientRequestUpdate clienteRequest, MultipartFile image) {
+        var cliente = mapper.toClientUpdate(clienteRequest);
 
         var res = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
 
