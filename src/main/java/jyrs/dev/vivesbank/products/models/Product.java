@@ -1,15 +1,27 @@
 package jyrs.dev.vivesbank.products.models;
 
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jyrs.dev.vivesbank.products.models.type.Type;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public abstract class Product {
+@Entity
+@Table(name = "PRODUCTS")
+@EntityListeners(AuditingEntityListener.class)
+public class Product {
+    @Id
     private long id;
     private Type tipo;
     @Min(value = 0, message = "Tae cannot be negative")

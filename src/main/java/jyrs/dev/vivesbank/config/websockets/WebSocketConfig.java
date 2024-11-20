@@ -17,12 +17,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketProductosHandler(), "/ws/" + apiVersion + "/productos");
+        registry.addHandler(webSocketProductosHandler(), "/ws/" + apiVersion + "/bankAccounts");
     }
 
     @Bean
     public WebSocketHandler webSocketProductosHandler() {
-        return new WebSocketHandler("Productos");
+        return new WebSocketHandler("BankAccounts");
     }
 
 }

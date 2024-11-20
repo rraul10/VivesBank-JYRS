@@ -3,8 +3,6 @@ package jyrs.dev.vivesbank.products.bankAccounts.dto;
 import lombok.Data;
 
 @Data
-public class BankAccountDto {
-    private String iban;
+public class BankAccountRequest {
     private String accountType;
-    private double balance;
 }

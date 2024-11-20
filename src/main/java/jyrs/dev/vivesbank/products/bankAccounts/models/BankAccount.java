@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "BANK_ACCOUNTS")
 @EntityListeners(AuditingEntityListener.class)
-public class BankAccount extends Product {
+public class BankAccount {
     @Id
     private Long id;
     private String iban;
@@ -36,8 +36,12 @@ public class BankAccount extends Product {
     @JoinColumn(name = "CREDIT_CARD_ID")
     private CreditCard creditCard;
 
-    @ManyToOne
-    @JoinColumn(name = "CLIENT_ID")
-    private
-    Client client;
+//    @ManyToOne
+//    @JoinColumn(name = "CLIENT_ID")
+//    private Client client;
+
+    @OneToOne
+    @JoinColumn(name = "PRODUCT_ID")
+    private Product product;
+
 }
