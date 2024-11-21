@@ -1,5 +1,9 @@
 package jyrs.dev.vivesbank.products.bankAccounts.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
+import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountHaveCreditCard;
@@ -8,6 +12,9 @@ import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundBy
 import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
@@ -17,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
@@ -26,11 +34,19 @@ import java.util.Random;
 public class BankAccountServiceImpl implements BankAccountService{
     private BankAccountRepository bankAccountRepository;
     private BankAccountMapper bankAccountMapper;
+    private WebSocketConfig webSocketConfig;
+    private ObjectMapper mapper;
+    private BankAccountNotificationMapper bankAccountNotificationMapper;
+    private WebSocketHandler webSocketService;
 
     @Autowired
-    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository, BankAccountMapper bankAccountMapper) {
+    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository, BankAccountMapper bankAccountMapper, WebSocketConfig webSocketConfig, BankAccountNotificationMapper bankAccountNotificationMapper) {
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
+        this.webSocketConfig = webSocketConfig;
+        webSocketService = webSocketConfig.webSocketProductosHandler();
+        mapper = new ObjectMapper();
+        this.bankAccountNotificationMapper = bankAccountNotificationMapper;
     }
 
 
@@ -88,6 +104,8 @@ public class BankAccountServiceImpl implements BankAccountService{
         bankAccount.setCreditCard(null);
         BankAccount savedBankAccount = bankAccountRepository.save(bankAccount);
 
+        onChange(Notificacion.Tipo.CREATE, savedBankAccount);
+
         return bankAccountMapper.toResponse(savedBankAccount);
     }
 
@@ -104,6 +122,7 @@ public class BankAccountServiceImpl implements BankAccountService{
         }
 
         bankAccountRepository.deleteById(id);
+        onChange(Notificacion.Tipo.DELETE, account);
         log.info("Cuenta bancaria con ID " + id + " eliminada exitosamente.");
     }
 
@@ -137,6 +156,39 @@ public class BankAccountServiceImpl implements BankAccountService{
             digits.append(random.nextInt(10));
         }
         return digits.toString();
+    }
+
+
+    void onChange(Notificacion.Tipo tipo, BankAccount data) {
+        log.debug("Servicio de cuentas de banco  onChange con tipo: " + tipo + " y datos: " + data);
+
+        if (webSocketService == null) {
+            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+            webSocketService = this.webSocketConfig.webSocketProductosHandler();
+        }
+
+        try {
+            Notificacion<BankAccountNotificationResponse> notificacion = new Notificacion<>(
+                    "BANK_ACCOUNT",
+                    tipo,
+                    bankAccountNotificationMapper.toNotificationResponse(data),
+                    LocalDateTime.now().toString()
+            );
+
+            String json = mapper.writeValueAsString((notificacion));
+
+            log.info("Enviando mensaje a los clientes ws");
+            Thread senderThread = new Thread(() -> {
+                try {
+                    webSocketService.sendMessage(json);
+                } catch (Exception e) {
+                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+                }
+            });
+            senderThread.start();
+        } catch (JsonProcessingException e) {
+            log.error("Error al convertir la notificación a JSON", e);
+        }
     }
 
 

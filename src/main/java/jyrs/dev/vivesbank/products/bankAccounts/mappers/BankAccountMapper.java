@@ -42,7 +42,7 @@ public class BankAccountMapper {
         }
 
         return BankAccount.builder()
-               .iban(bankAccountRequest)
+               .iban()
                .accountType(AccountType.valueOf(bankAccountRequest.getAccountType()))
                .balance(bankAccountRequest.getBalance())
                .creditCard(toCard(bankAccountRequest.getCreditCard()))
