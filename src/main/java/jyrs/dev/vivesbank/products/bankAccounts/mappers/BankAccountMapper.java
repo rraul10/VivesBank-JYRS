@@ -36,17 +36,16 @@ public class BankAccountMapper {
         );
     }
 
-    public BankAccount toBankAccount(BankAccountRequest bankAccountRequest){
+    public BankAccount toBankAccount(BankAccountRequest bankAccountRequest) {
         if (bankAccountRequest == null) {
             return null;
         }
 
         return BankAccount.builder()
-               .iban()
-               .accountType(AccountType.valueOf(bankAccountRequest.getAccountType()))
-               .balance(bankAccountRequest.getBalance())
-               .creditCard(toCard(bankAccountRequest.getCreditCard()))
-               .build();
+                .accountType(AccountType.valueOf(bankAccountRequest.getAccountType()))
+                .balance(0.0)
+                .creditCard(null)
+                .build();
     }
 
 

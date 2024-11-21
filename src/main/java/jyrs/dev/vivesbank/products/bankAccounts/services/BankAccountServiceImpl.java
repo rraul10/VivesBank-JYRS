@@ -18,6 +18,7 @@ import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificaci
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -93,6 +94,7 @@ public class BankAccountServiceImpl implements BankAccountService{
     }
 
     @Override
+    @CachePut(key = "#result.id")
     public BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest) {
         log.info("Guardando cuenta bancaria: " + bankAccountRequest);
 
@@ -102,6 +104,7 @@ public class BankAccountServiceImpl implements BankAccountService{
         bankAccount.setIban(iban);
         bankAccount.setBalance(0.0);
         bankAccount.setCreditCard(null);
+
         BankAccount savedBankAccount = bankAccountRepository.save(bankAccount);
 
         onChange(Notificacion.Tipo.CREATE, savedBankAccount);
@@ -110,7 +113,11 @@ public class BankAccountServiceImpl implements BankAccountService{
     }
 
 
+
+
     @Override
+    @CachePut(key = "#id")
+    
     public void deleteBankAccount(Long id) {
         log.info("Eliminando cuenta de banco por el ID: " + id);
 
