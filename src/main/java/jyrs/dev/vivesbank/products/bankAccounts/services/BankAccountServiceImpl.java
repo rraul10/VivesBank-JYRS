@@ -52,25 +52,14 @@ public class BankAccountServiceImpl implements BankAccountService{
 
 
     @Override
-    public Page<BankAccountResponse> findAllBankAccounts(Optional<String> iban, Optional<String> accountType, Optional<Double> balance, Pageable pageable) {
+    public Page<BankAccountResponse> findAllBankAccounts(Optional<String> accountType, Pageable pageable) {
         log.info("Finding all bank accounts");
-
-        Specification<BankAccount> specIbanBankAccount = (root, query, criteriaBuilder) ->
-                iban.map(i -> criteriaBuilder.like(criteriaBuilder.lower(root.get("iban")), "%" + i.toLowerCase() + "%"))
-                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
         Specification<BankAccount> specAccountType = (root, query, criteriaBuilder) ->
                 accountType.map(a -> criteriaBuilder.like(criteriaBuilder.lower(root.get("accountType")), "%" + a.toLowerCase() + "%"))
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
-        Specification<BankAccount> specBalanceBankAccount = (root, query, criteriaBuilder) ->
-                balance.map(b -> criteriaBuilder.greaterThanOrEqualTo(root.get("balance"), b))
-                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
-
-        Specification<BankAccount> criterio = Specification.where(specIbanBankAccount)
-                .and(specAccountType)
-                .and(specBalanceBankAccount);
-
+        Specification<BankAccount> criterio = Specification.where(specAccountType);
         var page = bankAccountRepository.findAll(criterio, pageable);
 
         return page.map(bankAccountMapper::toResponse);
@@ -117,7 +106,6 @@ public class BankAccountServiceImpl implements BankAccountService{
 
     @Override
     @CachePut(key = "#id")
-    
     public void deleteBankAccount(Long id) {
         log.info("Eliminando cuenta de banco por el ID: " + id);
 

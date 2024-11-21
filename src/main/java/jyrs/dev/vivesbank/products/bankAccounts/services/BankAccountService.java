@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface BankAccountService {
-    Page<BankAccountResponse> findAllBankAccounts(Optional<String> iban, Optional<String> accountType, Optional<Double> balance, Pageable pageable);
+    Page<BankAccountResponse> findAllBankAccounts(Optional<String> accountType, Pageable pageable);
     BankAccountResponse findBankAccountById(Long id);
     BankAccountResponse findBankAccountByIban(String iban);
     BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest);
