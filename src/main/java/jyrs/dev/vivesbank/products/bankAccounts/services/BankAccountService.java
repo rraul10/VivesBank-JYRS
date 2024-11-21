@@ -13,6 +13,5 @@ public interface BankAccountService {
     BankAccountResponse findBankAccountById(Long id);
     BankAccountResponse findBankAccountByIban(String iban);
     BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest);
-    BankAccountResponse updateBankAccount(Long id, BankAccountResponse bankAccountResponse);
     void deleteBankAccount(Long id);
 }
