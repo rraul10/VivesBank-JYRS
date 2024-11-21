@@ -2,12 +2,19 @@ package jyrs.dev.vivesbank.users.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Entity
 @Table(name = "Clients")
-public class Client extends User {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Client{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id_Cliente;
