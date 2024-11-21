@@ -24,8 +24,6 @@ public class Product {
     @Id
     private long id;
     private Type tipo;
-    @Min(value = 0, message = "Tae cannot be negative")
-    private Double tae;
     @CreationTimestamp
     @Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @Builder.Default

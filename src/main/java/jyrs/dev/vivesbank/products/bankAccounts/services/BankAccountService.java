@@ -10,8 +10,9 @@ import java.util.Optional;
 
 public interface BankAccountService {
     Page<BankAccountResponse> findAllBankAccounts(Optional<String> iban, Optional<String> accountType, Optional<Double> balance, Pageable pageable);
-    BankAccount findBankAccountById(Long id);
+    BankAccountResponse findBankAccountById(Long id);
+    BankAccountResponse findBankAccountByIban(String iban);
     BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest);
-    BankAccount updateBankAccount(Long id, BankAccountResponse bankAccountResponse);
+    BankAccountResponse updateBankAccount(Long id, BankAccountResponse bankAccountResponse);
     void deleteBankAccount(Long id);
 }

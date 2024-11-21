@@ -1,7 +1,8 @@
 package jyrs.dev.vivesbank.products.bankAccounts.dto;
 
 import jakarta.annotation.Nullable;
-import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardDto;
+import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
+import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponse;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,8 +10,8 @@ import lombok.Data;
 @Builder
 public class BankAccountResponse {
     private String iban;
-    private String accountType;
+    private AccountType accountType;
     private double balance;
     @Nullable
-    private CreditCardDto creditCard;
+    private CreditCardResponse creditCard;
 }

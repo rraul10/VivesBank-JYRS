@@ -4,35 +4,50 @@ import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
+import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponse;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BankAccountMapper {
 
-    public BankAccount toBankAccountFromResponse(BankAccountResponse bankAccountResponse, AccountType accountType, CreditCard creditCard) {
-        return BankAccount.builder()
-                .iban(bankAccountResponse.getIban())
-                .accountType(accountType)
-                .balance(bankAccountResponse.getBalance())
-                .creditCard(creditCard)
+    public BankAccountResponse toResponse(BankAccount account) {
+        if (account == null) {
+            return null;
+        }
+
+        return BankAccountResponse.builder()
+                .iban(account.getIban())
+                .accountType(account.getAccountType())
+                .balance(account.getBalance())
+                .creditCard(toCardDto(account.getCreditCard()))
                 .build();
     }
 
-    public BankAccount toBankAccountCreate(BankAccountRequest bankAccountRequest, BankAccount bankAccount){
+    public CreditCardResponse toCardDto(CreditCard creditCard){
+        if (creditCard == null) {
+            return null;
+        }
+
+        return new CreditCardResponse(
+                creditCard.getNumber(),
+                creditCard.getExpirationDate().toString(),
+                creditCard.getCvc()
+        );
+    }
+
+    public BankAccount toBankAccount(BankAccountRequest bankAccountRequest){
+        if (bankAccountRequest == null) {
+            return null;
+        }
+
         return BankAccount.builder()
-               .iban(bankAccount.getIban())
+               .iban(bankAccountRequest)
                .accountType(AccountType.valueOf(bankAccountRequest.getAccountType()))
-               .balance(bankAccount.getBalance())
+               .balance(bankAccountRequest.getBalance())
+               .creditCard(toCard(bankAccountRequest.getCreditCard()))
                .build();
     }
 
-    public BankAccountResponse toBankAccountFromCreate(BankAccountRequest bankAccountRequest, BankAccount bankAccount) {
-        return BankAccountResponse.builder()
-               .iban(bankAccount.getIban())
-               .accountType(bankAccountRequest.getAccountType())
-               .balance(bankAccount.getBalance())
-                .creditCard(bankAccount.getCreditCard().toString())
-               .build();
-    }
+
 }

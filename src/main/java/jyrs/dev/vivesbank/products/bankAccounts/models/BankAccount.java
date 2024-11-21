@@ -29,7 +29,8 @@ public class BankAccount {
     @Column(columnDefinition = "double precision default 0.0")
     @Builder.Default
     private Double balance = 0.0;
-
+    @Min(value = 0, message = "Tae cannot be negative")
+    private Double tae;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToOne
