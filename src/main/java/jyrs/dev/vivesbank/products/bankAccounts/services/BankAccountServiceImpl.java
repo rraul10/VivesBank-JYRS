@@ -124,14 +124,19 @@ public class BankAccountServiceImpl implements BankAccountService{
 
     public String generateUniqueIban() {
         String iban;
+        int attempts = 0;
         do {
             iban = generateIban();
+            attempts++;
+            if (attempts > 1000) {
+                throw new IllegalStateException("No se pudo generar un IBAN único después de 1000 intentos.");
+            }
         } while (ibanExists(iban));
         return iban;
     }
 
     private boolean ibanExists(String iban) {
-        return bankAccountRepository.findByIban(iban) != null;
+        return bankAccountRepository.findByIban(iban).isPresent();
     }
 
     private String generateIban() {
