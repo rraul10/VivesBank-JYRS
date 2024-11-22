@@ -52,6 +52,7 @@ public class Client{
     @ElementCollection
     private List<String> cuentas; //TODO Cambiar string por clase cuentas
 
+
     public void setUsername() {
         this.email = user.getUsername();
     }
