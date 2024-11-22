@@ -63,13 +63,15 @@ public class ClientsServiceImpl implements ClientsService{
         var page = repository.findAll(criterio, pageable);
         return page.map(mapper::toResponse);
     }
-
+/*
     @Override
     public List<ClientResponse> getAllIsDeleted(Boolean isDeleted) {
         var lista = repository.getAllByIsDeleted(isDeleted);
 
         return lista.stream().map(mapper::toResponse).toList();
     }
+
+ */
 
 
 

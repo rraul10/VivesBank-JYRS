@@ -71,7 +71,7 @@ public class ClientRestController {
         return ResponseEntity.ok(service.getById(id));
     }
 
-    @GetMapping("{/dni/dni}")
+    @GetMapping("/dni/{dni}")
     public ResponseEntity<ClientResponse> getClienteByDni(@PathVariable String dni) {
         return ResponseEntity.ok(service.getByDni(dni));
     }
