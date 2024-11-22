@@ -21,9 +21,6 @@ public class ClientRequestCreate {
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
     private String apellidos;
 
-    @NotBlank(message = "La foto del DNI no puede estar vacía")
-    private String fotoDni;
-
     @NotBlank(message = "La dirección no puede estar vacía")
     private AddressDto direccion;
 

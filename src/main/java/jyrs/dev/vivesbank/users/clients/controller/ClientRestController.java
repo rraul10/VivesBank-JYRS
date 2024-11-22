@@ -58,26 +58,30 @@ public class ClientRestController {
 
 
  */
-
+/*
     @GetMapping("{isdeleted}")
     public ResponseEntity<List<ClientResponse>>getAllClienteIsDeleted(@PathVariable Boolean isdeleted) {
         return ResponseEntity.ok(service.getAllIsDeleted(isdeleted));
     }
+
+ */
 
     @GetMapping("{id}")
     public ResponseEntity<ClientResponse> getClienteById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
-    @GetMapping("{dni}")
+    @GetMapping("{/dni/dni}")
     public ResponseEntity<ClientResponse> getClienteByDni(@PathVariable String dni) {
         return ResponseEntity.ok(service.getByDni(dni));
     }
-
-    @GetMapping("{username}")
+/*
+    @GetMapping("{/username/username}")
     public ResponseEntity<ClientResponse> getClienteById(@PathVariable String username) {
         return ResponseEntity.ok(service.getByUsername(username));
     }
+    
+ */
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClientResponse> createCliente(
@@ -96,8 +100,20 @@ public class ClientRestController {
     }
 
     @PutMapping(value="{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ClientResponse> updateCliente(@PathVariable Long id, @RequestBody ClientRequestUpdate clientRequest, @RequestPart("file") MultipartFile file) {
-        var result= service.update(id, clientRequest,file);
+    public ResponseEntity<ClientResponse> updateCliente(@PathVariable Long id, @RequestBody ClientRequestUpdate clientRequest) {
+        var result= service.update(id, clientRequest);
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping(value="/dni/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClientResponse> updateClienteDni(@PathVariable Long id,  @RequestPart("file") MultipartFile file) {
+        var result= service.updateDni(id, file);
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping(value="/perfil/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClientResponse> updateClientePerfil(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
+        var result= service.updatePerfil(id, file);
         return ResponseEntity.ok(result);
     }
 

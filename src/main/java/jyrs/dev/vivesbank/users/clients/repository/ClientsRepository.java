@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ClientsRepository extends JpaRepository<Client,Long>, JpaSpecificationExecutor<Client> {
 
-    Optional<Client> getByUsername(String username);
+    //Optional<Client> getByUsername(String username);
 
     Optional<Client> getByDni(String dni);
 

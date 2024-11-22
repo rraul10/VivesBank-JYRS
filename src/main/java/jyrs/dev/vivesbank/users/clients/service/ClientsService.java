@@ -15,15 +15,19 @@ public interface ClientsService {
 
     ClientResponse getById(Long id);
 
-    ClientResponse getByUsername(String username);
+    //ClientResponse getByUsername(String username);
 
     ClientResponse getByDni(String dni);
 
     ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image);
 
-    ClientResponse update(Long id, ClientRequestUpdate clienteRequest, MultipartFile image);
+    ClientResponse update(Long id, ClientRequestUpdate clienteRequest);
 
-    List<ClientResponse> getAllIsDeleted(Boolean isDeleted);
+    ClientResponse updateDni(Long id,  MultipartFile fotoDni);
+
+    ClientResponse updatePerfil(Long id,  MultipartFile fotoPerfil);
+
+    //List<ClientResponse> getAllIsDeleted(Boolean isDeleted);
 
     void delete(Long id);
 
