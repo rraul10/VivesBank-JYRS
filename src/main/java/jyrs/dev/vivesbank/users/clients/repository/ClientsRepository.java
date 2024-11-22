@@ -16,5 +16,5 @@ public interface ClientsRepository extends JpaRepository<Client,Long>, JpaSpecif
 
     Optional<Client> getByDni(String dni);
 
-    List<Client> getAllByIsDeleted(Boolean isDeleted);
+    //List<Client> getAllByIsDeleted(Boolean isDeleted);
 }
