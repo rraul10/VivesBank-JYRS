@@ -8,6 +8,7 @@ import jyrs.dev.vivesbank.auth.jwt.JwtService;
 import jyrs.dev.vivesbank.auth.users.service.AuthUserService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,45 +25,55 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final AuthUserService authUserService;
-
+    @Autowired
     public JwtAuthenticationFilter(JwtService jwtService, AuthUserService authUserService) {
         this.jwtService = jwtService;
         this.authUserService = authUserService;
     }
 
     @Override
-    protected void doFilterInternal(@NonNull  HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        log.info("Iniciando el filtro de auntenticación");
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+
+        // Evita que el filtro se aplique en las rutas públicas (como /auth/**)
+        if (requestURI.matches(".*/auth/.*")) {
+            log.info("Ruta pública detectada: {}, omitiendo filtro JWT", requestURI);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        log.info("Iniciando el filtro de autenticación");
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         UserDetails userDetails = null;
         String userName = null;
-        if(!StringUtils.hasText(authHeader) || !StringUtils.startsWithIgnoreCase(authHeader, "Bearer")){
+
+        if (!StringUtils.hasText(authHeader) || !StringUtils.startsWithIgnoreCase(authHeader, "Bearer")) {
             log.info("No hay cabecera de autorización, continuando con la petición");
             filterChain.doFilter(request, response);
             return;
         }
-        log.info("Se ha encontrado cabecera de autenticación, procesando..");
+
+        log.info("Se ha encontrado cabecera de autenticación, procesando...");
         jwt = authHeader.substring(7);
         try {
             userName = jwtService.extractUserName(jwt);
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("Token no válido");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token no autorizado o inválido");
             return;
         }
-        log.info("Usuario auntenticado: {}", userName);
-        if(StringUtils.hasText(userName) && SecurityContextHolder.getContext().getAuthentication() == null){
+
+        if (StringUtils.hasText(userName) && SecurityContextHolder.getContext().getAuthentication() == null) {
             log.info("Comprobando usuario y token");
             try {
                 userDetails = authUserService.loadUserByUsername(userName);
-            }catch (Exception e){
+            } catch (Exception e) {
                 log.info("Usuario no encontrado: {}", userName);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario no autorizado");
                 return;
             }
-            authUserService.loadUserByUsername(userName);
-            log.info("Usuario encontrado: {}", userDetails);
+
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 log.info("JWT válido");
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -73,7 +84,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.setContext(context);
             }
         }
+
         filterChain.doFilter(request, response);
-        }
     }
+}
 

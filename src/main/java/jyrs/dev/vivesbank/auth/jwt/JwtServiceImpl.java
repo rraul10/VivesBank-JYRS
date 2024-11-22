@@ -17,7 +17,7 @@ import java.util.function.Function;
 @Service
 @Slf4j
 public class JwtServiceImpl implements JwtService {
-    @Value("${jwt.Secret}")
+    @Value("${jwt.secret}")
     private String jwtSignInKey;
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
