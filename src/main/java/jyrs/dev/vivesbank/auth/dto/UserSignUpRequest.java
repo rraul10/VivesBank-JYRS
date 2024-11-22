@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 @Data
 @Builder
@@ -18,13 +19,11 @@ public class UserSignUpRequest {
     @NotBlank(message = "El username no puede estar vacío")
     String username;
 
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-            message = "La contraseña debe tener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un carácter especial.")
+    @Length(min = 8)
     @NotBlank(message = "La contraseña no puede estar vacía")
     String password;
 
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-            message = "La contraseña de comprobación debe tener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un carácter especial. Además de coincidir con la contraseña")
+    @Length(min = 8)
     @NotBlank(message = "La contraseña de comprobación no puede estar vacía y debe coincidir con la contraseña.")
     String checkPassword;
 

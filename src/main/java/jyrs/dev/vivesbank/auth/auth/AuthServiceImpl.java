@@ -18,6 +18,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,6 +41,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public JwtAuthResponse singUp(UserSignUpRequest request) throws UserAuthNameOrEmailExisten {
         log.info("Creando usuario: {}" , request);
+        if(!validatePassword(request.getPassword())){
+            throw new UserDiferentePasswords("Las contraseñas no puede tener menos de 8 caracteres....");
+        }
         if(request.getPassword().contentEquals(request.getCheckPassword())){
             User user = User.builder()
                     .username(request.getUsername())
@@ -55,6 +60,13 @@ public class AuthServiceImpl implements AuthService {
         }else {
             throw new UserDiferentePasswords("Las contraseñas no coinciden");
         }
+    }
+
+    public static boolean validatePassword(String password) {
+        var regex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(password);
+        return matcher.matches();
     }
 
     @Override
