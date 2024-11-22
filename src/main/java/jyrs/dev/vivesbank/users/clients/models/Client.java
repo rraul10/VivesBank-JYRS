@@ -1,8 +1,9 @@
 package jyrs.dev.vivesbank.users.clients.models;
 
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jyrs.dev.vivesbank.users.User;
+import jyrs.dev.vivesbank.users.models.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,9 +31,8 @@ public class Client{
     @Column(nullable = false)
     @NotBlank(message = "El nombre no puede estar vacío")
     private String nombre;
-
-    @Embedded
     private Address direccion;
+
     @Column(nullable = false)
     @NotBlank(message = "Los apellidos no pueden estar vacíos")
     private String apellidos;
@@ -55,5 +55,6 @@ public class Client{
 
     public void setUsername() {
         this.email = user.getUsername();
+
     }
 }
