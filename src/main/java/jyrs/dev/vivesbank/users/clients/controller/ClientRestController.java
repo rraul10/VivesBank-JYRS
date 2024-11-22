@@ -1,10 +1,16 @@
 package jyrs.dev.vivesbank.users.clients.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
+import jyrs.dev.vivesbank.utils.PageResponse;
+import jyrs.dev.vivesbank.utils.PaginationLinksUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,24 +19,25 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/clientes")
 public class ClientRestController {
 
     private final ClientsService service;
+    private final PaginationLinksUtils paginationLinksUtils;
 
-
-    public ClientRestController(ClientsService service) {
+    public ClientRestController(ClientsService service, PaginationLinksUtils paginationLinksUtils) {
         this.service = service;
+        this.paginationLinksUtils = paginationLinksUtils;
     }
 
-    // TODO GET
-/*
     @GetMapping
     public ResponseEntity<PageResponse<ClientResponse>> getClients(
             @RequestParam(required = false) Optional<String> nombre,
@@ -57,7 +64,6 @@ public class ClientRestController {
     }
 
 
- */
 /*
     @GetMapping("{isdeleted}")
     public ResponseEntity<List<ClientResponse>>getAllClienteIsDeleted(@PathVariable Boolean isdeleted) {

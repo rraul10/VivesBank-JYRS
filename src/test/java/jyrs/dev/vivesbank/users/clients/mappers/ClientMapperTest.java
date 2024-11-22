@@ -1,16 +1,20 @@
 package jyrs.dev.vivesbank.users.clients.mappers;
 
-import jyrs.dev.vivesbank.users.Role;
-import jyrs.dev.vivesbank.users.User;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
+import jyrs.dev.vivesbank.users.models.Role;
+import jyrs.dev.vivesbank.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.xml.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +49,7 @@ class ClientMapperTest {
                 "666666666",
                 "test"
         );
+
 
         Client cliente = mapper.toClientCreate(clienteRequest);
 

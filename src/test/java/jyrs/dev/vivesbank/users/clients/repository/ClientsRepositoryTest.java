@@ -1,9 +1,10 @@
 package jyrs.dev.vivesbank.users.clients.repository;
 
-import jyrs.dev.vivesbank.users.Role;
-import jyrs.dev.vivesbank.users.User;
+import jyrs.dev.vivesbank.users.models.Role;
+import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
+import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -21,16 +22,17 @@ class ClientsRepositoryTest {
     @Autowired
     private ClientsRepository repository;
 
+    @Autowired
+    private UsersRepository repositoryUser;
+
     @Test
     void testGetByDni() {
-        User use = new User(1L,
-                "TEST",
-                "TEST",
-                "TEST",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                false,
-                Set.of(Role.UN_LOG));
+        User use = User.builder()
+                .username("usuario@correo.com")
+                .password("Val1d@123")
+                .fotoPerfil("profile.jpg")
+                .roles(Set.of( Role.USER))
+                .build();
         Address address = Address.builder()
                 .calle("TEST")
                 .numero(1)
@@ -46,17 +48,17 @@ class ClientsRepositoryTest {
                 .apellidos("TEST")
                 .cuentas(List.of())
                 .direccion(address)
-                .dni("TEST")
-                .email("TEST")
+                .dni("04246431x")
+                .email("test@test.com")
                 .fotoDni("TEST")
-                .numTelefono("TEST")
+                .numTelefono("666666666")
                 .user(use)
                 .build();
 
-
+        repositoryUser.save(use);
         repository.save(client);
 
-        Optional<Client> clientFound = repository.getByDni("TEST");
+        Optional<Client> clientFound = repository.getByDni("04246431x");
 
         assertEquals(client.getNombre(),clientFound.get().getNombre());
     }

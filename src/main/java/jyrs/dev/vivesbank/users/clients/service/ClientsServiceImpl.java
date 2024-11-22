@@ -1,7 +1,6 @@
 package jyrs.dev.vivesbank.users.clients.service;
 
 
-import jyrs.dev.vivesbank.users.User;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
@@ -10,6 +9,7 @@ import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
+import jyrs.dev.vivesbank.users.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class ClientsServiceImpl implements ClientsService{
+public class ClientsServiceImpl implements ClientsService {
 
     private final ClientsRepository repository;
     private final StorageService storageService;
@@ -54,7 +54,6 @@ public class ClientsServiceImpl implements ClientsService{
                         .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
 
 
-
         Specification<Client> criterio = Specification.where(specNombre)
                 .and(specApellido)
                 .and(specCiudad)
@@ -74,10 +73,9 @@ public class ClientsServiceImpl implements ClientsService{
  */
 
 
-
     @Override
     public ClientResponse getById(Long id) {
-        var cliente = repository.findById(id).orElseThrow(()->new ClientNotFound(id.toString()));
+        var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
         return mapper.toResponse(cliente);
     }
 /*
@@ -91,21 +89,21 @@ public class ClientsServiceImpl implements ClientsService{
 
     @Override
     public ClientResponse getByDni(String dni) {
-        var cliente = repository.getByDni(dni).orElseThrow(()->new ClientNotFound(dni));
+        var cliente = repository.getByDni(dni).orElseThrow(() -> new ClientNotFound(dni));
         return mapper.toResponse(cliente);
     }
 
     @Override
     public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image) {
-        var cliente= mapper.toClientCreate(clienteRequest);
+        var cliente = mapper.toClientCreate(clienteRequest);
 
-        var tipo = "DNI-"+cliente.getEmail();
-        String imageStored = storageService.store(image,tipo);
+        var tipo = "DNI-" + cliente.getEmail();
+        String imageStored = storageService.store(image, tipo);
         String imageUrl = imageStored;
 
         cliente.setFotoDni(imageUrl);
 
-        var clienteGuardado= repository.save(cliente);
+        var clienteGuardado = repository.save(cliente);
 
         return mapper.toResponse(clienteGuardado);
     }
@@ -116,18 +114,18 @@ public class ClientsServiceImpl implements ClientsService{
 
         var res = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
 
-        res.setNombre(cliente.getNombre() != null ? cliente.getNombre(): res.getNombre());
-        res.setApellidos(cliente.getApellidos()!= null ? cliente.getApellidos(): res.getApellidos());
-        res.setEmail(cliente.getEmail()!= null ? cliente.getEmail(): res.getEmail());
-        res.setDireccion(cliente.getDireccion()!= null ? cliente.getDireccion(): res.getDireccion());
-        res.setNumTelefono(cliente.getNumTelefono()!= null ? cliente.getNombre(): res.getNombre());
+        res.setNombre(cliente.getNombre() != null ? cliente.getNombre() : res.getNombre());
+        res.setApellidos(cliente.getApellidos() != null ? cliente.getApellidos() : res.getApellidos());
+        res.setEmail(cliente.getEmail() != null ? cliente.getEmail() : res.getEmail());
+        res.setDireccion(cliente.getDireccion() != null ? cliente.getDireccion() : res.getDireccion());
+        res.setNumTelefono(cliente.getNumTelefono() != null ? cliente.getNombre() : res.getNombre());
 
-        User user= res.getUser();
-        user.setUsername(clienteRequest.getEmail()!= null ? cliente.getEmail(): user.getUsername());
-        user.setPassword(clienteRequest.getPassword()!= null ? clienteRequest.getPassword(): user.getPassword());
+        User user = res.getUser();
+        user.setUsername(clienteRequest.getEmail() != null ? cliente.getEmail() : user.getUsername());
+        user.setPassword(clienteRequest.getPassword() != null ? clienteRequest.getPassword() : user.getPassword());
         res.setUser(user);
 
-        var clienteActualizado= repository.save(res);
+        var clienteActualizado = repository.save(res);
 
         return mapper.toResponse(clienteActualizado);
     }
@@ -137,13 +135,13 @@ public class ClientsServiceImpl implements ClientsService{
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
 
         var email = cliente.getEmail();
-        var tipo = "DNI-"+email;
-        String imageStored= storageService.store(fotoDni,tipo);
+        var tipo = "DNI-" + email;
+        String imageStored = storageService.store(fotoDni, tipo);
         storageService.delete(cliente.getFotoDni());
 
         cliente.setDni(imageStored);
 
-        var clienteActualizado= repository.save(cliente);
+        var clienteActualizado = repository.save(cliente);
 
         return mapper.toResponse(clienteActualizado);
     }
@@ -151,17 +149,17 @@ public class ClientsServiceImpl implements ClientsService{
     @Override
     public ClientResponse updatePerfil(Long id, MultipartFile fotoPerfil) {
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
-        User user= cliente.getUser();
+        User user = cliente.getUser();
         var email = user.getUsername();
-        var tipo = "PROFILE-"+email;
-        String imageStored= storageService.store(fotoPerfil,tipo);
+        var tipo = "PROFILE-" + email;
+        String imageStored = storageService.store(fotoPerfil, tipo);
         storageService.delete(user.getUsername());
 
         user.setFotoPerfil(imageStored);
 
         cliente.setUser(user);
 
-        var clienteActualizado= repository.save(cliente);
+        var clienteActualizado = repository.save(cliente);
 
         return mapper.toResponse(clienteActualizado);
     }
@@ -179,7 +177,7 @@ public class ClientsServiceImpl implements ClientsService{
     public void deleteLog(Long id) {
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
 
-        User user= cliente.getUser();
+        User user = cliente.getUser();
 
         user.setIsDeleted(true);
 
