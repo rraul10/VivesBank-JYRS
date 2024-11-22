@@ -10,5 +10,5 @@ import java.util.List;
 
 @Repository
 public interface CreditCardRepository extends JpaRepository<CreditCard, Long>, JpaSpecificationExecutor<CreditCard> {
-    List<CreditCard> findByBankAccountIBAN (String iban);
+    List<CreditCard> findByBankAccount_Iban (String iban);
 }

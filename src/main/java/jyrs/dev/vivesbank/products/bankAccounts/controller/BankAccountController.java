@@ -20,6 +20,8 @@ import java.util.Optional;
 @Slf4j
 public class BankAccountController {
 
+
+    /*
     private final AccountService accountService;
     private final AccountMapper accountMapper;
 
@@ -69,4 +71,6 @@ public class BankAccountController {
         accountService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+     */
 }

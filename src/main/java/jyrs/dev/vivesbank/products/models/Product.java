@@ -1,7 +1,6 @@
 package jyrs.dev.vivesbank.products.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jyrs.dev.vivesbank.products.models.type.Type;
 import lombok.AllArgsConstructor;
@@ -16,7 +15,11 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
+@Table(name = "PRODUCTS" )
 public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Enumerated
     private Type tipo;

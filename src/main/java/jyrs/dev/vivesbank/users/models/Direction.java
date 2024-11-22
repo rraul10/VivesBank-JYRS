@@ -2,6 +2,9 @@ package jyrs.dev.vivesbank.users.models;
 
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Builder;
+
+import java.util.Optional;
 
 @Embeddable
 public class Direction {
@@ -13,4 +16,14 @@ public class Direction {
     private String puerta;
 
 
+    public Direction(String cp, String calle, Optional<String> numero, Optional<String> puerta) {
+        this.cp = cp;
+        this.calle = calle;
+        this.numero = numero.orElse(null);
+        this.puerta = puerta.orElse(null);
+    }
+
+    public Direction() {
+
+    }
 }

@@ -7,7 +7,7 @@ public class AccountUpdatedDto {
     private String iban;
     private Double balance;
     private AccountType accountType;
-    private CreditCard creditCard;
+    //private CreditCard creditCard;
     private Client client;
 
 }

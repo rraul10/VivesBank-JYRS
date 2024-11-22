@@ -7,5 +7,5 @@ public class AccountResponseDto {
     private String iban;
     private String accountType;
     private double balance;
-    private CreditCard creditCard;
+    //private CreditCard creditCard;
 }

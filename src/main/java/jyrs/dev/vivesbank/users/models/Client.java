@@ -2,18 +2,11 @@ package jyrs.dev.vivesbank.users.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Entity
 @Table(name = "Clients")
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Client{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,6 +14,9 @@ public class Client{
     @Column(nullable = false)
     @NotBlank(message = "El DNI no puede estar vacío")
     private String dni;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(nullable = false)
     @NotBlank(message = "El nombre no puede estar vacío")
@@ -47,6 +43,6 @@ public class Client{
     private List<String> cuentas; //TODO Cambiar string por clase cuentas
 
     public void setUsername() {
-        this.email = username;
+        this.email = user.username;
     }
 }
