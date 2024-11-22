@@ -4,6 +4,7 @@ import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
@@ -240,10 +241,67 @@ class ClientsServiceImplTest {
 
     @Test
     void getById() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        ClientResponse result = service.getById(id);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(clientResponse.getNombre(), result.getNombre()),
+                () -> assertEquals(clientResponse.getApellidos(), result.getApellidos())
+        );
+
+        verify(repository, times(1)).findById(id);
+        verify(mapper, times(1)).toResponse(cliente);
+    }
+
+    @Test
+    void getByIdNotFound() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+        var exception = assertThrows(ClientNotFound.class, () -> service.getById(id));
+
+        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).findById(id);
+        verify(mapper, times(0)).toResponse(any(Client.class));
     }
 
     @Test
     void getByDni() {
+
+        String dni = "11111111A";
+        when(repository.getByDni(dni)).thenReturn(Optional.of(cliente));
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        var res = service.getByDni(dni);
+
+        assertAll(
+                () -> assertNotNull(res),
+                () -> assertEquals(clientResponse.getNombre(), res.getNombre()),
+                () -> assertEquals(clientResponse.getApellidos(), res.getApellidos())
+        );
+
+        verify(repository, times(1)).getByDni(dni);
+        verify(mapper, times(1)).toResponse(cliente);
+
+    }
+
+    @Test
+    void getByDniNotFound() {
+        String dni = "11111111A";
+
+        when(repository.getByDni(dni)).thenReturn(Optional.empty());
+        var exception = assertThrows(ClientNotFound.class, () -> service.getByDni(dni));
+
+        assertEquals("El cliente: 11111111A no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).getByDni(dni);
+        verify(mapper, times(0)).toResponse(any(Client.class));
     }
 
     @Test
