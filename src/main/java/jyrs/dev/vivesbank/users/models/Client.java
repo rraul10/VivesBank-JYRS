@@ -43,6 +43,6 @@ public class Client{
     private List<String> cuentas; //TODO Cambiar string por clase cuentas
 
     public void setUsername() {
-        this.email = user.username;
+        this.email = user.getUsername();
     }
 }

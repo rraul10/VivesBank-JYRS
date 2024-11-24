@@ -3,6 +3,7 @@ package jyrs.dev.vivesbank.auth.jwt;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import jyrs.dev.vivesbank.users.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -59,9 +60,10 @@ public class JwtServiceImpl implements JwtService {
         Algorithm algorithm = Algorithm.HMAC512(getSignInKey());
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + (1000 *  jwtExpiration));
+        String guuid = ((User) userDetails).getGuuid();
         return JWT.create()
                 .withHeader(createHeader())
-                .withSubject(userDetails.getUsername())
+                .withSubject(guuid)
                 .withIssuedAt(now)
                 .withExpiresAt(expirationDate)
                 .withClaim("extraClaims", extraClaims)

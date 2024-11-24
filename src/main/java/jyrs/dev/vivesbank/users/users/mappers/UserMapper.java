@@ -17,7 +17,7 @@ public class UserMapper {
      }
      public UserResponseDto toUserResponse(User user){
          return new UserResponseDto(
-                 user.getId(),
+                 user.getGuuid(),
                  user.getUsername(),
                  user.getFotoPerfil(),
                  user.getIsDeleted()
