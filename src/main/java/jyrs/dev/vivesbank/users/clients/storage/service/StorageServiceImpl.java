@@ -53,7 +53,7 @@ public class StorageServiceImpl implements StorageService{
         String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         String extension = StringUtils.getFilenameExtension(filename);
         String justFilename = filename.replace("." + extension, "");
-        String storedFilename = "vivesBank-"+tipo+"-"+System.currentTimeMillis() + "_" + justFilename.replaceAll("\\s+", "") + "." + extension;
+        String storedFilename = "vivesBank-"+tipo+"-"+System.currentTimeMillis() + "." + extension;
 
         try {
             if (file.isEmpty()) {

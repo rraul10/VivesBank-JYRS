@@ -10,6 +10,8 @@ import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
+import jyrs.dev.vivesbank.users.models.Role;
+import jyrs.dev.vivesbank.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,9 +20,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -110,6 +114,12 @@ class ClientsServiceImplTest {
         cliente = Client.builder()
                 .dni("11111111A")
                 .nombre("Juan")
+                .user(User.builder()
+                        .username("usuario@correo.com")
+                        .password("password123")
+                        .fotoPerfil("profile.jpg")
+                        .roles(Set.of( Role.USER))
+                        .build())
                 .apellidos("Pérez")
                 .direccion(address)
                 .fotoDni("fotoDni.jpg")
@@ -306,25 +316,252 @@ class ClientsServiceImplTest {
 
     @Test
     void create() {
+        var tipo = "DNI-"+cliente.getEmail();
+        MultipartFile image = mock(MultipartFile.class);
+        //when(image.getOriginalFilename()).thenReturn("dni.jpg");
+
+        when(mapper.toClientCreate(clienteCreate)).thenReturn(cliente);
+        when(storageService.store(image,tipo)).thenReturn("path/dni.jpg");
+
+        when(repository.save(cliente)).thenReturn(cliente);
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        ClientResponse result = service.create(clienteCreate, image);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(clientResponse.getNombre(), result.getNombre())
+        );
+
+        verify(mapper, times(1)).toClientCreate(clienteCreate);
+        verify(storageService, times(1)).store(image, tipo);
+        verify(repository, times(1)).save(cliente);
+        verify(mapper, times(1)).toResponse(cliente);
+
     }
 
     @Test
     void update() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+
+        when(mapper.toClientUpdate(clienteUpdate)).thenReturn(cliente);
+
+        when(repository.save(cliente)).thenReturn(cliente);
+
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        var result = service.update(id, clienteUpdate);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(clientResponse.getNombre(), result.getNombre()),
+                () -> assertEquals(clientResponse.getEmail(), result.getEmail())
+        );
+
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).save(cliente);
+        verify(mapper, times(1)).toClientUpdate(clienteUpdate);
+        verify(mapper, times(1)).toResponse(cliente);
     }
+
+    @Test
+    void updateNotFound() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ClientNotFound.class, () -> service.update(id, clienteUpdate));
+
+        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).findById(id);
+        verify(mapper,times(0)).toResponse(cliente);
+        verify(repository, times(0)).save(any());
+    }
+
 
     @Test
     void updateDni() {
+        Client clienteUpdate= Client.builder()
+                .dni("11111111A")
+                .nombre("Juan")
+                .apellidos("Pérez")
+                .direccion(address)
+                .fotoDni("fotoDniUpdate.jpg")
+                .numTelefono("666666666")
+                .email("juan.perez@example.com")
+                .cuentas(List.of())
+                .build();
+        Long id = 1L;
+        String storedImageUrl = "fotoDni.jpg";
+        MultipartFile newDniImage = mock(MultipartFile.class);
+
+        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+
+        when(storageService.store(newDniImage, "DNI-" + cliente.getEmail())).thenReturn(storedImageUrl);
+
+        doNothing().when(storageService).delete(cliente.getFotoDni());
+
+        cliente.setDni(storedImageUrl);
+        when(repository.save(cliente)).thenReturn(clienteUpdate);
+
+        when(mapper.toResponse(clienteUpdate)).thenReturn(clientResponse);
+
+        var result = service.updateDni(id, newDniImage);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(clientResponse.getNombre(), result.getNombre())
+        );
+
+        verify(repository, times(1)).findById(id);
+        verify(storageService, times(1)).store(newDniImage, "DNI-" + cliente.getEmail());
+        verify(storageService, times(1)).delete(cliente.getFotoDni());
+        verify(repository, times(1)).save(cliente);
+        verify(mapper, times(1)).toResponse(clienteUpdate);
     }
+
+    @Test
+    void updateDniNotFound() {
+        Long id = 1L;
+        MultipartFile dniImagen = mock(MultipartFile.class);
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ClientNotFound.class,
+                () -> service.updateDni(id, dniImagen));
+
+        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).findById(id);
+        verifyNoInteractions(storageService);
+        verify(repository, times(0)).save(any());
+        verify(mapper, times(0)).toResponse(any());
+    }
+
 
     @Test
     void updatePerfil() {
+        User user = User.builder()
+                .username("usuario@correo.com")
+                .password("password123")
+                .fotoPerfil("profile.jpg")
+                .roles(Set.of( Role.USER))
+                .build();
+        Long id = 1L;
+        String storedImageUrl = "perfil";
+        MultipartFile newProfileImage = mock(MultipartFile.class);
+
+        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+
+        when(storageService.store(newProfileImage, "PROFILE-" + user.getUsername())).thenReturn(storedImageUrl);
+
+        doNothing().when(storageService).delete(user.getUsername());
+
+        user.setFotoPerfil(storedImageUrl);
+        cliente.setUser(user);
+
+        when(repository.save(cliente)).thenReturn(cliente);
+
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        var result = service.updatePerfil(id, newProfileImage);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(clientResponse.getNombre(), result.getNombre()),
+                () -> assertEquals(storedImageUrl, user.getFotoPerfil())
+        );
+
+        verify(repository, times(1)).findById(id);
+        verify(storageService, times(1)).store(newProfileImage, "PROFILE-" + user.getUsername());
+        verify(storageService, times(1)).delete(user.getUsername());
+        verify(repository, times(1)).save(cliente);
+        verify(mapper, times(1)).toResponse(cliente);
     }
+    @Test
+    void updatePerfilNotFound() {
+        Long id = 1L;
+        MultipartFile newProfileImage = mock(MultipartFile.class);
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ClientNotFound.class,
+                () -> service.updatePerfil(id, newProfileImage));
+
+        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).findById(id);
+        verifyNoInteractions(storageService);
+        verify(repository, times(0)).save(any());
+        verify(mapper, times(0)).toResponse(any());
+    }
+
 
     @Test
     void delete() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+
+        doNothing().when(repository).deleteById(id);
+        doNothing().when(storageService).delete(cliente.getFotoDni());
+
+        service.delete(id);
+
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).deleteById(id);
+        verify(storageService, times(1)).delete(cliente.getFotoDni());
     }
 
     @Test
-    void deleteLog() {
+    void deleteNotFound() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ClientNotFound.class,
+                () -> service.delete(id));
+
+        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(0)).deleteById(any());
+        verify(storageService, times(0)).delete(any());
     }
+
+
+    @Test
+    void deleteLog() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+
+        when(repository.save(cliente)).thenReturn(cliente);
+
+        service.deleteLog(id);
+
+        assertTrue(cliente.getUser().getIsDeleted());
+
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).save(cliente);
+    }
+
+    @Test
+    void deleteLogClientNotFound() {
+        Long id = 1L;
+
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ClientNotFound.class,
+                () -> service.deleteLog(id));
+
+        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).findById(id);
+        verify(repository, times(0)).save(any());
+    }
+
 }

@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/clientes")
+@RequestMapping("${api.path:/api}/${api.version:/v1}/clients")
 public class ClientRestController {
 
     private final ClientsService service;
@@ -91,7 +91,7 @@ public class ClientRestController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClientResponse> createCliente(
-            @Valid @RequestBody ClientRequestCreate clientRequestCreate,
+            @RequestPart("clientRequestCreate") @Valid ClientRequestCreate clientRequestCreate,
             @RequestPart("file") MultipartFile file
     ) {
         if (!file.isEmpty()) {
@@ -105,8 +105,8 @@ public class ClientRestController {
 
     }
 
-    @PutMapping(value="{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ClientResponse> updateCliente(@PathVariable Long id, @RequestBody ClientRequestUpdate clientRequest) {
+    @PutMapping(value="{id}")
+    public ResponseEntity<ClientResponse> updateCliente(@PathVariable Long id, @RequestBody @Valid ClientRequestUpdate clientRequest) {
         var result= service.update(id, clientRequest);
         return ResponseEntity.ok(result);
     }

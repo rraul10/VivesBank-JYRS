@@ -43,7 +43,7 @@ class ClientsRepositoryTest {
                 .updateAt(LocalDateTime.now())
                 .build();
         Client client = Client.builder()
-                .id_Cliente(1L)
+                .id(1L)
                 .nombre("TEST")
                 .apellidos("TEST")
                 .cuentas(List.of())

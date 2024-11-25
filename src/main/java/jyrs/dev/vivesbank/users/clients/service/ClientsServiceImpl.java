@@ -36,23 +36,23 @@ public class ClientsServiceImpl implements ClientsService {
     }
 
     @Override
-    public Page<ClientResponse> getAll(Optional<String> nombre, Optional<String> apellidos, Optional<String> ciudad, Optional<String> provincia, Pageable pageable) {
+    public Page<ClientResponse> getAll(Optional<String> nombre, Optional<String> apellidos,
+                                       Optional<String> ciudad, Optional<String> provincia, Pageable pageable) {
         Specification<Client> specNombre = (root, query, criteriaBuilder) ->
                 nombre.map(n -> criteriaBuilder.like(criteriaBuilder.lower(root.get("nombre")), "%" + n.toLowerCase() + "%"))
-                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+                        .orElse(null);
 
         Specification<Client> specApellido = (root, query, criteriaBuilder) ->
-                apellidos.map(a -> criteriaBuilder.like(root.get("apellidos"), a))
-                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+                apellidos.map(a -> criteriaBuilder.like(criteriaBuilder.lower(root.get("apellidos")), "%" + a.toLowerCase() + "%"))
+                        .orElse(null);
 
         Specification<Client> specCiudad = (root, query, criteriaBuilder) ->
                 ciudad.map(c -> criteriaBuilder.like(criteriaBuilder.lower(root.get("direccion").get("ciudad")), "%" + c.toLowerCase() + "%"))
-                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+                        .orElse(null);
 
         Specification<Client> specProvincia = (root, query, criteriaBuilder) ->
-                ciudad.map(c -> criteriaBuilder.like(criteriaBuilder.lower(root.get("direccion").get("provincia")), "%" + c.toLowerCase() + "%"))
-                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
-
+                provincia.map(p -> criteriaBuilder.like(criteriaBuilder.lower(root.get("direccion").get("provincia")), "%" + p.toLowerCase() + "%"))
+                        .orElse(null);
 
         Specification<Client> criterio = Specification.where(specNombre)
                 .and(specApellido)
@@ -62,6 +62,7 @@ public class ClientsServiceImpl implements ClientsService {
         var page = repository.findAll(criterio, pageable);
         return page.map(mapper::toResponse);
     }
+
 /*
     @Override
     public List<ClientResponse> getAllIsDeleted(Boolean isDeleted) {
@@ -139,7 +140,7 @@ public class ClientsServiceImpl implements ClientsService {
         String imageStored = storageService.store(fotoDni, tipo);
         storageService.delete(cliente.getFotoDni());
 
-        cliente.setDni(imageStored);
+        cliente.setFotoDni(imageStored);
 
         var clienteActualizado = repository.save(cliente);
 

@@ -11,13 +11,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import lombok.*;
-
-import java.util.List;
 
 @Entity
 @Table(name = "Clients")
@@ -29,7 +24,7 @@ public class Client {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id_Cliente;
+    Long id;
 
     @Column(nullable = false)
     @NotBlank(message = "El DNI o NIE no puede estar vacío")

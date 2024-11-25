@@ -73,7 +73,7 @@ class StorageServiceImplTest {
         when(multipartFile.getInputStream()).thenReturn(mock(InputStream.class));
 
         String storedFilename = storageServiceImpl.store(multipartFile,tipo);
-        assertTrue(storedFilename.contains("test-image"));
+        assertTrue(storedFilename.contains("vivesBank"));
         verify(multipartFile, times(1)).getInputStream();
     }
 
