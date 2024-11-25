@@ -1,6 +1,7 @@
 package jyrs.dev.vivesbank.products.bankAccounts.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.services.BankAccountService;
@@ -63,7 +64,7 @@ public class BankAccountController {
     }
 
     @PostMapping
-    public ResponseEntity<BankAccountResponse> create(@RequestBody BankAccountRequest bankAccountRequest){
+    public ResponseEntity<BankAccountResponse> create(@Valid @RequestBody BankAccountRequest bankAccountRequest){
         log.info("Creando cuenta bancaria: " + bankAccountRequest);
         var result = accountService.saveBankAccount(bankAccountRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);

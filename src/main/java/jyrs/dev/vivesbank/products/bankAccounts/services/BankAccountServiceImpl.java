@@ -32,7 +32,8 @@ import java.util.Random;
 @Service
 @Slf4j
 @CacheConfig(cacheNames = {"bankAccounts"})
-public class BankAccountServiceImpl implements BankAccountService{
+public class BankAccountServiceImpl implements BankAccountService {
+
     private BankAccountRepository bankAccountRepository;
     private BankAccountMapper bankAccountMapper;
     private WebSocketConfig webSocketConfig;
@@ -45,11 +46,10 @@ public class BankAccountServiceImpl implements BankAccountService{
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
         this.webSocketConfig = webSocketConfig;
-        webSocketService = webSocketConfig.webSocketProductosHandler();
-        mapper = new ObjectMapper();
+        this.webSocketService = webSocketConfig.webSocketProductosHandler();
+        this.mapper = new ObjectMapper();
         this.bankAccountNotificationMapper = bankAccountNotificationMapper;
     }
-
 
     @Override
     public Page<BankAccountResponse> findAllBankAccounts(Optional<String> accountType, Pageable pageable) {
@@ -63,7 +63,6 @@ public class BankAccountServiceImpl implements BankAccountService{
         var page = bankAccountRepository.findAll(criterio, pageable);
 
         return page.map(bankAccountMapper::toResponse);
-
     }
 
     @Override
@@ -73,7 +72,6 @@ public class BankAccountServiceImpl implements BankAccountService{
         var bankAccount = bankAccountRepository.findById(id).orElseThrow(() -> new BankAccountNotFound(id));
         return bankAccountMapper.toResponse(bankAccount);
     }
-
 
     @Cacheable(key = "#iban")
     public BankAccountResponse findBankAccountByIban(String iban) {
@@ -87,6 +85,7 @@ public class BankAccountServiceImpl implements BankAccountService{
     public BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest) {
         log.info("Guardando cuenta bancaria: " + bankAccountRequest);
 
+        // Generar un IBAN único
         String iban = generateUniqueIban();
 
         BankAccount bankAccount = bankAccountMapper.toBankAccount(bankAccountRequest);
@@ -100,9 +99,6 @@ public class BankAccountServiceImpl implements BankAccountService{
 
         return bankAccountMapper.toResponse(savedBankAccount);
     }
-
-
-
 
     @Override
     @CachePut(key = "#id")
@@ -121,7 +117,7 @@ public class BankAccountServiceImpl implements BankAccountService{
         log.info("Cuenta bancaria con ID " + id + " eliminada exitosamente.");
     }
 
-
+    // Generación de un IBAN único
     public String generateUniqueIban() {
         String iban;
         int attempts = 0;
@@ -131,24 +127,53 @@ public class BankAccountServiceImpl implements BankAccountService{
             if (attempts > 1000) {
                 throw new IllegalStateException("No se pudo generar un IBAN único después de 1000 intentos.");
             }
-        } while (ibanExists(iban));
+        } while (ibanExists(iban)); // Verifica que el IBAN no exista
         return iban;
     }
 
+    // Verifica si el IBAN ya existe en la base de datos
     private boolean ibanExists(String iban) {
         return bankAccountRepository.findByIban(iban).isPresent();
     }
 
+    // Genera un IBAN aleatorio y válido
     private String generateIban() {
         String countryCode = "ES";
-        int checkDigits = new Random().nextInt(90) + 10;
-        String bankCode = generateRandomDigits(4);
-        String branchCode = generateRandomDigits(4);
-        String accountNumber = generateRandomDigits(10);
+        String entityCode = "0128"; // Ejemplo de código de entidad
+        String accountNumber = generateRandomDigits(10); // Número de cuenta aleatorio
+        String ibanBase = entityCode + accountNumber + "142800"; // Construir base del IBAN
 
-        return countryCode + checkDigits + bankCode + branchCode + accountNumber;
+        // Calcular el dígito de control
+        int checkDigits = calculateControlDigits(ibanBase);
+
+        // Formar el IBAN final
+        return countryCode + String.format("%02d", checkDigits) + entityCode + accountNumber;
     }
 
+    private int calculateControlDigits(String ibanBase) {
+        StringBuilder numericIban = new StringBuilder();
+
+        // Convertir letras a números si las hubiera
+        for (char ch : ibanBase.toCharArray()) {
+            if (Character.isDigit(ch)) {
+                numericIban.append(ch);
+            } else {
+                numericIban.append((int) ch - 'A' + 10); // Convertir letras a números
+            }
+        }
+
+        // Calcular el módulo 97
+        String numericIbanStr = numericIban.toString();
+        int remainder = 0;
+        for (int i = 0; i < numericIbanStr.length(); i += 9) {
+            remainder = Integer.parseInt(remainder + numericIbanStr.substring(i, Math.min(i + 9, numericIbanStr.length()))) % 97;
+        }
+
+        // Los dígitos de control se calculan como (98 - resto)
+        return 98 - remainder;
+    }
+
+    // Genera dígitos aleatorios de una longitud dada
     private String generateRandomDigits(int length) {
         Random random = new Random();
         StringBuilder digits = new StringBuilder();
@@ -158,9 +183,8 @@ public class BankAccountServiceImpl implements BankAccountService{
         return digits.toString();
     }
 
-
     void onChange(Notificacion.Tipo tipo, BankAccount data) {
-        log.debug("Servicio de cuentas de banco  onChange con tipo: " + tipo + " y datos: " + data);
+        log.debug("Servicio de cuentas de banco onChange con tipo: " + tipo + " y datos: " + data);
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
@@ -175,7 +199,7 @@ public class BankAccountServiceImpl implements BankAccountService{
                     LocalDateTime.now().toString()
             );
 
-            String json = mapper.writeValueAsString((notificacion));
+            String json = mapper.writeValueAsString(notificacion);
 
             log.info("Enviando mensaje a los clientes ws");
             Thread senderThread = new Thread(() -> {
@@ -190,6 +214,4 @@ public class BankAccountServiceImpl implements BankAccountService{
             log.error("Error al convertir la notificación a JSON", e);
         }
     }
-
-
 }
