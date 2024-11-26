@@ -43,13 +43,13 @@ public class UserControllerTests {
     private final String myEndpoint = "/vivesBank/v1/users";
     private final UserRequestDto userRequestDto = UserRequestDto.builder()
             .username("usuario@correo.com")
-            .password("password")
+            .password("17j$e7cS")
             .fotoPerfil("foto.jpg")
             .isDeleted(false)
             .build();
     private final User user = User.builder()
             .username("usuario@correo.com")
-            .password("password")
+            .password("17j$e7cS")
             .fotoPerfil("foto.jpg")
             .isDeleted(false)
             .build();
@@ -227,7 +227,7 @@ public class UserControllerTests {
     void saveUser() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                .username("usuario@correo.com")
-               .password("password")
+               .password("17j$e7cS")
                .fotoPerfil("foto.jpg")
                .isDeleted(false)
                .build();
@@ -249,7 +249,7 @@ public class UserControllerTests {
     void SaveUserBadRequestUserName() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                .username("usuario")
-               .password("password")
+               .password("17j$e7cS")
                .fotoPerfil("foto.jpg")
                .isDeleted(false)
                .build();
@@ -283,7 +283,7 @@ public class UserControllerTests {
     void SaveUserBadRequestFoto() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("usuario@correo.com")
-                .password("password")
+                .password("17j$e7cS")
                 .fotoPerfil("")
                 .isDeleted(false)
                 .build();
@@ -301,7 +301,7 @@ public class UserControllerTests {
     void updateUser() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                .username("nuevoUsuario@gmail.com")
-               .password("nuevaPassword")
+               .password("17j$e7cS")
                .fotoPerfil("nuevaFoto.jpg")
                .isDeleted(false)
                .build();
@@ -323,7 +323,7 @@ public class UserControllerTests {
     void updateUserNotFound() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                .username("nuevoUsuario@gmail.com")
-               .password("nuevaPassword")
+               .password("17j$e7cS")
                .fotoPerfil("nuevaFoto.jpg")
                .isDeleted(false)
                .build();
@@ -342,7 +342,7 @@ public class UserControllerTests {
     void updateUserBadRequestEmptyUserName() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                .username("")
-               .password("password")
+               .password("17j$e7cS")
                .fotoPerfil("foto.jpg")
                .isDeleted(false)
                .build();
@@ -359,7 +359,7 @@ public class UserControllerTests {
     void updateUserBadRequestBadUserName() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("usuario")
-                .password("password")
+                .password("17j$e7cS")
                 .fotoPerfil("foto.jpg")
                 .isDeleted(false)
                 .build();
@@ -395,7 +395,7 @@ public class UserControllerTests {
     void updateUserbadRequestEmptyPhoto() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                .username("usuario@correo.com")
-               .password("password")
+               .password("17j$e7cS")
                .fotoPerfil("")
                .isDeleted(false)
                .build();

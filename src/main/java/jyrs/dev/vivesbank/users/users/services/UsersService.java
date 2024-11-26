@@ -10,9 +10,9 @@ import java.util.Optional;
 
 public interface UsersService {
     Page<UserResponseDto> getAllUsers(Optional<String> username, Optional<Boolean> isDeleted, Pageable pageable);
-    UserResponseDto getUserById(Long id);
+    UserResponseDto getUserById(String id);
     UserResponseDto getUserByName(String name);
     UserResponseDto saveUser(UserRequestDto user);
-    UserResponseDto updateUser(Long id, UserRequestDto user);
-    void deleteUser(Long id);
+    UserResponseDto updateUser(String id, UserRequestDto user);
+    void deleteUser(String id);
 }

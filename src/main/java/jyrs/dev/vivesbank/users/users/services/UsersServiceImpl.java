@@ -49,9 +49,13 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     @Cacheable
-    public UserResponseDto getUserById(Long id) {
+    public UserResponseDto getUserById(String id) {
         log.info("Obteniendo user por id: " + id);
-        return userMapper.toUserResponse(usersRepository.findById(id).orElseThrow(() -> new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id)));
+        var res = userMapper.toUserResponse(usersRepository.findByGuuid(id));
+        if(res == null){
+            throw  new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id);
+        }
+        return res;
     }
 
     @Override
@@ -73,18 +77,23 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
-    public UserResponseDto updateUser(Long id, UserRequestDto user) {
+    public UserResponseDto updateUser(String id, UserRequestDto user) {
         log.info("actualizando usuario con id: " + id + " user: " + user);
-        var result = usersRepository.findById(id).orElseThrow(() -> new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id));
-        var userUpdated = usersRepository.save(userMapper.toUser(user, result));
-        return userMapper.toUserResponse(userUpdated);
+        var result = usersRepository.findByGuuid(id);
+        if(result == null){
+           throw  new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id);
+        }
+        return userMapper.toUserResponse(usersRepository.save(userMapper.toUser(user, result)));
     }
 
     @Override
     @CacheEvict(value = "usersCache", key = "#id")
-    public void deleteUser(Long id) {
+    public void deleteUser(String id) {
         log.info("Borrando usuario con id: " + id);
-        var result = usersRepository.findById(id).orElseThrow(() -> new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id));
+        var result = usersRepository.findByGuuid(id);
+        if(result == null){
+            throw  new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id);
+        }
         result.setIsDeleted(true);
         usersRepository.save(result);
     }
