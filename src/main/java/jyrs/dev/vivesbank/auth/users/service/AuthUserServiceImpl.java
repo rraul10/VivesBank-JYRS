@@ -15,8 +15,8 @@ public class AuthUserServiceImpl implements AuthUserService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String guuid) throws UserExceptions.UserNotFound {
-        return userRepository.findByGuuid(guuid)
-                .orElseThrow(() -> new UserExceptions.UserNotFound("no se ha encontrado usuario con uniqueId: " + guuid));
+    public UserDetails loadUserByUsername(String username) throws UserExceptions.UserNotFound {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserExceptions.UserNotFound("no se ha encontrado usuario con username: " + username));
     }
 }

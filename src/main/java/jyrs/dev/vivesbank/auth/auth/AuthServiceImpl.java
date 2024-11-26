@@ -77,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
         log.info("Autenticando usuario: {}", request);
 
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getGuuid(), user.getPassword()));
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
         log.info("Autenticando usuario: {}", request);
 
         var jwt = jwtService.generateToken(user);
