@@ -11,6 +11,7 @@ import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
 import jyrs.dev.vivesbank.users.models.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +29,7 @@ public class ClientsServiceImpl implements ClientsService {
     private final ClientsRepository repository;
     private final StorageService storageService;
     private final ClientMapper mapper;
+    @Autowired
 
     public ClientsServiceImpl(ClientsRepository repository, StorageService storageService, ClientMapper mapper) {
         this.repository = repository;
