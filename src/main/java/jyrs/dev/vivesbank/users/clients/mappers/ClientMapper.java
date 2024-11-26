@@ -22,7 +22,6 @@ public class ClientMapper {
                 .nombre(clientRequestCreate.getNombre())
                 .apellidos(clientRequestCreate.getApellidos())
                 .numTelefono(clientRequestCreate.getNumTelefono())
-                .email(clientRequestCreate.getEmail())
                 .direccion(toAdress(clientRequestCreate.getDireccion()))
                 .build();
 

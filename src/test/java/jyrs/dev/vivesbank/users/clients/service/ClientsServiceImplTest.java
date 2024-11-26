@@ -84,7 +84,6 @@ class ClientsServiceImplTest {
                         "TEST",
                         28001))
                 .numTelefono("666666666")
-                .email("juan.perez@example.com")
                 .build();
 
         clienteUpdate = ClientRequestUpdate.builder()

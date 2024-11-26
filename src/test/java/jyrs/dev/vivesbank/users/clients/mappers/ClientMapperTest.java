@@ -46,8 +46,7 @@ class ClientMapperTest {
                 "test",
                 "test",
                 addressDto,
-                "666666666",
-                "test"
+                "666666666"
         );
 
 

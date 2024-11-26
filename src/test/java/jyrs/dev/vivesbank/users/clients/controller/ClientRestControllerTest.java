@@ -108,7 +108,6 @@ class ClientRestControllerTest {
                         "España",
                         28001))
                 .numTelefono("666666666")
-                .email("juan.perez@example.com")
                 .build();
 
         clienteUpdate = ClientRequestUpdate.builder()
@@ -413,7 +412,6 @@ class ClientRestControllerTest {
                         "España",
                         28001))
                 .numTelefono("+123456789")
-                .email("juan.perez@example.com")
                 .build();
 
         MockMultipartFile file = new MockMultipartFile("file", "foto.png", "image/png", "imagen".getBytes());
@@ -455,7 +453,6 @@ class ClientRestControllerTest {
                         "España",
                         28001))
                 .numTelefono("+123456789")
-                .email("juan.perez@example.com")
                 .build();
 
         MockMultipartFile file = new MockMultipartFile("file", "foto.png", "image/png", "imagen".getBytes());
@@ -693,7 +690,7 @@ class ClientRestControllerTest {
 
     @Test
     void testValidationError() throws Exception {
-        ClientRequestCreate invalidClientRequest = new ClientRequestCreate("", "", "", null, "", "");
+        ClientRequestCreate invalidClientRequest = new ClientRequestCreate("", "", "", null, "");
 
         MockHttpServletResponse response = mockMvc.perform(
                         post(endpoint)

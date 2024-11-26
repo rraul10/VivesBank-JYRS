@@ -5,6 +5,7 @@ import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClienteExists;
 import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
@@ -96,7 +97,14 @@ public class ClientsServiceImpl implements ClientsService {
 
     @Override
     public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image) {
+
         var cliente = mapper.toClientCreate(clienteRequest);
+
+        repository.getByDni(cliente.getDni()).ifPresent(existingClient -> {
+            throw new ClienteExists(cliente.getDni());
+        });
+
+
 
         var tipo = "DNI-" + cliente.getEmail();
         String imageStored = storageService.store(image, tipo);

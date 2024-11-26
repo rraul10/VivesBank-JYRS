@@ -13,6 +13,7 @@ import java.util.List;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
+import org.hibernate.validator.constraints.UniqueElements;
 
 @Entity
 @Table(name = "Clients")
@@ -26,7 +27,7 @@ public class Client {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     @NotBlank(message = "El DNI o NIE no puede estar vacío")
     @Pattern(regexp = "^([0-9]{8}[A-Za-z]|[XYZ][0-9]{7}[A-Za-z])$",
             message = "El DNI debe ser 8 dígitos seguidos de una letra, o un NIE válido (X, Y, Z + 7 dígitos + letra)")
@@ -57,7 +58,7 @@ public class Client {
     @Pattern(regexp = "^\\d{9}$", message = "El número de teléfono debe contener 9 dígitos")
     private String numTelefono;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     @NotBlank(message = "El email no puede estar vacío")
     @Email(message = "El email debe tener un formato válido")
     private String email;

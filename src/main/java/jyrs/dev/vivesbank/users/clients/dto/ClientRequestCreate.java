@@ -40,8 +40,5 @@ public class ClientRequestCreate {
             message = "El número de teléfono debe ser válido (debe contener entre 9 y 15 dígitos, con o sin símbolo '+' al principio)")
     private String numTelefono;
 
-    @NotBlank(message = "El email no puede estar vacío")
-    @Email(message = "El email debe ser válido")
-    private String email;
 }
 
