@@ -83,8 +83,7 @@ public class UsersServiceImpl implements UsersService {
         if(result == null){
            throw  new UserExceptions.UserNotFound("No se ha encontrado user con id: " + id);
         }
-        var userUpdated = usersRepository.save(userMapper.toUser(user, result));
-        return userMapper.toUserResponse(userUpdated);
+        return userMapper.toUserResponse(usersRepository.save(userMapper.toUser(user, result)));
     }
 
     @Override

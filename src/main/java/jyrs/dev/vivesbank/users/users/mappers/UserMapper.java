@@ -27,6 +27,7 @@ public class UserMapper {
      public User toUser(UserRequestDto userRequest, User user){
          return User.builder()
                  .id(user.getId())
+                 .guuid(user.getGuuid())
                  .username(userRequest.getUsername())
                  .password(userRequest.getPassword())
                  .fotoPerfil(userRequest.getFotoPerfil())
