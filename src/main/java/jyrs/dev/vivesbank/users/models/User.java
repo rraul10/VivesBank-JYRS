@@ -31,10 +31,10 @@ import java.util.stream.Collectors;
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Base de datos generará este ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "unique_id", nullable = false, unique = true, updatable = false)  // Asegura unicidad
+    @Column(name = "guuid", nullable = false, unique = true, updatable = false)
     private String guuid;
 
     @Column(nullable = false)

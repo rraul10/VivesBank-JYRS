@@ -14,7 +14,7 @@ import org.hibernate.validator.constraints.Length;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserSignInRequest {
-    @Email(regexp = ".*@.*\\..*", message = "User name debe ser válido")
+    //@Email(regexp = ".*@.*\\..*", message = "User name debe ser válido")
     @NotBlank(message = "El username no puede estar vacío")
     String username;
     @Length(min = 8)

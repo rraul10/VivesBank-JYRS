@@ -72,10 +72,14 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public JwtAuthResponse signIn(UserSignInRequest request) throws AuthSingInInvalid {
         log.info("Autenticando usuario: {}", request);
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        var user = authUserRepository.findByGuuid(request.getUsername())
+        var user = authUserRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AuthSingInInvalid("Usuario o contraseña incorrectos"));
+        log.info("Autenticando usuario: {}", request);
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getGuuid(), user.getPassword()));
+        log.info("Autenticando usuario: {}", request);
+
         var jwt = jwtService.generateToken(user);
         return JwtAuthResponse.builder().token(jwt).build();
     }

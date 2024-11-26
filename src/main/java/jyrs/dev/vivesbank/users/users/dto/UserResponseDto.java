@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponseDto{
-        private String unique_id;
+        private String guuid;
         @NotBlank(message = "El nombre de usuario no puede estar vacío")
         String username;
         @NotBlank(message = "La ruta de la imagen no puede estar vacía")

@@ -33,15 +33,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String requestURI = request.getRequestURI();
-
-        // Evita que el filtro se aplique en las rutas públicas (como /auth/**)
-        if (requestURI.matches(".*/auth/.*")) {
-            log.info("Ruta pública detectada: {}, omitiendo filtro JWT", requestURI);
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         log.info("Iniciando el filtro de autenticación");
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
@@ -86,6 +77,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/vivesbank/" + "v1" + "/auth/signin") ||
+                path.startsWith("/vivesbank/" + "v1" + "/auth/signup");
     }
 }
 
