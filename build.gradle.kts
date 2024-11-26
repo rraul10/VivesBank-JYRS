@@ -37,7 +37,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
-    //implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security")
     //H2
     implementation("com.h2database:h2")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
@@ -62,7 +62,7 @@ dependencies {
     // Dependencias para Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     // Test Spring Security
-    //testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.security:spring-security-test")
 
 }
 
