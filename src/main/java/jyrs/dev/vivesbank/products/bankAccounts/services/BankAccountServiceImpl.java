@@ -7,6 +7,7 @@ import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountHaveCreditCard;
+import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountIbanException;
 import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFound;
 import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundByIban;
 import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
@@ -42,12 +44,11 @@ public class BankAccountServiceImpl implements BankAccountService {
     private WebSocketHandler webSocketService;
 
     @Autowired
-    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository, BankAccountMapper bankAccountMapper, WebSocketConfig webSocketConfig, BankAccountNotificationMapper bankAccountNotificationMapper) {
+    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository, BankAccountMapper bankAccountMapper, WebSocketHandler webSocketHandler, ObjectMapper mapper, BankAccountNotificationMapper bankAccountNotificationMapper) {
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
-        this.webSocketConfig = webSocketConfig;
-        this.webSocketService = webSocketConfig.webSocketProductosHandler();
-        this.mapper = new ObjectMapper();
+        this.webSocketService = webSocketHandler;
+        this.mapper = mapper != null ? mapper : new ObjectMapper();
         this.bankAccountNotificationMapper = bankAccountNotificationMapper;
     }
 
@@ -85,7 +86,6 @@ public class BankAccountServiceImpl implements BankAccountService {
     public BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest) {
         log.info("Guardando cuenta bancaria: " + bankAccountRequest);
 
-        // Generar un IBAN único
         String iban = generateUniqueIban();
 
         BankAccount bankAccount = bankAccountMapper.toBankAccount(bankAccountRequest);
@@ -117,7 +117,6 @@ public class BankAccountServiceImpl implements BankAccountService {
         log.info("Cuenta bancaria con ID " + id + " eliminada exitosamente.");
     }
 
-    // Generación de un IBAN único
     public String generateUniqueIban() {
         String iban;
         int attempts = 0;
@@ -125,56 +124,50 @@ public class BankAccountServiceImpl implements BankAccountService {
             iban = generateIban();
             attempts++;
             if (attempts > 1000) {
-                throw new IllegalStateException("No se pudo generar un IBAN único después de 1000 intentos.");
+                throw new BankAccountIbanException("No se pudo generar un IBAN único después de 1000 intentos.");
             }
-        } while (ibanExists(iban)); // Verifica que el IBAN no exista
+        } while (ibanExists(iban));
         return iban;
     }
 
-    // Verifica si el IBAN ya existe en la base de datos
-    private boolean ibanExists(String iban) {
+    public boolean ibanExists(String iban) {
         return bankAccountRepository.findByIban(iban).isPresent();
     }
 
-    // Genera un IBAN aleatorio y válido
-    private String generateIban() {
+    public String generateIban() {
         String countryCode = "ES";
-        String entityCode = "0128"; // Ejemplo de código de entidad
-        String accountNumber = generateRandomDigits(10); // Número de cuenta aleatorio
-        String ibanBase = entityCode + accountNumber + "142800"; // Construir base del IBAN
-
-        // Calcular el dígito de control
+        String entityCode = "0128";
+        String branchCode = "0001";
+        String accountControlDigits = "00";
+        String accountNumber = generateRandomDigits(10);
+        String ibanBase = entityCode + branchCode + accountControlDigits + accountNumber + "142800";
         int checkDigits = calculateControlDigits(ibanBase);
 
-        // Formar el IBAN final
-        return countryCode + String.format("%02d", checkDigits) + entityCode + accountNumber;
+        return countryCode + String.format("%02d", checkDigits) + entityCode + branchCode + accountControlDigits + accountNumber;
     }
 
-    private int calculateControlDigits(String ibanBase) {
+
+    public int calculateControlDigits(String ibanBase) {
         StringBuilder numericIban = new StringBuilder();
 
-        // Convertir letras a números si las hubiera
         for (char ch : ibanBase.toCharArray()) {
             if (Character.isDigit(ch)) {
                 numericIban.append(ch);
             } else {
-                numericIban.append((int) ch - 'A' + 10); // Convertir letras a números
+                numericIban.append((int) ch - 'A' + 10);
             }
         }
 
-        // Calcular el módulo 97
         String numericIbanStr = numericIban.toString();
-        int remainder = 0;
-        for (int i = 0; i < numericIbanStr.length(); i += 9) {
-            remainder = Integer.parseInt(remainder + numericIbanStr.substring(i, Math.min(i + 9, numericIbanStr.length()))) % 97;
-        }
+        BigInteger numericIbanBigInt = new BigInteger(numericIbanStr);
 
-        // Los dígitos de control se calculan como (98 - resto)
-        return 98 - remainder;
+        BigInteger remainder = numericIbanBigInt.mod(BigInteger.valueOf(97));
+
+        BigInteger checkDigits = BigInteger.valueOf(98).subtract(remainder);
+        return checkDigits.intValue();
     }
 
-    // Genera dígitos aleatorios de una longitud dada
-    private String generateRandomDigits(int length) {
+    public String generateRandomDigits(int length) {
         Random random = new Random();
         StringBuilder digits = new StringBuilder();
         for (int i = 0; i < length; i++) {
@@ -188,7 +181,7 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
-            webSocketService = this.webSocketConfig.webSocketProductosHandler();
+            webSocketService = this.webSocketConfig.webSocketBankAccountHandler();
         }
 
         try {
