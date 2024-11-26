@@ -38,10 +38,12 @@ public class JwtServiceImpl implements JwtService {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         log.info("Exctracting claim from token: " + token);
         final String username = extractUserName(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenSpired(token);
+        log.info("extrayendo username para comprobar validez: " + username);
+        log.info("username userDetails: " + userDetails.getUsername());
+        return (username.equals(((User) userDetails).getGuuid())) && !isTokenExpired(token);
     }
 
-    private boolean isTokenSpired(String token) {
+    private boolean isTokenExpired(String token) {
         Date expirationDate = extractExpiration(token);
         return expirationDate.before(new Date());
     }

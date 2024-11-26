@@ -64,7 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario no autorizado");
                 return;
             }
-
+            log.info("user encontrado : " + userDetails);
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 log.info("JWT válido");
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -79,11 +79,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return path.startsWith("/vivesbank/" + "v1" + "/auth/signin") ||
-                path.startsWith("/vivesbank/" + "v1" + "/auth/signup");
-    }
 }
 
