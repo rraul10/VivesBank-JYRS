@@ -47,7 +47,7 @@ public class UsersController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable String id) {
         log.info("Obteniendo user por id: " + id);
         return ResponseEntity.ok(usersService.getUserById(id));
     }
@@ -63,13 +63,13 @@ public class UsersController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserRequestDto userRequestDto) {
+    public ResponseEntity<UserResponseDto> updateUser(@PathVariable String id, @Valid @RequestBody UserRequestDto userRequestDto) {
         log.info("Actualizando user: " + id + ", " + userRequestDto);
         var result = usersService.updateUser(id,userRequestDto);
         return ResponseEntity.ok(result);
     }
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         log.info("Eliminando user por id: " + id);
         usersService.deleteUser(id);
         return ResponseEntity.noContent().build();

@@ -1,6 +1,5 @@
 package jyrs.dev.vivesbank.users.repository;
 
-import jyrs.dev.vivesbank.users.models.Direction;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 public class UserServiceImplTests {
     private final User user = User.builder()
             .username("usuario@correo.com")
-            .password("password123")
+            .password("17j$e7cS")
             .fotoPerfil("profile.jpg")
             .roles(Set.of( Role.USER))
             .build();
@@ -164,13 +164,13 @@ public class UserServiceImplTests {
     void saveUser(){
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("usuario@correo.com")
-                .password("password")
+                .password("17j$e7cS")
                 .fotoPerfil("foto.jpg")
                 .isDeleted(false)
                 .build();
         User user = User.builder()
                 .username("usuario@correo.com")
-                .password("password")
+                .password("17j$e7cS")
                 .fotoPerfil("foto.jpg")
                 .isDeleted(false)
                 .build();
@@ -199,7 +199,7 @@ public class UserServiceImplTests {
         Long userId = 1L;
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("nuevoUsuario")
-                .password("nuevaPassword")
+                .password("17j$e7cS")
                 .fotoPerfil("nuevaFoto.jpg")
                 .isDeleted(false)
                 .build();
@@ -207,7 +207,7 @@ public class UserServiceImplTests {
         User existingUser = User.builder()
                 .id(userId)
                 .username("usuarioAntiguo")
-                .password("passwordAntigua")
+                .password("17j$e7cS")
                 .fotoPerfil("fotoAntigua.jpg")
                 .isDeleted(false)
                 .build();
@@ -215,7 +215,7 @@ public class UserServiceImplTests {
         User updatedUser = User.builder()
                 .id(userId)
                 .username("nuevoUsuario")
-                .password("nuevaPassword")
+                .password("17j$e7cS")
                 .fotoPerfil("nuevaFoto.jpg")
                 .isDeleted(false)
                 .build();
@@ -256,7 +256,7 @@ public class UserServiceImplTests {
         Long userId = 1L;
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("nuevoUsuario")
-                .password("nuevaPassword")
+                .password("17j$e7cS")
                 .fotoPerfil("nuevaFoto.jpg")
                 .isDeleted(false)
                 .build();
