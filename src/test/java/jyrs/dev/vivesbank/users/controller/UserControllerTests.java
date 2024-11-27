@@ -22,6 +22,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
@@ -39,6 +42,7 @@ import java.util.Optional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
+@WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "USER"})
 public class UserControllerTests {
     private final String myEndpoint = "/vivesBank/v1/users";
     private final UserRequestDto userRequestDto = UserRequestDto.builder()
@@ -68,6 +72,18 @@ public class UserControllerTests {
     public UserControllerTests(UsersService usersService){
         this.usersService = usersService;
         mapper.registerModule(new JavaTimeModule());
+    }
+    @Test
+    @WithAnonymousUser
+    void NotAuthenticated() throws Exception {
+        // Localpoint
+        MockHttpServletResponse response = mockMvc.perform(
+                        get(myEndpoint)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertEquals(403, response.getStatus());
     }
 
     @Test
@@ -192,6 +208,22 @@ public class UserControllerTests {
         assertEquals(404, response.getStatus());
 
         verify(usersService, times(1)).getUserById("puZjCDm_xCc");
+    }
+
+    @Test
+    void getMyProfile() throws Exception {
+        when(usersService.getUserById(SecurityContextHolder.getContext().getAuthentication().getName())).thenReturn(responseDto);
+        MockHttpServletResponse response = mockMvc.perform(
+                        get(myEndpoint + "/me/profile")
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+        UserResponseDto res = mapper.readValue(response.getContentAsString(), UserResponseDto.class);
+        assertAll("getmyprofile",
+                () -> assertEquals(200, response.getStatus()),
+                () -> assertEquals(responseDto, res)
+        );
+
+        verify(usersService, times(1)).getUserById(SecurityContextHolder.getContext().getAuthentication().getName());
     }
     @Test
     void getUserByName() throws Exception {
