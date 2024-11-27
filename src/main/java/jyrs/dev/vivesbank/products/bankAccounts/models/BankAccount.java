@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import jyrs.dev.vivesbank.products.models.Product;
+import jyrs.dev.vivesbank.users.models.Client;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "BANK_ACCOUNTS")
 @EntityListeners(AuditingEntityListener.class)
-public class BankAccount extends Product {
+public class BankAccount{
     @Id
     private Long id;
     private String iban;
@@ -36,8 +37,11 @@ public class BankAccount extends Product {
     @JoinColumn(name = "CREDIT_CARD_ID")
     private CreditCard creditCard;
 
+    @OneToOne
+    @JoinColumn(name = "PRODUCT_ID")
+    private Product product;
+
     @ManyToOne
     @JoinColumn(name = "CLIENT_ID")
-    private
-    Client client;
+    private Client client;
 }

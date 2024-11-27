@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "CREDIT_CARDS")
 @EntityListeners(AuditingEntityListener.class)
-public class CreditCard extends Product {
+public class CreditCard {
     @Id
     private Long id;
     @Pattern(regexp = "\\d{16}", message = "The card number must have exactly 16 digits")

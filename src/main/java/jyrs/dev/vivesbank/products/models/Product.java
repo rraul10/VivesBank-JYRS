@@ -1,17 +1,32 @@
 package jyrs.dev.vivesbank.products.models;
 
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jyrs.dev.vivesbank.products.models.type.Type;
+
+import jyrs.dev.vivesbank.products.models.type.ProductType;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Builder
-public abstract class Product {
-    private long id;
-    private Type tipo;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "PRODUCTS" )
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private ProductType type;
+
+    private String specification;
     @Min(value = 0, message = "Tae cannot be negative")
     private Double tae;
     @CreationTimestamp
@@ -25,4 +40,5 @@ public abstract class Product {
     @Column(columnDefinition = "boolean default false")
     @Builder.Default
     private Boolean isDeleted = false;
+
 }
