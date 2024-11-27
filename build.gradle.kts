@@ -49,6 +49,8 @@ dependencies {
     // JWT (Json Web Token)
     implementation("com.auth0:java-jwt:4.4.0")
 
+    implementation ("org.springframework.boot:spring-boot-starter-data-mongodb")
+
     // Para usar con jackson el controlador las fechas: LocalDate, LocalDateTime, etc
     // Lo podemos usar en el test o en el controlador, si hiciese falta, por eso está aquí
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
