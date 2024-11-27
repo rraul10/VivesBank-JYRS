@@ -4,23 +4,25 @@ import jyrs.dev.vivesbank.products.dto.ProductDto;
 import jyrs.dev.vivesbank.products.dto.ProductResponseDto;
 import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
 import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.products.models.type.Type;
+import jyrs.dev.vivesbank.products.models.type.ProductType;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProductMapper {
 
-    public Product toProduct(ProductDto dto, Type type){
+    public Product toProduct(ProductDto dto, ProductType productType){
         return Product.builder()
-                .tipo(type)
+                .type(productType)
+                .specification(dto.getSpecification())
                 .tae(dto.getTae())
                 .build();
     }
 
-    public Product toProduct(ProductUpdatedDto dto, Product product, Type tipo){
+    public Product toProduct(ProductUpdatedDto dto, Product product, ProductType tipo){
         return Product.builder()
                 .id(product.getId())
-                .tipo(tipo)
+                .type(tipo)
+                .specification(product.getSpecification() != null ? dto.getSpecification() : product.getSpecification())
                 .tae(product.getTae() != null ? dto.getTae() : product.getTae())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
@@ -30,7 +32,7 @@ public class ProductMapper {
     public ProductResponseDto toProductReesponseDto(Product product){
         return ProductResponseDto.builder()
                 .id(product.getId())
-                .tipo(product.getTipo())
+                .nombre(product.getType())
                 .tae(product.getTae())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())

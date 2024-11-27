@@ -3,8 +3,12 @@ package jyrs.dev.vivesbank.products.controllers;
 
 import jyrs.dev.vivesbank.products.dto.ProductDto;
 import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
+import jyrs.dev.vivesbank.products.exceptions.ProductBadRequestException;
+import jyrs.dev.vivesbank.products.exceptions.ProductExistingException;
+import jyrs.dev.vivesbank.products.exceptions.ProductNotFoundException;
 import jyrs.dev.vivesbank.products.mapper.ProductMapper;
 import jyrs.dev.vivesbank.products.models.Product;
+import jyrs.dev.vivesbank.products.models.type.ProductType;
 import jyrs.dev.vivesbank.products.services.ProductServices;
 import jyrs.dev.vivesbank.utils.PageResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +38,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<PageResponse<Product>> findAll(
-            @RequestParam(required = false)Optional<String> type,
+            @RequestParam(required = false)Optional<ProductType> type,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -50,6 +54,20 @@ public class ProductController {
     public ResponseEntity<Product> getById(@PathVariable Long id) {
         log.info("Obteniendo producto con id: " + id);
         return ResponseEntity.ok(productServices.getById(id));
+    }
+
+    @GetMapping("/type/{type}")
+    public ResponseEntity<PageResponse<Product>> getByType(
+            @PathVariable String type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction)
+    {
+        log.info("Obteniendo productos de tipo: " + type);
+        Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name())? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(PageResponse.of(productServices.getByType(ProductType.valueOf(type), pageable), sortBy, direction));
     }
 
     @PostMapping
@@ -72,4 +90,16 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-}
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<String> handleProductNotFoundException(ProductNotFoundException ex) {
+        log.error("Producto no encontrado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ProductExistingException.class)
+    public ResponseEntity<String> handleProductExistingException(ProductExistingException ex) {
+        log.error("Error en los datos: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    }

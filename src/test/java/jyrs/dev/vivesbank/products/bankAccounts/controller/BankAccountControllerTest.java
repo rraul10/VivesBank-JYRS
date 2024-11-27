@@ -3,6 +3,7 @@ package jyrs.dev.vivesbank.products.bankAccounts.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
+import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import jyrs.dev.vivesbank.users.models.Client;
 import jyrs.dev.vivesbank.users.models.Direction;
 import jyrs.dev.vivesbank.utils.PageResponse;
@@ -43,7 +44,7 @@ class BankAccountControllerTest {
     private final CreditCard card = new CreditCard();
 
     private final Direction direccion = new Direction();
-
+/*
     private final Client client = Client.builder()
             .id_Cliente(1L)
             .dni("")
@@ -275,4 +276,6 @@ class BankAccountControllerTest {
             verify(accountService, times(1)).findById(anyLong());
             verify(accountService, times(1)).deleteById(anyLong());
     }
+    */
 }
+

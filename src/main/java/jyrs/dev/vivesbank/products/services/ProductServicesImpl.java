@@ -2,10 +2,11 @@ package jyrs.dev.vivesbank.products.services;
 
 import jyrs.dev.vivesbank.products.dto.ProductDto;
 import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
+import jyrs.dev.vivesbank.products.exceptions.ProductExistingException;
 import jyrs.dev.vivesbank.products.exceptions.ProductNotFoundException;
 import jyrs.dev.vivesbank.products.mapper.ProductMapper;
 import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.products.models.type.Type;
+import jyrs.dev.vivesbank.products.models.type.ProductType;
 import jyrs.dev.vivesbank.products.repositories.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class ProductServicesImpl implements ProductServices {
     }
 
     @Override
-    public Page<Product> getAll(Optional<String> tipo,
+    public Page<Product> getAll(Optional<ProductType> tipo,
                                 Pageable pageable) {
         log.info("Obteniendo todos los productos paginados y ordenados con {}", pageable);
         Specification<Product> specTypeAccount = ((root, query, criteriaBuilder) ->
@@ -49,14 +50,32 @@ public class ProductServicesImpl implements ProductServices {
         return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
 
     }
+    @Override
+    public Page<Product> getByType(ProductType type, Pageable pageable) {
+        return productRepository.findAllByType(type, pageable);
+    }
+
+    private Boolean checkProduct(String spec){
+        log.info("Buscando producto existento: " +spec);
+        if(productRepository.findBySpecificationContainingIgnoreCase(spec).isPresent()){
+            return true;
+        }else{
+            return false;
+        }
+    }
 
     @Override
     public Product save(ProductDto productDto) {
         log.info("Creando producto");
-        var tipo = productDto.getTipo();
-        var res = productRepository.save(productMapper.toProduct(productDto, tipo));
-        //onChange(Notificacion.Tipo.CREATE, res);
-        return res;
+        if(checkProduct(productDto.getSpecification())){
+            throw new ProductExistingException(productDto.getSpecification());
+        }else{
+            ProductType tipo = productDto.getProductType();
+            var res = productRepository.save(productMapper.toProduct(productDto, tipo));
+            //onChange(Notificacion.Tipo.CREATE, res);
+            return res;
+        }
+
     }
 
     @Override

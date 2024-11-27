@@ -2,7 +2,8 @@ package jyrs.dev.vivesbank.products.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jyrs.dev.vivesbank.products.models.type.Type;
+
+import jyrs.dev.vivesbank.products.models.type.ProductType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,8 +22,11 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Enumerated
-    private Type tipo;
+
+    @Enumerated(EnumType.STRING)
+    private ProductType type;
+
+    private String specification;
     @Min(value = 0, message = "Tae cannot be negative")
     private Double tae;
     @CreationTimestamp
@@ -37,7 +41,4 @@ public class Product {
     @Builder.Default
     private Boolean isDeleted = false;
 
-    public void setTae(Type tipo) {
-        this.tae = tipo.getTaeValue();
-    }
 }
