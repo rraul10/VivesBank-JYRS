@@ -13,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +53,16 @@ public class UsersController {
         log.info("Obteniendo user por id: " + id);
         return ResponseEntity.ok(usersService.getUserById(id));
     }
+    @GetMapping("/me/profile")
+    public ResponseEntity<UserResponseDto> me(@AuthenticationPrincipal User user) {
+        log.info("Obteniendo usuario");
+        return ResponseEntity.ok(usersService.getUserById(user.getGuuid()));
+    }
+    @PutMapping("/me/profile")
+    public ResponseEntity<UserResponseDto> updateMe(@AuthenticationPrincipal User user, @Valid @RequestBody UserRequestDto userRequest) {
+        log.info("updateMe: user: {}, userRequest: {}", user, userRequest);
+        return ResponseEntity.ok(usersService.updateUser(user.getGuuid(), userRequest));
+    }
     @GetMapping("/name/{name}")
     public ResponseEntity<UserResponseDto> getUserByName(@PathVariable String name) {
         log.info("Obteniendo user por name: " + name);
@@ -72,6 +84,13 @@ public class UsersController {
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         log.info("Eliminando user por id: " + id);
         usersService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/me/profile")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Void> deleteMe(@AuthenticationPrincipal User user) {
+        log.info("deleteMe: user: {}", user);
+        usersService.deleteUser(user.getGuuid());
         return ResponseEntity.noContent().build();
     }
 

@@ -9,6 +9,7 @@ import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.utils.PageResponse;
 import jyrs.dev.vivesbank.utils.PaginationLinksUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -34,11 +35,12 @@ public class ClientRestController {
 
     private final ClientsService service;
     private final PaginationLinksUtils paginationLinksUtils;
-
+    @Autowired
     public ClientRestController(ClientsService service, PaginationLinksUtils paginationLinksUtils) {
         this.service = service;
         this.paginationLinksUtils = paginationLinksUtils;
     }
+
 
     @GetMapping
     public ResponseEntity<PageResponse<ClientResponse>> getClients(

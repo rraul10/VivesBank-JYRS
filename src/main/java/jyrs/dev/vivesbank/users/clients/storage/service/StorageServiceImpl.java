@@ -7,6 +7,7 @@ import jyrs.dev.vivesbank.users.clients.storage.exceptions.StorageInternal;
 import jyrs.dev.vivesbank.users.clients.storage.exceptions.StorageNotFound;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -32,7 +33,7 @@ public class StorageServiceImpl implements StorageService{
 
     private final Path rootLocation;
 
-
+    @Autowired
     public StorageServiceImpl(@Value("${upload.root-location}") String path) {
         this.rootLocation = Paths.get(path);
     }
