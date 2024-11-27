@@ -16,13 +16,15 @@ public class BankAccountResponse {
     private double balance;
     @Nullable
     private CreditCardResponse creditCard;
+    private Long clientId;
 
     @JsonCreator
     public BankAccountResponse(
             @JsonProperty("iban") String iban,
             @JsonProperty("accountType") AccountType accountType,
             @JsonProperty("balance") double balance,
-            @JsonProperty("creditCard") CreditCardResponse creditCard) {
+            @JsonProperty("creditCard") CreditCardResponse creditCard,
+            @JsonProperty("clientId") Long clientId) {
         this.iban = iban;
         this.accountType = accountType;
         this.balance = balance;

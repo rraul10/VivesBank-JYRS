@@ -1,6 +1,5 @@
 package jyrs.dev.vivesbank.users.clients.controller;
 
-import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -14,8 +13,6 @@ import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
-import jyrs.dev.vivesbank.utils.PageResponse;
-import jyrs.dev.vivesbank.utils.PaginationLinksUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
