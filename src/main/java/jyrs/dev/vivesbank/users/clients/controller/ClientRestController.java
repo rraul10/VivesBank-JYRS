@@ -6,6 +6,7 @@ import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
+import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.utils.PageResponse;
 import jyrs.dev.vivesbank.utils.PaginationLinksUtils;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -91,12 +93,14 @@ public class ClientRestController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClientResponse> createCliente(
+            @AuthenticationPrincipal User user,
             @RequestPart("clientRequestCreate") @Valid ClientRequestCreate clientRequestCreate,
             @RequestPart("file") MultipartFile file
     ) {
+
         if (!file.isEmpty()) {
 
-            ClientResponse cliente = service.create(clientRequestCreate,file);
+            ClientResponse cliente = service.create(clientRequestCreate,file,user);
             return ResponseEntity.status(HttpStatus.CREATED).body(cliente);
 
         } else {

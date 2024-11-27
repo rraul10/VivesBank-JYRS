@@ -96,14 +96,14 @@ public class ClientsServiceImpl implements ClientsService {
     }
 
     @Override
-    public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image) {
+    public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image,User user) {
 
         var cliente = mapper.toClientCreate(clienteRequest);
+
 
         repository.getByDni(cliente.getDni()).ifPresent(existingClient -> {
             throw new ClienteExists(cliente.getDni());
         });
-
 
 
         var tipo = "DNI-" + cliente.getEmail();
@@ -111,7 +111,7 @@ public class ClientsServiceImpl implements ClientsService {
         String imageUrl = imageStored;
 
         cliente.setFotoDni(imageUrl);
-
+        cliente.setUser(user);
         var clienteGuardado = repository.save(cliente);
 
         return mapper.toResponse(clienteGuardado);

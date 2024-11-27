@@ -3,6 +3,7 @@ package jyrs.dev.vivesbank.users.clients.service;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
+import jyrs.dev.vivesbank.users.models.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,7 +20,7 @@ public interface ClientsService {
 
     ClientResponse getByDni(String dni);
 
-    ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image);
+    ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image, User user);
 
     ClientResponse update(Long id, ClientRequestUpdate clienteRequest);
 

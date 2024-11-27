@@ -5,6 +5,7 @@ import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClienteExists;
 import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
@@ -48,12 +49,22 @@ class ClientsServiceImplTest {
     private ClientRequestCreate clienteCreate;
     private ClientRequestUpdate clienteUpdate;
     private ClientResponse clientResponse;
+    private User user;
+
 
     private Address address;
     private AddressDto addressDto;
 
     @BeforeEach
     void setUp() {
+        user = User.builder()
+                .id(1L)
+                .guuid("12345-abcde-67890")
+                .username("test@example.com")
+                .password("password123")
+                .fotoPerfil("path/to/foto.png")
+                .roles(Set.of(Role.USER))
+                .build();
         address = Address.builder()
                 .calle("TEST")
                 .numero(1)
@@ -317,15 +328,15 @@ class ClientsServiceImplTest {
     void create() {
         var tipo = "DNI-"+cliente.getEmail();
         MultipartFile image = mock(MultipartFile.class);
-        //when(image.getOriginalFilename()).thenReturn("dni.jpg");
 
         when(mapper.toClientCreate(clienteCreate)).thenReturn(cliente);
         when(storageService.store(image,tipo)).thenReturn("path/dni.jpg");
 
+        when(repository.getByDni(cliente.getDni())).thenReturn(Optional.ofNullable(cliente));
         when(repository.save(cliente)).thenReturn(cliente);
         when(mapper.toResponse(cliente)).thenReturn(clientResponse);
 
-        ClientResponse result = service.create(clienteCreate, image);
+        ClientResponse result = service.create(clienteCreate, image,user);
 
         assertAll(
                 () -> assertNotNull(result),
@@ -334,9 +345,29 @@ class ClientsServiceImplTest {
 
         verify(mapper, times(1)).toClientCreate(clienteCreate);
         verify(storageService, times(1)).store(image, tipo);
+        verify(repository, times(1)).getByDni(cliente.getDni());
         verify(repository, times(1)).save(cliente);
         verify(mapper, times(1)).toResponse(cliente);
 
+    }
+    @Test
+    void createExists() {
+        var tipo = "DNI-"+cliente.getEmail();
+        MultipartFile image = mock(MultipartFile.class);
+
+        when(mapper.toClientCreate(clienteCreate)).thenReturn(cliente);
+        when(storageService.store(image,tipo)).thenReturn("path/dni.jpg");
+        when(repository.getByDni(cliente.getDni())).thenReturn(Optional.empty());
+
+        //ClientResponse result = service.create(clienteCreate, image,user);
+        var exception = assertThrows(ClienteExists.class, () -> service.create(clienteCreate,image,user));
+
+        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+
+        verify(mapper, times(1)).toClientCreate(clienteCreate);
+        verify(storageService, times(1)).store(image, tipo);
+        verify(repository, times(1)).getByDni(cliente.getDni());
+        verify(repository, times(1)).save(any());
     }
 
     @Test

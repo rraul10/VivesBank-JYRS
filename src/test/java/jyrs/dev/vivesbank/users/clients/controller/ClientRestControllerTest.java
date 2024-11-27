@@ -71,12 +71,21 @@ class ClientRestControllerTest {
     private ClientRequestCreate clienteCreate;
     private ClientRequestUpdate clienteUpdate;
     private ClientResponse clientResponse;
+    private User user;
 
     private Address address;
     private AddressDto addressDto;
 
     @BeforeEach
     void setUp() {
+        user = User.builder()
+                .id(1L)
+                .guuid("12345-abcde-67890")
+                .username("test@example.com")
+                .password("password123")
+                .fotoPerfil("path/to/foto.png")
+                .roles(Set.of(Role.USER))
+                .build();
 
         address = Address.builder()
                 .calle("TEST")
@@ -347,7 +356,7 @@ class ClientRestControllerTest {
                 MediaType.APPLICATION_JSON_VALUE,
                 mapper.writeValueAsBytes(clienteCreate)
         );
-        when(service.create(any(ClientRequestCreate.class), any(MultipartFile.class))).thenReturn(clientResponse);
+        when(service.create(any(ClientRequestCreate.class), any(MultipartFile.class),user)).thenReturn(clientResponse);
 
         MockHttpServletResponse response = mockMvc.perform(
                 multipart(endpoint)
@@ -365,7 +374,7 @@ class ClientRestControllerTest {
                 () -> assertEquals("Juan", res.getNombre())
         );
 
-        verify(service, times(1)).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, times(1)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
@@ -394,7 +403,7 @@ class ClientRestControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
 
-        verify(service, never()).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, never()).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
@@ -435,7 +444,7 @@ class ClientRestControllerTest {
                 () -> assertEquals(400, response.getStatus())
         );
 
-        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
@@ -476,7 +485,7 @@ class ClientRestControllerTest {
                 () -> assertEquals(400, response.getStatus())
         );
 
-        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
 
