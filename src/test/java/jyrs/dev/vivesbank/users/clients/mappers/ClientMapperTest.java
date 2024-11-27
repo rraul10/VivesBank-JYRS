@@ -93,6 +93,7 @@ class ClientMapperTest {
     @Test
     void toResponseOk(){
         User use = new User(1L,
+                "puZjCDm_xCg",
                 "TEST",
                 "TEST",
                 "TEST",
