@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +41,7 @@ import java.util.Optional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureJsonTesters
+@WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "USER"})
 @ExtendWith(MockitoExtension.class)
 class BankAccountControllerTest {
     private final String myEndpoint = "/cuentas";
