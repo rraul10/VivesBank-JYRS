@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Min;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.users.models.Client;
+import jyrs.dev.vivesbank.users.clients.models.Client;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,8 +21,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "BANK_ACCOUNTS")
 @EntityListeners(AuditingEntityListener.class)
-public class BankAccount{
+public class BankAccount {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String iban;
     private AccountType accountType;
@@ -30,18 +31,20 @@ public class BankAccount{
     @Column(columnDefinition = "double precision default 0.0")
     @Builder.Default
     private Double balance = 0.0;
-
+    @Min(value = 0, message = "Tae cannot be negative")
+    private Double tae;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToOne
     @JoinColumn(name = "CREDIT_CARD_ID")
     private CreditCard creditCard;
 
+    @ManyToOne
+    @JoinColumn(name = "CLIENT_ID")
+    private Client client;
+
     @OneToOne
     @JoinColumn(name = "PRODUCT_ID")
     private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "CLIENT_ID")
-    private Client client;
 }

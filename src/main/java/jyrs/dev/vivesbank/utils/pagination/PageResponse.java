@@ -1,6 +1,5 @@
-package jyrs.dev.vivesbank.utils;
+package jyrs.dev.vivesbank.utils.pagination;
 
-import jyrs.dev.vivesbank.users.models.User;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -33,5 +32,4 @@ public record PageResponse<T>(
                 direction
         );
     }
-
 }
