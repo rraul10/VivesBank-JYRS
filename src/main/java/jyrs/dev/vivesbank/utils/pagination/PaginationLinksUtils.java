@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.utils;
+package jyrs.dev.vivesbank.utils.pagination;
 
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
@@ -6,6 +6,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class PaginationLinksUtils {
+
     public String createLinkHeader(Page<?> page, UriComponentsBuilder uriBuilder) {
         final StringBuilder linkHeader = new StringBuilder();
 
@@ -50,4 +51,5 @@ public class PaginationLinksUtils {
             linkHeader.append(", ");
         }
     }
+
 }

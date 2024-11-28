@@ -3,14 +3,13 @@ package jyrs.dev.vivesbank.products.controllers;
 
 import jyrs.dev.vivesbank.products.dto.ProductDto;
 import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
-import jyrs.dev.vivesbank.products.exceptions.ProductBadRequestException;
 import jyrs.dev.vivesbank.products.exceptions.ProductExistingException;
 import jyrs.dev.vivesbank.products.exceptions.ProductNotFoundException;
 import jyrs.dev.vivesbank.products.mapper.ProductMapper;
 import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.products.models.type.ProductType;
 import jyrs.dev.vivesbank.products.services.ProductServices;
-import jyrs.dev.vivesbank.utils.PageResponse;
+import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
