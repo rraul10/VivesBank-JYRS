@@ -18,7 +18,10 @@ public class Movement {
     @Id
     private String id;
 
+    @DBRef
     private BankAccount origin;
+
+    @DBRef
     private BankAccount destination;
 
     private String typeMovement;

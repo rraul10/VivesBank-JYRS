@@ -1,6 +1,7 @@
 package jyrs.dev.vivesbank.movements.services;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
+import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import org.springframework.stereotype.Service;
@@ -14,17 +15,16 @@ public class MovementsServiceImpl implements MovementsService {
 
     private final MovementsRepository movementsRepository;
     private final ClientsRepository clientsRepository;
+    private final MovementValidator movementValidator;
 
     @Override
     public void createMovement(String senderClientId, String recipientClientId,
                                BankAccount origin, BankAccount destination, String typeMovement,
                                Double amount) {
 
-        // We are looking for the sending client
         var senderClient = clientsRepository.findById(Long.parseLong(senderClientId))
                 .orElseThrow(() -> new IllegalArgumentException("Sender Client not found"));
 
-        // We look for the target client.
         var recipientClient = recipientClientId != null
                 ? clientsRepository.findById(Long.parseLong(recipientClientId))
                 .orElseThrow(() -> new IllegalArgumentException("Recipient Client not found"))
@@ -51,13 +51,12 @@ public class MovementsServiceImpl implements MovementsService {
         var movement = movementsRepository.findById(movementId)
                 .orElseThrow(() -> new IllegalArgumentException("Movement not found"));
 
-        if (!movement.getIsReversible() || movement.getTransferDeadlineDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Movement cannot be reversed");
-        }
+        movementValidator.validateReversible(movement);
 
         movement.setIsReversible(false);
         movementsRepository.save(movement);
     }
+
 
     @Override
     public List<Movement> getMovementsByClientId(String clientId) {
