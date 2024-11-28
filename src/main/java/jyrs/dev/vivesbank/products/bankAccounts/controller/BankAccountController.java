@@ -20,7 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/cuentas")
+@RequestMapping("${api.path:/api}/${api.version:/v1}/accounts")
 @Slf4j
 public class BankAccountController {
 
