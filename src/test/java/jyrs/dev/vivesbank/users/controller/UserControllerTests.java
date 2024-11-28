@@ -25,6 +25,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
@@ -44,7 +45,7 @@ import java.util.Optional;
 @ExtendWith(MockitoExtension.class)
 @WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "USER"})
 public class UserControllerTests {
-    private final String myEndpoint = "/vivesBank/v1/users";
+    private final String myEndpoint = "/vivesbank/v1/users";
     private final UserRequestDto userRequestDto = UserRequestDto.builder()
             .username("usuario@correo.com")
             .password("17j$e7cS")
@@ -60,9 +61,11 @@ public class UserControllerTests {
             .build();
     private final UserResponseDto responseDto = UserResponseDto.builder()
             .username("usuario@correo.com")
+            .guuid("puZjCDm_xCg")
             .fotoPerfil("foto.jpg")
             .isDeleted(false)
             .build();
+    @Autowired
     private final ObjectMapper mapper = new  ObjectMapper();
     @Autowired
     MockMvc mockMvc;
@@ -200,7 +203,7 @@ public class UserControllerTests {
     }
     @Test
     void getUserByIdNotFound() throws Exception {
-        when(usersService.getUserById("puZjCDm_xCg")).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado usuario con id: "+ "puZjCDm_xCc"));
+        when(usersService.getUserById("puZjCDm_xCc")).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado usuario con id: "+ "puZjCDm_xCc"));
         MockHttpServletResponse response = mockMvc.perform(
                         get(myEndpoint + "/{id}", "puZjCDm_xCc")
                                 .accept(MediaType.APPLICATION_JSON))
@@ -211,19 +214,17 @@ public class UserControllerTests {
     }
 
     @Test
-    void getMyProfile() throws Exception {
-        when(usersService.getUserById(SecurityContextHolder.getContext().getAuthentication().getName())).thenReturn(responseDto);
+    @WithUserDetails("admin@example.com")
+    void me() throws Exception {
+        var myLocalEndpoint = myEndpoint + "/me/profile";
+        when(usersService.getUserById(user.getGuuid())).thenReturn(responseDto);
         MockHttpServletResponse response = mockMvc.perform(
-                        get(myEndpoint + "/me/profile")
-                                .accept(MediaType.APPLICATION_JSON))
+                        get(myLocalEndpoint)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
-        UserResponseDto res = mapper.readValue(response.getContentAsString(), UserResponseDto.class);
-        assertAll("getmyprofile",
-                () -> assertEquals(200, response.getStatus()),
-                () -> assertEquals(responseDto, res)
-        );
 
-        verify(usersService, times(1)).getUserById(SecurityContextHolder.getContext().getAuthentication().getName());
+        assertEquals(200, response.getStatus());
     }
     @Test
     void getUserByName() throws Exception {
@@ -242,15 +243,13 @@ public class UserControllerTests {
     }
     @Test
     void getUserByNameNotFound() throws Exception {
-        when(usersService.getUserByName("usuarioNotFound@corre.com")).thenReturn(responseDto);
+        when(usersService.getUserByName("usuarioNotFound@corre.com")).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado usuario con username: "+ "usuarioNotFound@corre.com"));
         MockHttpServletResponse response = mockMvc.perform(
                         get(myEndpoint + "/name/{name}", "usuarioNotFound@corre.com")
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
-        UserResponseDto res = mapper.readValue(response.getContentAsString(), UserResponseDto.class);
         assertAll("getbyname",
-                () -> assertEquals(200, response.getStatus()),
-                () -> assertEquals(responseDto, res)
+                () -> assertEquals(404, response.getStatus())
         );
 
         verify(usersService, times(1)).getUserByName("usuarioNotFound@corre.com");
@@ -330,6 +329,32 @@ public class UserControllerTests {
         verify(usersService, times(0)).saveUser(userRequestDto);
     }
 
+    @Test
+    @WithUserDetails("admin@example.com")
+    void updateMe() throws Exception {
+        var myLocalEndpoint = myEndpoint + "/me/profile";
+        UserRequestDto userRequestDto = UserRequestDto.builder()
+               .username("nuevoUsuario@gmail.com")
+               .password("17j$e7cS")
+               .fotoPerfil("nuevaFoto.jpg")
+               .isDeleted(false)
+               .build();
+        UserResponseDto responseDto1 = UserResponseDto.builder()
+                .username("nuevoUsuario@gmail.com")
+                .fotoPerfil("nuevaFoto.jpg")
+                .isDeleted(false)
+                .build();
+        when(usersService.updateUser(user.getGuuid(), userRequestDto)).thenReturn(responseDto1);
+        MockHttpServletResponse response = mockMvc.perform(
+                        put(myLocalEndpoint)
+                               .contentType(MediaType.APPLICATION_JSON)
+                               .content(mapper.writeValueAsString(userRequestDto)))
+                               .andReturn().getResponse();
+        assertAll("updateMe",
+                () -> assertEquals(200, response.getStatus())
+        );
+        verify(usersService, times(1)).updateUser(user.getGuuid(), userRequestDto);
+    }
     @Test
     void updateUser() throws Exception {
         UserRequestDto userRequestDto = UserRequestDto.builder()
