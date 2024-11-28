@@ -3,6 +3,7 @@ package jyrs.dev.vivesbank.users.clients.models;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.users.models.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,8 +64,9 @@ public class Client {
     @Email(message = "El email debe tener un formato válido")
     private String email;
 
-    @ElementCollection
-    private List<String> cuentas; //TODO Cambiar string por clase cuentas
+    @OneToMany
+    @JoinColumn(name = "BANK_ACCOUNTS_id")
+    private List<BankAccount> cuentas;
 
     public void setUsername() {
         this.email = user.getUsername();

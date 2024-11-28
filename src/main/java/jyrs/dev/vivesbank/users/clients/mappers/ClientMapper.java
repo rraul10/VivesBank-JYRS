@@ -1,5 +1,8 @@
 package jyrs.dev.vivesbank.users.clients.mappers;
 
+import jyrs.dev.vivesbank.products.dto.ProductResponseDto;
+import jyrs.dev.vivesbank.products.mapper.ProductMapper;
+import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
@@ -8,8 +11,16 @@ import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class ClientMapper {
+
+    private final ProductMapper productMapper;
+
+    public ClientMapper(ProductMapper productMapper) {
+        this.productMapper = productMapper;
+    }
 
 
     public Client toClientCreate(ClientRequestCreate clientRequestCreate) {
@@ -54,7 +65,7 @@ public class ClientMapper {
                 .numTelefono(client.getNumTelefono())
                 .email(client.getEmail())
                 .direccion(toAddresDto(client.getDireccion()))
-                .cuentas(client.getCuentas())
+                .cuentas((client.getCuentas()))
                 .build();
     }
 
@@ -87,6 +98,8 @@ public class ClientMapper {
                 address.getCp()
         );
     }
+
+
 
 
 }
