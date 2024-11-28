@@ -2,6 +2,7 @@ package jyrs.dev.vivesbank.movements.controller;
 
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
+import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +19,8 @@ public class MovementsController {
     public ResponseEntity<Void> createMovement(
             @RequestParam String senderClientId,
             @RequestParam(required = false) String recipientClientId,
-            @RequestParam String origin,
-            @RequestParam String destination,
+            @RequestParam BankAccount origin,
+            @RequestParam BankAccount destination,
             @RequestParam String typeMovement,
             @RequestParam Double amount) {
 
