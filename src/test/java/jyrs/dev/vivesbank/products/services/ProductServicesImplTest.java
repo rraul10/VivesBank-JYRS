@@ -1,16 +1,14 @@
 package jyrs.dev.vivesbank.products.services;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-import jyrs.dev.vivesbank.products.dto.ProductDto;
-import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
-import jyrs.dev.vivesbank.products.exceptions.ProductExistingException;
-import jyrs.dev.vivesbank.products.exceptions.ProductNotFoundException;
-import jyrs.dev.vivesbank.products.mapper.ProductMapper;
-import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.products.models.type.ProductType;
-import jyrs.dev.vivesbank.products.repositories.ProductRepository;
+import jyrs.dev.vivesbank.products.base.dto.ProductDto;
+import jyrs.dev.vivesbank.products.base.dto.ProductUpdatedDto;
+import jyrs.dev.vivesbank.products.base.exceptions.ProductExistingException;
+import jyrs.dev.vivesbank.products.base.exceptions.ProductNotFoundException;
+import jyrs.dev.vivesbank.products.base.mapper.ProductMapper;
+import jyrs.dev.vivesbank.products.base.models.Product;
+import jyrs.dev.vivesbank.products.base.models.type.ProductType;
+import jyrs.dev.vivesbank.products.base.repositories.ProductRepository;
+import jyrs.dev.vivesbank.products.base.services.ProductServicesImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,7 +16,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 

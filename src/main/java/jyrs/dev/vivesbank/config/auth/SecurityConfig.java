@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/users").permitAll())
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT, "/vivesbank/" + apiVersion + "/users/{id}").hasAnyRole("ADMIN", "USER"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, "/vivesbank/" + apiVersion + "/users/{id}").hasAnyRole("ADMIN", "USER"))
+                .authorizeHttpRequests(request ->request.requestMatchers("/api/creditcard/**").permitAll())
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;
 

@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
-import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.users.models.Client;
+import jyrs.dev.vivesbank.products.base.models.Product;
+//import jyrs.dev.vivesbank.users.models.Client;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,7 +41,7 @@ public class BankAccount{
     @JoinColumn(name = "PRODUCT_ID")
     private Product product;
 
-    @ManyToOne
+ /*   @ManyToOne
     @JoinColumn(name = "CLIENT_ID")
-    private Client client;
+    private Client client;*/
 }
