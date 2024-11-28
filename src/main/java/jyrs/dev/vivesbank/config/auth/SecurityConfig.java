@@ -48,9 +48,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,"/vivesbank/" + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, "/vivesbank/" + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,"/vivesbank/" + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements").hasRole("ADMIN")) // GET ALL MOVEMENTS
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements/client/{clientId}").hasAnyRole("USER", "ADMIN")) // GET MOVEMENTS BY CLIENT ID
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements/tipo/{typeMovement}").hasRole("ADMIN")) // GET MOVEMENTS BY TYPE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/movements").hasAnyRole("ADMIN")) // CREATE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/movements/{id}/reverse").hasAnyRole("CLIENT")) // Reverse movement
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank/" + apiVersion + "/movements/{id}").hasRole("CLIENT")) // DELETE MOVEMENT BY ID
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;
-
         return http.build();
     }
     @Bean

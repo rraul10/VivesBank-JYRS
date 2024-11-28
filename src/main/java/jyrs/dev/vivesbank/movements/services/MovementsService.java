@@ -14,4 +14,11 @@ public interface MovementsService {
     void reverseMovement(String movementId);
 
     List<Movement> getMovementsByClientId(String clientId);
+
+    List<Movement> getAllMovements();
+
+    List<Movement> getMovementsByTipo(String typeMovement);
+
+    void deleteMovement(String movementId);
 }
+

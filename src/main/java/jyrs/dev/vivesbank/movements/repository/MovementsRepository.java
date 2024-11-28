@@ -10,4 +10,5 @@ import java.util.List;
 public interface MovementsRepository extends MongoRepository<Movement, String> {
     List<Movement> findBySenderClient_Id(String clientId);
     List<Movement> findByRecipientClient_Id(String clientId);
+    List<Movement> findByTypeMovement(String typeMovement);
 }

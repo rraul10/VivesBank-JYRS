@@ -79,10 +79,9 @@ public class MovementsServiceImpl implements MovementsService {
 
     @Override
     public void deleteMovement(String movementId) {
-        var movement = movementsRepository.findById(movementId)
-                .orElseThrow(() -> new IllegalArgumentException("Movement not found"));
-
-        movementsRepository.delete(movement);
+        
     }
+
+
 }
 

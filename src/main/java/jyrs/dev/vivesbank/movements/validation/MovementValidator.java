@@ -1,9 +1,12 @@
 package jyrs.dev.vivesbank.movements.validation;
 
 import jyrs.dev.vivesbank.movements.models.Movement;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 
+@Service
 public class MovementValidator {
     public void validateReversible(Movement movement) {
 
