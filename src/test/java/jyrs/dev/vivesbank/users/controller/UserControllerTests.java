@@ -8,6 +8,7 @@ import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
 import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
+import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
