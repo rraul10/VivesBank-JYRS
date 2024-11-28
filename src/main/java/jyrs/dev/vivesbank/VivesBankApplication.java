@@ -8,8 +8,8 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
-@EnableCaching // Habilitamos el caché a nivel de aplicación
-@EnableJpaAuditing // Habilitamos la auditoría, idual para el tiempo de creación y modificación
+@EnableCaching
+@EnableJpaAuditing
 @Slf4j
 public class VivesBankApplication implements CommandLineRunner {
 
