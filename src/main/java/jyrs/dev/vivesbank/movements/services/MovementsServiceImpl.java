@@ -7,6 +7,7 @@ import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -63,9 +64,12 @@ public class MovementsServiceImpl implements MovementsService {
         var sentMovements = movementsRepository.findBySenderClient_Id(clientId);
         var receivedMovements = movementsRepository.findByRecipientClient_Id(clientId);
 
-        sentMovements.addAll(receivedMovements);
-        return sentMovements;
+        List<Movement> allMovements = new ArrayList<>(sentMovements);
+        allMovements.addAll(receivedMovements);
+
+        return allMovements;
     }
+
 
     @Override
     public List<Movement> getAllMovements() {
@@ -73,7 +77,7 @@ public class MovementsServiceImpl implements MovementsService {
     }
 
     @Override
-    public List<Movement> getMovementsByTipo(String typeMovement) {
+    public List<Movement> getMovementsByType(String typeMovement) {
         return movementsRepository.findByTypeMovement(typeMovement);
     }
 

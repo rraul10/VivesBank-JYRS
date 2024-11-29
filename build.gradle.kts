@@ -45,11 +45,15 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    // Para manejar los JWT tokens
-    // JWT (Json Web Token)
     implementation("com.auth0:java-jwt:4.4.0")
 
     implementation ("org.springframework.boot:spring-boot-starter-data-mongodb")
+
+    implementation ("org.springframework.boot:spring-boot-starter-web")
+
+    testImplementation ("org.springframework.boot:spring-boot-starter-test")
+    testImplementation ("org.testcontainers:junit-jupiter:1.17.6")
+    testImplementation ("org.testcontainers:mongodb:1.17.6")
 
     // Para usar con jackson el controlador las fechas: LocalDate, LocalDateTime, etc
     // Lo podemos usar en el test o en el controlador, si hiciese falta, por eso está aquí

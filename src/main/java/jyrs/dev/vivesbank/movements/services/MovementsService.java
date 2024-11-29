@@ -17,7 +17,7 @@ public interface MovementsService {
 
     List<Movement> getAllMovements();
 
-    List<Movement> getMovementsByTipo(String typeMovement);
+    List<Movement> getMovementsByType(String typeMovement);
 
     void deleteMovement(String movementId);
 }
