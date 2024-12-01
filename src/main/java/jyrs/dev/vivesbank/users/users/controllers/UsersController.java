@@ -1,13 +1,16 @@
 package jyrs.dev.vivesbank.users.users.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
 import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
+import jyrs.dev.vivesbank.utils.pagination.PaginationLinksUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,9 +31,11 @@ import java.util.Optional;
 @RequestMapping("${api.path:/api}/${api.version:/v1}/users")
 public class UsersController {
     private final UsersService usersService;
+    private final PaginationLinksUtils paginationLinksUtils;
     @Autowired
-    public UsersController(UsersService usersService) {
+    public UsersController(UsersService usersService, PaginationLinksUtils paginationLinksUtils) {
         this.usersService = usersService;
+        this.paginationLinksUtils = paginationLinksUtils;
     }
 
     @GetMapping
@@ -39,12 +45,16 @@ public class UsersController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            HttpServletRequest request
     ){
         log.info("Obteniendo a los usuarios con las siguientes condiciones: " + username + "," + isDeleted + "," + size + "," + sortBy + "," + direction);
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        var pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(PageResponse.of(usersService.getAllUsers(username, isDeleted, pageable), sortBy, direction));
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
+        Page<UserResponseDto> pageResult = usersService.getAllUsers(username, isDeleted, PageRequest.of(page, size, sort));
+        return ResponseEntity.ok()
+                .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
+                .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
     @GetMapping("/{id}")
