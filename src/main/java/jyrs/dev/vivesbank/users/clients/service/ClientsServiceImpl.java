@@ -38,7 +38,7 @@ public class ClientsServiceImpl implements ClientsService {
     private final RedisTemplate<String, Object> redisTemplate;
     @Autowired
 
-    public ClientsServiceImpl(ClientsRepository repository, StorageService storageService, ClientMapper mapper, ClientStorage storage) {
+    public ClientsServiceImpl(ClientsRepository repository,RedisTemplate<String, Object> redisTemplate, StorageService storageService, ClientMapper mapper, ClientStorage storage) {
         this.repository = repository;
         this.storageService = storageService;
         this.mapper = mapper;
