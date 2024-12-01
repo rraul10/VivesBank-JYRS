@@ -3,6 +3,7 @@ package jyrs.dev.vivesbank.movements.services;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 
+import java.io.File;
 import java.util.List;
 
 public interface MovementsService {
@@ -20,5 +21,7 @@ public interface MovementsService {
     List<Movement> getMovementsByType(String typeMovement);
 
     void deleteMovement(String movementId);
+    void exportJson(File file, List<Movement> movements);
+    void importJson(File file);
 }
 

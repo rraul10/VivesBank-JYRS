@@ -1,5 +1,7 @@
 package jyrs.dev.vivesbank.backup;
 
+import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
+import jyrs.dev.vivesbank.movements.services.MovementsService;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.services.BankAccountService;
@@ -31,35 +33,39 @@ public class StorageServiceImpl implements StorageService {
     private final BankAccountService bankAccountService;
     private final ProductServices productService;
     //public final CreditCardService creditCardService;
+    private final MovementsService movementsService;
 
     private final ClientsRepository clientRepository;
     private final UsersRepository userRepository;
     private final BankAccountRepository bankAccountRepository;
     private final ProductRepository productRepository;
     private final CreditCardRepository creditCardRepository;
+    private final MovementsRepository movementsRepository;
 
     private static final File DEFAULT_BACKUP_FILE = new File("backup.zip");
 
     public StorageServiceImpl(ClientsService clientService,
                               UsersService userService,
                               BankAccountService bankAccountService,
-                              ProductServices productService,
+                              ProductServices productService, MovementsService movementsService,
                               //CreditCardService creditCardService,
                               ClientsRepository clientRepository,
                               UsersRepository userRepository,
                               BankAccountRepository bankAccountRepository,
                               ProductRepository productRepository,
-                              CreditCardRepository creditCardRepository) {
+                              CreditCardRepository creditCardRepository, MovementsRepository movementsRepository) {
         this.clientService = clientService;
         this.userService = userService;
         this.bankAccountService = bankAccountService;
         this.productService = productService;
+        this.movementsService = movementsService;
         //this.creditCardService = creditCardService;
         this.clientRepository = clientRepository;
         this.userRepository = userRepository;
         this.bankAccountRepository = bankAccountRepository;
         this.productRepository = productRepository;
         this.creditCardRepository = creditCardRepository;
+        this.movementsRepository = movementsRepository;
     }
 
     @Override
@@ -74,6 +80,7 @@ public class StorageServiceImpl implements StorageService {
             //creditCardService.exportToJson(tempDir.resolve("creditCards.json").toFile(), creditCardRepository.findAll();
             bankAccountService.exportJson(tempDir.resolve("bankAccounts.json").toFile(), bankAccountRepository.findAll());
             productService.exportJson(tempDir.resolve("products.json").toFile(), productRepository.findAll());
+            movementsService.exportJson(tempDir.resolve("movements.json").toFile(),movementsRepository.findAll());
 
             try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(zipFile.toPath()))) {
                 Files.walk(tempDir)
@@ -103,6 +110,7 @@ public class StorageServiceImpl implements StorageService {
             //creditCardService.importJson(tempDir.resolve("creditCards.json").toFile());
             bankAccountService.importJson(tempDir.resolve("bankAccounts.json").toFile());
             productService.importJson(tempDir.resolve("products.json").toFile());
+            movementsService.importJson(tempDir.resolve("movements.json").toFile());
 
             log.debug("Data imported successfully from ZIP: {}", zipFile.getName());
         } catch (IOException e) {
