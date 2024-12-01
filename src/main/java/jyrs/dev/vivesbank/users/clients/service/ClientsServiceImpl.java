@@ -5,22 +5,24 @@ import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClienteExists;
 import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
+import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -29,12 +31,14 @@ public class ClientsServiceImpl implements ClientsService {
     private final ClientsRepository repository;
     private final StorageService storageService;
     private final ClientMapper mapper;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
-    public ClientsServiceImpl(ClientsRepository repository, StorageService storageService, ClientMapper mapper) {
+    public ClientsServiceImpl(ClientsRepository repository, StorageService storageService, ClientMapper mapper, RedisTemplate<String, Object> redisTemplate) {
         this.repository = repository;
         this.storageService = storageService;
         this.mapper = mapper;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -65,46 +69,68 @@ public class ClientsServiceImpl implements ClientsService {
         return page.map(mapper::toResponse);
     }
 
-/*
-    @Override
-    public List<ClientResponse> getAllIsDeleted(Boolean isDeleted) {
-        var lista = repository.getAllByIsDeleted(isDeleted);
-
-        return lista.stream().map(mapper::toResponse).toList();
-    }
-
- */
-
 
     @Override
     public ClientResponse getById(Long id) {
+        String redisKey = "client:id:" + id;
+        ClientResponse cachedClient = (ClientResponse) redisTemplate.opsForValue().get(redisKey);
+
+        if (cachedClient != null) {
+            log.info("Cliente obtenido desde caché de Redis");
+            return cachedClient;
+        }
+
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
-        return mapper.toResponse(cliente);
+
+        cachedClient = mapper.toResponse(cliente);
+        redisTemplate.opsForValue().set(redisKey, cachedClient, 10, TimeUnit.MINUTES);
+
+        log.info("Cliente obtenido desde la base de datos y almacenado en caché Redis");
+        return cachedClient;
     }
-/*
+
     @Override
-    public ClientResponse getByUsername(String username) {
-        var cliente = repository.getByUsername(username).orElseThrow(()->new ClientNotFound(username));
+    public ClientResponse getByUserGuuid(String user) {
+        var cliente = repository.getByUser_Guuid(user).orElseThrow(() -> new ClientNotFound(user));
         return mapper.toResponse(cliente);
     }
-
- */
-
     @Override
     public ClientResponse getByDni(String dni) {
+        String redisKey = "client:dni:" + dni;
+        ClientResponse cachedClient = (ClientResponse) redisTemplate.opsForValue().get(redisKey);
+
+        if (cachedClient != null) {
+            log.info("Cliente con DNI {} obtenido desde caché de Redis", dni);
+            return cachedClient;
+        }
+
         var cliente = repository.getByDni(dni).orElseThrow(() -> new ClientNotFound(dni));
-        return mapper.toResponse(cliente);
+
+        cachedClient = mapper.toResponse(cliente);
+        redisTemplate.opsForValue().set(redisKey, cachedClient, 10, TimeUnit.MINUTES);
+
+        log.info("Cliente con DNI {} obtenido desde la base de datos y almacenado en caché Redis", dni);
+        return cachedClient;
     }
 
+
     @Override
-    public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image) {
-        var cliente = mapper.toClientCreate(clienteRequest);
+    public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image,User user) {
+
+        var cliente = mapper.fromClientCreate(clienteRequest);
+
+
+        repository.getByDni(cliente.getDni()).ifPresent(existingClient -> {
+            throw new ClienteExists(cliente.getDni());
+        });
+
 
         var tipo = "DNI-" + cliente.getEmail();
-        String imageStored = storageService.store(image, tipo);
-        String imageUrl = imageStored;
+        String imageUrl = storageService.store(image, tipo);
 
         cliente.setFotoDni(imageUrl);
+        user.getRoles().add(Role.CLIENT);
+        cliente.setUser(user);
 
         var clienteGuardado = repository.save(cliente);
 
@@ -112,11 +138,10 @@ public class ClientsServiceImpl implements ClientsService {
     }
 
     @Override
-    public ClientResponse update(Long id, ClientRequestUpdate clienteRequest) {
-        var cliente = mapper.toClientUpdate(clienteRequest);
+    public ClientResponse updateMe(String id, ClientRequestUpdate clienteRequest) {
+        var cliente = mapper.fromClientUpdate(clienteRequest);
 
-        var res = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
-
+        var res = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
         res.setNombre(cliente.getNombre() != null ? cliente.getNombre() : res.getNombre());
         res.setApellidos(cliente.getApellidos() != null ? cliente.getApellidos() : res.getApellidos());
         res.setEmail(cliente.getEmail() != null ? cliente.getEmail() : res.getEmail());
@@ -127,20 +152,21 @@ public class ClientsServiceImpl implements ClientsService {
         user.setUsername(clienteRequest.getEmail() != null ? cliente.getEmail() : user.getUsername());
         user.setPassword(clienteRequest.getPassword() != null ? clienteRequest.getPassword() : user.getPassword());
         res.setUser(user);
+      
+        redisTemplate.delete("client:id:" + id);
 
         var clienteActualizado = repository.save(res);
-
         return mapper.toResponse(clienteActualizado);
     }
-
+      
     @Override
-    public ClientResponse updateDni(Long id, MultipartFile fotoDni) {
-        var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
-
+    public ClientResponse updateMeDni(String id, MultipartFile fotoDni) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+        String fotoVieja = cliente.getFotoDni();
         var email = cliente.getEmail();
         var tipo = "DNI-" + email;
         String imageStored = storageService.store(fotoDni, tipo);
-        storageService.delete(cliente.getFotoDni());
+        storageService.delete(fotoVieja);
 
         cliente.setFotoDni(imageStored);
 
@@ -149,19 +175,22 @@ public class ClientsServiceImpl implements ClientsService {
         return mapper.toResponse(clienteActualizado);
     }
 
+
     @Override
-    public ClientResponse updatePerfil(Long id, MultipartFile fotoPerfil) {
-        var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+    public ClientResponse updateMePerfil(String id, MultipartFile fotoPerfil) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
         User user = cliente.getUser();
+        String fotoVieja = user.getFotoPerfil();
         var email = user.getUsername();
         var tipo = "PROFILE-" + email;
         String imageStored = storageService.store(fotoPerfil, tipo);
-        storageService.delete(user.getUsername());
+
+        storageService.delete(fotoVieja);
 
         user.setFotoPerfil(imageStored);
 
         cliente.setUser(user);
-
         var clienteActualizado = repository.save(cliente);
 
         return mapper.toResponse(clienteActualizado);
@@ -179,6 +208,28 @@ public class ClientsServiceImpl implements ClientsService {
 
     public void deleteLog(Long id) {
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+
+        User user = cliente.getUser();
+
+        user.setIsDeleted(true);
+
+        cliente.setUser(user);
+
+        repository.save(cliente);
+    }
+
+
+    @Override
+    public void deleteMe(String id) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
+        repository.deleteById(cliente.getId());
+        storageService.delete(cliente.getFotoDni());
+
+    }
+
+    public void deleteMeLog(String id) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
 
         User user = cliente.getUser();
 
