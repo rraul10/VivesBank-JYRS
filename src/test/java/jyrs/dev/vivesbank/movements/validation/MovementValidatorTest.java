@@ -1,6 +1,7 @@
 package jyrs.dev.vivesbank.movements.validation;
 
 import jyrs.dev.vivesbank.movements.models.Movement;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -9,28 +10,43 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MovementValidatorTest {
 
+    private MovementValidator movementValidator;
+
+    @BeforeEach
+    void setUp() {
+        movementValidator = new MovementValidator();
+    }
+
     @Test
     void validateReversibleOk() {
         Movement movement = new Movement();
         movement.setIsReversible(true);
-        movement.setDate(LocalDateTime.now().minusHours(23));
-        assertDoesNotThrow(() -> MovementValidator.validateReversible(movement));
+        movement.setDate(LocalDateTime.now().minusHours(12));
+
+        assertDoesNotThrow(() -> movementValidator.validateReversible(movement));
     }
 
     @Test
-    void validateReversibleIrreversible() {
+    void validateReversibleNotOk() {
         Movement movement = new Movement();
         movement.setIsReversible(false);
+        movement.setDate(LocalDateTime.now().minusHours(12));
 
-        assertThrows(IllegalStateException.class, () -> MovementValidator.validateReversible(movement));
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> movementValidator.validateReversible(movement));
+
+        assertEquals("Movement cannot be reversed, it is already irreversible", exception.getMessage());
     }
 
     @Test
-    void validateReversibleTooOld() {
+    void validateReversibleIsOlderThanOneDay() {
         Movement movement = new Movement();
         movement.setIsReversible(true);
         movement.setDate(LocalDateTime.now().minusDays(2));
 
-        assertThrows(IllegalStateException.class, () -> MovementValidator.validateReversible(movement));
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> movementValidator.validateReversible(movement));
+
+        assertEquals("Movement cannot be reversed, it has been more than one day since the transaction", exception.getMessage());
     }
 }

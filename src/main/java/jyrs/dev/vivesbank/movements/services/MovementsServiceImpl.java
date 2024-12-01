@@ -47,16 +47,20 @@ public class MovementsServiceImpl implements MovementsService {
         movementsRepository.save(movement);
     }
 
-    @Override
     public void reverseMovement(String movementId) {
         var movement = movementsRepository.findById(movementId)
                 .orElseThrow(() -> new IllegalArgumentException("Movement not found"));
 
         movementValidator.validateReversible(movement);
 
+        if (!movement.getIsReversible()) {
+            throw new IllegalStateException("Movement cannot be reversed");
+        }
+
         movement.setIsReversible(false);
         movementsRepository.save(movement);
     }
+
 
 
     @Override

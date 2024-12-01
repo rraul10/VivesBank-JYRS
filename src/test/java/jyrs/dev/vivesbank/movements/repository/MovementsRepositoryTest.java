@@ -1,102 +1,90 @@
 package jyrs.dev.vivesbank.movements.repository;
-
-
 import jyrs.dev.vivesbank.movements.models.Movement;
-import org.junit.jupiter.api.Test;
+import jyrs.dev.vivesbank.users.clients.models.Client;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.springframework.beans.factory.annotation.Autowired;
+import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+
 
 @DataMongoTest
 @Testcontainers
 class MovementsRepositoryTest {
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:5.0")
-            .withExposedPorts(27017);
-
-    @DynamicPropertySource
-    static void configureMongoDB(DynamicPropertyRegistry registry) {
-        mongoDBContainer.start();
-        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-    }
+    private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0.6");
 
     @Autowired
     private MovementsRepository movementsRepository;
 
-    @Autowired
-    private org.springframework.data.mongodb.core.MongoTemplate mongoTemplate;
+    @BeforeAll
+    static void startContainer() {
+        mongoDBContainer.start();
+        String mongoUri = "mongodb://" + mongoDBContainer.getHost() + ":" + mongoDBContainer.getMappedPort(27017);
+        System.setProperty("spring.data.mongodb.uri", mongoUri);
+        System.out.println("MongoDB container started at: " + mongoUri);
+    }
 
-    @Test
-    void testMongoDBConnection() {
-        assertTrue(mongoDBContainer.isRunning(), "MongoDB container is not running");
+    @AfterAll
+    static void stopContainer() {
+        mongoDBContainer.stop();
     }
 
     @Test
-    void findBySenderClientId() {
-        Movement movement = new Movement();
-        movement.setSenderClientId("1");
-        movement.setRecipientClientId("2");
-        movement.setTypeMovement("TRANSFER");
-        movement.setAmount(100.0);
-        mongoTemplate.save(movement);
-
-        List<Movement> result = movementsRepository.findBySenderClient_Id("1");
-
-        assertTrue(result.size() > 0);
-        assertEquals("1", result.get(0).getSenderClientId());
-        assertEquals("2", result.get(0).getRecipientClientId());
-    }
-
-    @Test
-    void findByRecipientClientId() {
-        Movement movement = new Movement();
-        movement.setSenderClientId("3");
-        movement.setRecipientClientId("4");
-        movement.setTypeMovement("TRANSFER");
-        movement.setAmount(50.0);
-        mongoTemplate.save(movement);
-
-        List<Movement> result = movementsRepository.findByRecipientClient_Id("4");
-
-        assertTrue(result.size() > 0);
-        assertEquals("3", result.get(0).getSenderClientId());
-        assertEquals("4", result.get(0).getRecipientClientId());
-    }
-
-    @Test
-    void findByTypeMovement() {
+    void findBySenderClient_Id_ShouldReturnMatchingMovements() {
         Movement movement1 = new Movement();
-        movement1.setSenderClientId("1");
-        movement1.setRecipientClientId("2");
+        movement1.setSenderClient(new Client("123"));
         movement1.setTypeMovement("TRANSFER");
-        movement1.setAmount(100.0);
+        movementsRepository.save(movement1);
 
         Movement movement2 = new Movement();
-        movement2.setSenderClientId("3");
-        movement2.setRecipientClientId("4");
-        movement2.setTypeMovement("WITHDRAWAL");
-        movement2.setAmount(50.0);
+        movement2.setSenderClient(new Client("456"));
+        movement2.setTypeMovement("PAYMENT");
+        movementsRepository.save(movement2);
 
-        mongoTemplate.save(movement1);
-        mongoTemplate.save(movement2);
+        List<Movement> results = movementsRepository.findBySenderClient_Id("123");
 
-        List<Movement> transferMovements = movementsRepository.findByTypeMovement("TRANSFER");
-        List<Movement> withdrawalMovements = movementsRepository.findByTypeMovement("WITHDRAWAL");
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getSenderClient().getId()).isEqualTo("123");
+    }
 
-        assertEquals(1, transferMovements.size());
-        assertEquals(1, withdrawalMovements.size());
-        assertEquals("TRANSFER", transferMovements.get(0).getTypeMovement());
-        assertEquals("WITHDRAWAL", withdrawalMovements.get(0).getTypeMovement());
+    @Test
+    void findByRecipientClient_Id_ShouldReturnMatchingMovements() {
+        Movement movement = new Movement();
+        movement.setRecipientClient(new Client("789"));
+        movement.setTypeMovement("DEPOSIT");
+        movementsRepository.save(movement);
+
+        List<Movement> results = movementsRepository.findByRecipientClient_Id("789");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getRecipientClient().getId()).isEqualTo("789");
+    }
+
+    @Test
+    void findByTypeMovement_ShouldReturnMatchingMovements() {
+        Movement movement1 = new Movement();
+        movement1.setTypeMovement("TRANSFER");
+        movementsRepository.save(movement1);
+
+        Movement movement2 = new Movement();
+        movement2.setTypeMovement("PAYMENT");
+        movementsRepository.save(movement2);
+
+        List<Movement> results = movementsRepository.findByTypeMovement("TRANSFER");
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getTypeMovement()).isEqualTo("TRANSFER");
     }
 }
+
 
 
 
