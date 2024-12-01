@@ -1,22 +1,29 @@
 package jyrs.dev.vivesbank.movements.services;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
+import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
 import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
+
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MovementsServiceImpl implements MovementsService {
 
     private final MovementsRepository movementsRepository;
     private final ClientsRepository clientsRepository;
     private final MovementValidator movementValidator;
+    private final MovementsStorage storage;
 
     @Override
     public void createMovement(String senderClientId, String recipientClientId,
@@ -91,6 +98,22 @@ public class MovementsServiceImpl implements MovementsService {
                 .orElseThrow(() -> new IllegalArgumentException("Movement not found"));
 
         movementsRepository.delete(movement);
+    }
+
+    @Override
+    public void exportJson(File file, List<Movement> movements) {
+        log.info("Exportando movements a JSON");
+
+        storage.exportJson(file,movements);
+    }
+
+    @Override
+    public void importJson(File file) {
+        log.info("Importando movements desde JSON");
+
+        List<Movement> movements= storage.importJson(file);
+
+        movementsRepository.saveAll(movements);
     }
 }
 

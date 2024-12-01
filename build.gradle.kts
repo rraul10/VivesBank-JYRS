@@ -29,6 +29,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 
+    // iText Core Library
+    implementation("com.itextpdf:itext7-core:9.0.0")
+
     // Base de Datos
     implementation("com.h2database:h2")
 
