@@ -1,8 +1,6 @@
 package jyrs.dev.vivesbank.users.clients.mappers;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.ValidatorFactory;
+import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
@@ -13,22 +11,35 @@ import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
-import javax.xml.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ClientMapperTest {
 
-    private ClientMapper mapper;
+
     private AddressDto addressDto;
+    @Mock
+    private BankAccountMapper accountMapper;
+
+    @InjectMocks
+    private ClientMapper mapper;
 
     @BeforeEach
     void setUp() {
-        mapper = new ClientMapper();
+        mapper = new ClientMapper(accountMapper);
 
         addressDto = AddressDto.builder()
                 .calle("TEST")
@@ -40,7 +51,7 @@ class ClientMapperTest {
                 .build();
     }
     @Test
-    void toClientCreateOk(){
+    void fromClientCreateOk(){
         ClientRequestCreate clienteRequest = new ClientRequestCreate(
                 "11111111",
                 "test",
@@ -50,23 +61,23 @@ class ClientMapperTest {
         );
 
 
-        Client cliente = mapper.toClientCreate(clienteRequest);
+        Client cliente = mapper.fromClientCreate(clienteRequest);
 
         assertEquals(cliente.getNombre(),clienteRequest.getNombre());
         assertEquals(cliente.getDni(),clienteRequest.getDni());
     }
 
     @Test
-    void toClientCreateNull(){
+    void fromClientCreateNull(){
         ClientRequestCreate clienteRequest = null;
 
-        Client cliente = mapper.toClientCreate(clienteRequest);
+        Client cliente = mapper.fromClientCreate(clienteRequest);
 
         assertNull(cliente);
     }
 
     @Test
-    void toClientUpdateOk(){
+    void fromClientUpdateOk(){
         ClientRequestUpdate clienteRequest = new ClientRequestUpdate(
                 "test",
                 "test",
@@ -76,16 +87,16 @@ class ClientMapperTest {
                 "test"
         );
 
-        Client cliente = mapper.toClientUpdate(clienteRequest);
+        Client cliente = mapper.fromClientUpdate(clienteRequest);
 
         assertEquals(cliente.getNombre(),clienteRequest.getNombre());
     }
 
     @Test
-    void toClientUpdateNull(){
+    void fromClientUpdateNull(){
         ClientRequestUpdate clienteRequest = null;
 
-        Client cliente = mapper.toClientUpdate(clienteRequest);
+        Client cliente = mapper.fromClientUpdate(clienteRequest);
 
         assertNull(cliente);
     }
@@ -122,9 +133,13 @@ class ClientMapperTest {
                 .user(use)
                 .build();
 
+        when(accountMapper.toListAccountReesponseDto(List.of())).thenReturn(List.of());
+
         ClientResponse clienteResponse = mapper.toResponse(cliente);
 
         assertEquals(cliente.getNombre(),clienteResponse.getNombre());
+
+        verify(accountMapper,times(1)).toListAccountReesponseDto(List.of());
     }
 
     @Test

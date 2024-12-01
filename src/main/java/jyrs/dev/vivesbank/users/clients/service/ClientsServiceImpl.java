@@ -10,6 +10,7 @@ import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
+import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -66,30 +65,12 @@ public class ClientsServiceImpl implements ClientsService {
         return page.map(mapper::toResponse);
     }
 
-/*
-    @Override
-    public List<ClientResponse> getAllIsDeleted(Boolean isDeleted) {
-        var lista = repository.getAllByIsDeleted(isDeleted);
-
-        return lista.stream().map(mapper::toResponse).toList();
-    }
-
- */
-
 
     @Override
     public ClientResponse getById(Long id) {
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
         return mapper.toResponse(cliente);
     }
-/*
-    @Override
-    public ClientResponse getByUsername(String username) {
-        var cliente = repository.getByUsername(username).orElseThrow(()->new ClientNotFound(username));
-        return mapper.toResponse(cliente);
-    }
-
- */
 
     @Override
     public ClientResponse getByDni(String dni) {
@@ -98,9 +79,15 @@ public class ClientsServiceImpl implements ClientsService {
     }
 
     @Override
+    public ClientResponse getByUserGuuid(String user) {
+        var cliente = repository.getByUser_Guuid(user).orElseThrow(() -> new ClientNotFound(user));
+        return mapper.toResponse(cliente);
+    }
+
+    @Override
     public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image,User user) {
 
-        var cliente = mapper.toClientCreate(clienteRequest);
+        var cliente = mapper.fromClientCreate(clienteRequest);
 
 
         repository.getByDni(cliente.getDni()).ifPresent(existingClient -> {
@@ -109,21 +96,22 @@ public class ClientsServiceImpl implements ClientsService {
 
 
         var tipo = "DNI-" + cliente.getEmail();
-        String imageStored = storageService.store(image, tipo);
-        String imageUrl = imageStored;
+        String imageUrl = storageService.store(image, tipo);
 
         cliente.setFotoDni(imageUrl);
+        user.getRoles().add(Role.CLIENT);
         cliente.setUser(user);
+
         var clienteGuardado = repository.save(cliente);
 
         return mapper.toResponse(clienteGuardado);
     }
 
     @Override
-    public ClientResponse update(Long id, ClientRequestUpdate clienteRequest) {
-        var cliente = mapper.toClientUpdate(clienteRequest);
+    public ClientResponse updateMe(String id, ClientRequestUpdate clienteRequest) {
+        var cliente = mapper.fromClientUpdate(clienteRequest);
 
-        var res = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+        var res = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
 
         res.setNombre(cliente.getNombre() != null ? cliente.getNombre() : res.getNombre());
         res.setApellidos(cliente.getApellidos() != null ? cliente.getApellidos() : res.getApellidos());
@@ -136,19 +124,20 @@ public class ClientsServiceImpl implements ClientsService {
         user.setPassword(clienteRequest.getPassword() != null ? clienteRequest.getPassword() : user.getPassword());
         res.setUser(user);
 
-        var clienteActualizado = repository.save(res);
+        var clienteActualizadoSaved= repository.save(res);
 
-        return mapper.toResponse(clienteActualizado);
+        return mapper.toResponse(clienteActualizadoSaved);
     }
 
-    @Override
-    public ClientResponse updateDni(Long id, MultipartFile fotoDni) {
-        var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
 
+    @Override
+    public ClientResponse updateMeDni(String id, MultipartFile fotoDni) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+        String fotoVieja = cliente.getFotoDni();
         var email = cliente.getEmail();
         var tipo = "DNI-" + email;
         String imageStored = storageService.store(fotoDni, tipo);
-        storageService.delete(cliente.getFotoDni());
+        storageService.delete(fotoVieja);
 
         cliente.setFotoDni(imageStored);
 
@@ -157,19 +146,22 @@ public class ClientsServiceImpl implements ClientsService {
         return mapper.toResponse(clienteActualizado);
     }
 
+
     @Override
-    public ClientResponse updatePerfil(Long id, MultipartFile fotoPerfil) {
-        var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+    public ClientResponse updateMePerfil(String id, MultipartFile fotoPerfil) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
         User user = cliente.getUser();
+        String fotoVieja = user.getFotoPerfil();
         var email = user.getUsername();
         var tipo = "PROFILE-" + email;
         String imageStored = storageService.store(fotoPerfil, tipo);
-        storageService.delete(user.getUsername());
+
+        storageService.delete(fotoVieja);
 
         user.setFotoPerfil(imageStored);
 
         cliente.setUser(user);
-
         var clienteActualizado = repository.save(cliente);
 
         return mapper.toResponse(clienteActualizado);
@@ -187,6 +179,28 @@ public class ClientsServiceImpl implements ClientsService {
 
     public void deleteLog(Long id) {
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+
+        User user = cliente.getUser();
+
+        user.setIsDeleted(true);
+
+        cliente.setUser(user);
+
+        repository.save(cliente);
+    }
+
+
+    @Override
+    public void deleteMe(String id) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
+        repository.deleteById(cliente.getId());
+        storageService.delete(cliente.getFotoDni());
+
+    }
+
+    public void deleteMeLog(String id) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
 
         User user = cliente.getUser();
 

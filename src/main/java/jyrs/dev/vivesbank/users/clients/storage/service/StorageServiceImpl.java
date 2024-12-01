@@ -51,6 +51,7 @@ public class StorageServiceImpl implements StorageService{
 
     @Override
     public String store(MultipartFile file,String tipo) {
+
         String filename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
         String extension = StringUtils.getFilenameExtension(filename);
         String justFilename = filename.replace("." + extension, "");
