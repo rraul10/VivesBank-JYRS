@@ -89,18 +89,12 @@ public class ClientsServiceImpl implements ClientsService {
         return cachedClient;
     }
 
-
-    @Override
-    public ClientResponse getByDni(String dni) {
-        var cliente = repository.getByDni(dni).orElseThrow(() -> new ClientNotFound(dni));
-        return mapper.toResponse(cliente);
-    }
-
     @Override
     public ClientResponse getByUserGuuid(String user) {
         var cliente = repository.getByUser_Guuid(user).orElseThrow(() -> new ClientNotFound(user));
         return mapper.toResponse(cliente);
-
+    }
+    @Override
     public ClientResponse getByDni(String dni) {
         String redisKey = "client:dni:" + dni;
         ClientResponse cachedClient = (ClientResponse) redisTemplate.opsForValue().get(redisKey);

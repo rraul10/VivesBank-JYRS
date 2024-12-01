@@ -39,7 +39,7 @@ public class MovementsServiceImpl implements MovementsService {
                 .typeMovement(typeMovement)
                 .date(LocalDateTime.now())
                 .amount(amount)
-                .balance(senderClient.getCuentas() != null ? senderClient.getCuentas().stream().mapToDouble(cuenta -> cuenta != null ? Double.parseDouble(cuenta) : 0.0).sum() - amount : 0.0)
+                .balance(senderClient.getCuentas() != null ? senderClient.getCuentas().stream().mapToDouble(cuenta -> cuenta != null ? Double.parseDouble(String.valueOf(cuenta)) : 0.0).sum() - amount : 0.0)
                 .isReversible(true)
                 .transferDeadlineDate(LocalDateTime.now().plusDays(7))
                 .build();

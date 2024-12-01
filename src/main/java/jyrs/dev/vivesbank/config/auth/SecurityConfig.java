@@ -66,12 +66,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/clients/me/profile" ).hasRole("CLIENT"))
 
                 // MOVEMENTS
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements").hasRole("ADMIN")) // GET ALL MOVEMENTS
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements/client/{clientId}").hasRole( "ADMIN")) // GET MOVEMENTS BY CLIENT ID
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements/tipo/{typeMovement}").hasRole("ADMIN")) // GET MOVEMENTS BY TYPE MOVEMENT
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/movements").hasRole("ADMIN")) // CREATE MOVEMENT
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/movements/{id}/reverse").hasRole("CLIENT")) // Reverse movement
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank/" + apiVersion + "/movements/{id}").hasRole("CLIENT")) // DELETE MOVEMENT BY ID
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements").hasRole("ADMIN")) // GET ALL MOVEMENTS
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/client/{clientId}").hasRole( "ADMIN")) // GET MOVEMENTS BY CLIENT ID
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/tipo/{typeMovement}").hasRole("ADMIN")) // GET MOVEMENTS BY TYPE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank" + apiVersion + "/movements").hasRole("ADMIN")) // CREATE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank" + apiVersion + "/movements/{id}/reverse").hasRole("CLIENT")) // Reverse movement
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank" + apiVersion + "/movements/{id}").hasRole("CLIENT")) // DELETE MOVEMENT BY ID
 
                 //API FRANKFURTER
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency").permitAll()) // Permitir acceso público a todas las monedas
