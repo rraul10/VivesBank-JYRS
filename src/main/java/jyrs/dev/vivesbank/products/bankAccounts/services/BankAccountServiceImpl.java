@@ -13,6 +13,8 @@ import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundBy
 import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
+import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
+import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
@@ -26,8 +28,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -42,14 +46,16 @@ public class BankAccountServiceImpl implements BankAccountService {
     private ObjectMapper mapper;
     private BankAccountNotificationMapper bankAccountNotificationMapper;
     private WebSocketHandler webSocketService;
+    private final BankAccountStorage storage;
 
     @Autowired
-    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository, BankAccountMapper bankAccountMapper, WebSocketHandler webSocketHandler, ObjectMapper mapper, BankAccountNotificationMapper bankAccountNotificationMapper) {
+    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository, BankAccountMapper bankAccountMapper, WebSocketHandler webSocketHandler, ObjectMapper mapper, BankAccountNotificationMapper bankAccountNotificationMapper, BankAccountStorage storage) {
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
         this.webSocketService = webSocketHandler;
         this.mapper = mapper != null ? mapper : new ObjectMapper();
         this.bankAccountNotificationMapper = bankAccountNotificationMapper;
+        this.storage = storage;
     }
 
     @Override
@@ -115,6 +121,22 @@ public class BankAccountServiceImpl implements BankAccountService {
         bankAccountRepository.deleteById(id);
         onChange(Notificacion.Tipo.DELETE, account);
         log.info("Cuenta bancaria con ID " + id + " eliminada exitosamente.");
+    }
+
+    @Override
+    public void exportJson(File file, List<BankAccount> accounts) {
+        log.info("Exportando cuentas a JSON");
+
+        storage.exportJson(file,accounts);
+    }
+
+    @Override
+    public void importJson(File file) {
+        log.info("Importando cuentas desde JSON");
+
+        List<BankAccount> accounts= storage.importJson(file);
+
+        bankAccountRepository.saveAll(accounts);
     }
 
     public String generateUniqueIban() {

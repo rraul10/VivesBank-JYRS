@@ -9,6 +9,7 @@ import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
 import jyrs.dev.vivesbank.users.users.mappers.UserMapper;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.services.UsersServiceImpl;
+import jyrs.dev.vivesbank.users.users.storage.UserStorage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.io.File;
 import java.lang.reflect.Array;
 import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.Arrays;
@@ -48,6 +50,8 @@ public class UserServiceImplTests {
     private UsersRepository usersRepository;
     @Mock
     private UserMapper userMapper;
+    @Mock
+    private UserStorage storage;
     @InjectMocks
     private UsersServiceImpl usersService;
 
@@ -294,6 +298,31 @@ public class UserServiceImplTests {
         var result = assertThrows(UserExceptions.UserNotFound.class, () ->usersService.getUserById(id));
         verify(usersRepository, times(1)).findByGuuid(id);
         verify(usersRepository, times(0)).save(user);
+    }
+
+    @Test
+    void importJson() throws Exception {
+        File file = mock(File.class);
+        List<User> users = List.of(user);
+
+        when(storage.importJson(file)).thenReturn(users);
+
+        usersService.importJson(file);
+
+        verify(storage).importJson(file);
+
+        verify(usersRepository).saveAll(users);
+    }
+
+    @Test
+    void exportJson() throws Exception {
+        File file = mock(File.class);
+        List<User> users = List.of(user);
+
+        doNothing().when(storage).exportJson(file,users);
+        usersService.exportJson(file, users);
+
+        verify(storage).exportJson(file, users);
     }
 
 }

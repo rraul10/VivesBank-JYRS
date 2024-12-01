@@ -11,6 +11,8 @@ import jyrs.dev.vivesbank.products.mapper.ProductMapper;
 import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.products.models.type.ProductType;
 import jyrs.dev.vivesbank.products.repositories.ProductRepository;
+import jyrs.dev.vivesbank.products.storage.ProductStorage;
+import jyrs.dev.vivesbank.users.models.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -49,9 +52,12 @@ class ProductServicesImplTest {
 
     @Mock
     private ProductMapper productMapper;
+    @Mock
+    private ProductStorage storage;
 
     @InjectMocks
     private ProductServicesImpl productServices;
+
 
     @Captor
     private ArgumentCaptor<Product> productCaptor;
@@ -231,4 +237,30 @@ class ProductServicesImplTest {
 
         verify(productRepository, times(1)).findById(id);
     }
+
+    @Test
+    void importJson() throws Exception {
+        File file = mock(File.class);
+        List<Product> products = List.of(productTest);
+
+        when(storage.importJson(file)).thenReturn(products);
+
+        productServices.importJson(file);
+
+        verify(storage).importJson(file);
+
+        verify(productRepository).saveAll(products);
+    }
+
+    @Test
+    void exportJson() throws Exception {
+        File file = mock(File.class);
+        List<Product> products = List.of(productTest);
+
+        doNothing().when(storage).exportJson(file,products);
+        productServices.exportJson(file, products);
+
+        verify(storage).exportJson(file, products);
+    }
+
 }

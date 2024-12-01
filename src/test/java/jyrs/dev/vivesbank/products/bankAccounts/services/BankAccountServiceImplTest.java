@@ -12,7 +12,9 @@ import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
+import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
+import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +29,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -52,6 +55,8 @@ class BankAccountServiceImplTest {
 
     @Mock
     private WebSocketHandler webSocketHandlerMock;
+    @Mock
+    private BankAccountStorage storage;
 
     @Spy
     @InjectMocks
@@ -341,6 +346,31 @@ class BankAccountServiceImplTest {
 
         verify(bankAccountRepository, times(1)).findById(accountId);
         verify(bankAccountRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void importJson() throws Exception {
+        File file = mock(File.class);
+        List<BankAccount> accounts = List.of(account);
+
+        when(storage.importJson(file)).thenReturn(accounts);
+
+
+        bankAccountService.importJson(file);
+
+        verify(storage).importJson(file);
+        verify(bankAccountRepository).saveAll(accounts);
+    }
+
+    @Test
+    void exportJson() throws Exception {
+        File file = mock(File.class);
+        List<BankAccount> accounts = List.of(account);
+
+        doNothing().when(storage).exportJson(file,accounts);
+        bankAccountService.exportJson(file, accounts);
+
+        verify(storage).exportJson(file, accounts);
     }
 
 

@@ -6,6 +6,8 @@ import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.io.File;
+import java.util.List;
 import java.util.Optional;
 
 public interface UsersService {
@@ -15,4 +17,6 @@ public interface UsersService {
     UserResponseDto saveUser(UserRequestDto user);
     UserResponseDto updateUser(String id, UserRequestDto user);
     void deleteUser(String id);
+    void exportJson(File file, List<User> users);
+    void importJson(File file);
 }
