@@ -47,6 +47,10 @@ dependencies {
 
     implementation("com.auth0:java-jwt:4.4.0")
 
+    // Redis client
+    implementation ("redis.clients:jedis:4.4.3")
+    implementation ("org.springframework.boot:spring-boot-starter-data-redis")
+
     implementation ("org.springframework.boot:spring-boot-starter-data-mongodb")
 
     implementation ("org.springframework.boot:spring-boot-starter-web")
