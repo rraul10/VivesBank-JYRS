@@ -53,7 +53,9 @@ dependencies {
     testImplementation("org.testcontainers:mongodb:1.19.0")
     testImplementation("org.springframework.security:spring-security-test")
 
-    // Test Runtime
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // RETROFIT

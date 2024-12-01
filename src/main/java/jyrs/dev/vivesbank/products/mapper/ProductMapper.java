@@ -5,7 +5,10 @@ import jyrs.dev.vivesbank.products.dto.ProductResponseDto;
 import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
 import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.products.models.type.ProductType;
+import lombok.val;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class ProductMapper {
@@ -38,4 +41,5 @@ public class ProductMapper {
                 .updatedAt(product.getUpdatedAt())
                 .build();
     }
+
 }

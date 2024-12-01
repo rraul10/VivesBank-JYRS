@@ -3,6 +3,7 @@ package jyrs.dev.vivesbank.users.clients.service;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
+import jyrs.dev.vivesbank.users.models.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,21 +16,22 @@ public interface ClientsService {
 
     ClientResponse getById(Long id);
 
-    //ClientResponse getByUsername(String username);
 
     ClientResponse getByDni(String dni);
 
-    ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image);
+    ClientResponse getByUserGuuid(String dni);
 
-    ClientResponse update(Long id, ClientRequestUpdate clienteRequest);
+    ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image, User user);
 
-    ClientResponse updateDni(Long id,  MultipartFile fotoDni);
+    ClientResponse updateMe(String id, ClientRequestUpdate clienteRequest);
 
-    ClientResponse updatePerfil(Long id,  MultipartFile fotoPerfil);
+    ClientResponse updateMeDni(String id, MultipartFile fotoDni);
 
-    //List<ClientResponse> getAllIsDeleted(Boolean isDeleted);
+    ClientResponse updateMePerfil(String id, MultipartFile fotoPerfil);
+
 
     void delete(Long id);
+    void deleteMe(String id);
 
 
 }

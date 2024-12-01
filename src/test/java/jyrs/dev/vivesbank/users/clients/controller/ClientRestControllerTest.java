@@ -3,6 +3,9 @@ package jyrs.dev.vivesbank.users.clients.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jyrs.dev.vivesbank.auth.auth.AuthService;
+import jyrs.dev.vivesbank.auth.dto.JwtAuthResponse;
+import jyrs.dev.vivesbank.auth.dto.UserSignInRequest;
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
@@ -29,6 +32,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,6 +52,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureJsonTesters
+@EnableWebSecurity
+@EnableMethodSecurity
 @ExtendWith(MockitoExtension.class)
 class ClientRestControllerTest {
 
@@ -65,17 +76,25 @@ class ClientRestControllerTest {
         this.paginationLinksUtils = paginationLinksUtils;
         mapper.registerModule(new JavaTimeModule());
     }
-
     private Client cliente;
     private ClientRequestCreate clienteCreate;
     private ClientRequestUpdate clienteUpdate;
     private ClientResponse clientResponse;
+    private User user;
 
     private Address address;
     private AddressDto addressDto;
 
     @BeforeEach
     void setUp() {
+        user = User.builder()
+                .id(1L)
+                .guuid("puZjCDm_xCg")
+                .username("test@example.com")
+                .password("password123")
+                .fotoPerfil("path/to/foto.png")
+                .roles(Set.of(Role.USER))
+                .build();
 
         address = Address.builder()
                 .calle("TEST")
@@ -107,7 +126,6 @@ class ClientRestControllerTest {
                         "España",
                         28001))
                 .numTelefono("666666666")
-                .email("juan.perez@example.com")
                 .build();
 
         clienteUpdate = ClientRequestUpdate.builder()
@@ -132,17 +150,13 @@ class ClientRestControllerTest {
                 .numTelefono("66666666")
                 .direccion(addressDto)
                 .email("juan.perez@example.com")
+                .cuentas(List.of())
                 .build();
 
         cliente = Client.builder()
                 .dni("11111111A")
                 .nombre("Juan")
-                .user(User.builder()
-                        .username("usuario@correo.com")
-                        .password("password123")
-                        .fotoPerfil("profile.jpg")
-                        .roles(Set.of( Role.USER))
-                        .build())
+                .user(user)
                 .apellidos("Pérez")
                 .direccion(address)
                 .fotoDni("fotoDni.jpg")
@@ -150,9 +164,11 @@ class ClientRestControllerTest {
                 .email("juan.perez@example.com")
                 .cuentas(List.of())
                 .build();
+
     }
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void getClients() throws Exception {
 
         var clientList = List.of(clientResponse);
@@ -179,6 +195,7 @@ class ClientRestControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void getClientsByNombre() throws Exception {
         var clientList = List.of(clientResponse);
         Page<ClientResponse> page = new PageImpl<>(clientList);
@@ -205,6 +222,7 @@ class ClientRestControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void getClientsByCiudadProvincia() throws Exception {
         var clientList = List.of(clientResponse);
         Page<ClientResponse> page = new PageImpl<>(clientList);
@@ -232,6 +250,7 @@ class ClientRestControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void getClientsEmpty() throws Exception {
         Page<ClientResponse> page = new PageImpl<>(List.of());
 
@@ -255,10 +274,20 @@ class ClientRestControllerTest {
         verify(service, times(1)).getAll(any(), any(), any(), any(), any());
     }
 
+    @Test
+    @WithAnonymousUser
+    void noAuthentificated() throws Exception{
+        MockHttpServletResponse response = mockMvc.perform(
+                        get(endpoint)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+        assertEquals(403,response.getStatus());
+    }
 
 
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void getClientById() throws Exception {
 
         when(service.getById(1L)).thenReturn(clientResponse);
@@ -280,6 +309,7 @@ class ClientRestControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void getClientByIdNotFound() throws Exception {
 
         when(service.getById(13L)).thenThrow(new ClientNotFound("13"));
@@ -298,6 +328,7 @@ class ClientRestControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin",roles = {"ADMIN"})
     void getClientByDni() throws Exception {
         when(service.getByDni("11111111A")).thenReturn(clientResponse);
 
@@ -318,6 +349,7 @@ class ClientRestControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void getClientByDniNotFound() throws Exception {
         when(service.getByDni("99999999Z")).thenThrow(new ClientNotFound("99999999Z"));
 
@@ -334,9 +366,40 @@ class ClientRestControllerTest {
     }
 
 
+    @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
+    void deleteCliente() throws Exception {
+        doNothing().when(service).delete(1L);
 
+        MockHttpServletResponse response = mockMvc.perform(
+                        delete(endpoint + "/1")
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertEquals(204, response.getStatus());
+
+        verify(service, times(1)).delete(1L);
+    }
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
+    void deleteClientNotFound() throws Exception {
+        doThrow(new ClientNotFound("1")).when(service).delete(1L);
+
+        MockHttpServletResponse response = mockMvc.perform(
+                        delete(endpoint + "/1")
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(404, response.getStatus())
+        );
+
+        verify(service, times(1)).delete(1L);
+    }
+
+    @Test
+    @WithMockUser(username = "user",password = "user",roles = {"USER"})
     void createClient() throws Exception {
 
         MockMultipartFile file = new MockMultipartFile("file", "foto.png", "image/png", "imagen".getBytes());
@@ -347,7 +410,7 @@ class ClientRestControllerTest {
                 MediaType.APPLICATION_JSON_VALUE,
                 mapper.writeValueAsBytes(clienteCreate)
         );
-        when(service.create(any(ClientRequestCreate.class), any(MultipartFile.class))).thenReturn(clientResponse);
+        when(service.create(any(ClientRequestCreate.class), any(MultipartFile.class),user)).thenReturn(clientResponse);
 
         MockHttpServletResponse response = mockMvc.perform(
                 multipart(endpoint)
@@ -355,6 +418,9 @@ class ClientRestControllerTest {
                         .file(clientePart)
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                         .accept(MediaType.APPLICATION_JSON)
+                        .with(SecurityMockMvcRequestPostProcessors.authentication(
+                                new UsernamePasswordAuthenticationToken(user.getUsername(), "password", user.getAuthorities())
+                        ))
         ).andReturn().getResponse();
 
         ClientResponse res = mapper.readValue(response.getContentAsString(), ClientResponse.class);
@@ -365,10 +431,11 @@ class ClientRestControllerTest {
                 () -> assertEquals("Juan", res.getNombre())
         );
 
-        verify(service, times(1)).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, times(1)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
+    @WithMockUser(username = "user",password = "user",roles = {"USER"})
     void createClientEmptyFile() throws Exception {
         MockMultipartFile emptyFile = new MockMultipartFile(
                 "file",
@@ -394,10 +461,11 @@ class ClientRestControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
 
-        verify(service, never()).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, never()).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
+    @WithMockUser(username = "user",password = "user",roles = {"USER"})
     void createClientBadRequestDni() throws Exception {
 
         ClientRequestCreate clienteCreateInvalid = ClientRequestCreate.builder()
@@ -412,7 +480,6 @@ class ClientRestControllerTest {
                         "España",
                         28001))
                 .numTelefono("+123456789")
-                .email("juan.perez@example.com")
                 .build();
 
         MockMultipartFile file = new MockMultipartFile("file", "foto.png", "image/png", "imagen".getBytes());
@@ -436,10 +503,11 @@ class ClientRestControllerTest {
                 () -> assertEquals(400, response.getStatus())
         );
 
-        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
+    @WithMockUser(username = "user",password = "user",roles = {"USER"})
     void createClientBadRequestNombre() throws Exception {
 
         ClientRequestCreate clienteCreateInvalid = ClientRequestCreate.builder()
@@ -454,7 +522,6 @@ class ClientRestControllerTest {
                         "España",
                         28001))
                 .numTelefono("+123456789")
-                .email("juan.perez@example.com")
                 .build();
 
         MockMultipartFile file = new MockMultipartFile("file", "foto.png", "image/png", "imagen".getBytes());
@@ -478,18 +545,56 @@ class ClientRestControllerTest {
                 () -> assertEquals(400, response.getStatus())
         );
 
-        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class));
+        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
-
-
     @Test
-    void updateClient() throws Exception {
+    @WithMockUser(username = "client", password = "client", roles = {"USER","CLIENT"})
+    void getMe() throws Exception {
+        String guuid = user.getGuuid();
 
-        when(service.update(1L, clienteUpdate)).thenReturn(clientResponse);
+        when(service.getByUserGuuid(guuid)).thenReturn(clientResponse);
 
         MockHttpServletResponse response = mockMvc.perform(
-                        put(endpoint + "/1")
+                        get(endpoint+"/me/profile")
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        System.out.println("Yahya"+response.getContentAsString()+"final");
+        ClientResponse res = mapper.readValue(response.getContentAsString(), ClientResponse.class);
+
+        assertAll(
+                () -> assertEquals(200, response.getStatus()),
+                () -> assertEquals("Juan", res.getNombre())
+        );
+
+        verify(service, times(1)).getByUserGuuid(guuid);
+    }
+
+    @Test
+    @WithMockUser(username = "client", password = "client", roles = {"USER","CLIENT"})
+    void getMeNotFound() throws Exception {
+        when(service.getByUserGuuid("guuid-unknown")).thenThrow(new ClientNotFound("guuid-unknown"));
+
+        MockHttpServletResponse response = mockMvc.perform(
+                        get(endpoint+"/me/profile")
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertAll(
+                () -> assertEquals(404, response.getStatus())
+        );
+
+        verify(service, times(1)).getByUserGuuid("guuid-unknown");
+    }
+
+    @Test
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void updateMe() throws Exception {
+        when(service.updateMe(user.getGuuid(), clienteUpdate)).thenReturn(clientResponse);
+
+        MockHttpServletResponse response = mockMvc.perform(
+                        put(endpoint+"/me/profile")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(clienteUpdate))
                                 .accept(MediaType.APPLICATION_JSON))
@@ -503,15 +608,16 @@ class ClientRestControllerTest {
                 () -> assertEquals("Juan", res.getNombre())
         );
 
-        verify(service, times(1)).update(1L, clienteUpdate);
+        verify(service, times(1)).updateMe(user.getGuuid(), clienteUpdate);
     }
 
     @Test
-    void updateClientNotFound() throws Exception {
-        when(service.update(1L, clienteUpdate)).thenThrow(new ClientNotFound("1"));
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void updateMeNotFound() throws Exception {
+        when(service.updateMe("guuid-unknown", clienteUpdate)).thenThrow(new ClientNotFound("guuid-unknown"));
 
         MockHttpServletResponse response = mockMvc.perform(
-                        put(endpoint + "/1")
+                        put("/me/profile")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(clienteUpdate))
                                 .accept(MediaType.APPLICATION_JSON))
@@ -521,12 +627,12 @@ class ClientRestControllerTest {
                 () -> assertEquals(404, response.getStatus())
         );
 
-        verify(service, times(1)).update(1L, clienteUpdate);
+        verify(service, times(1)).updateMe("guuid-unknown", clienteUpdate);
     }
 
     @Test
-    void updateClientBadRequest() throws Exception {
-
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void updateMeBadRequest() throws Exception {
         ClientRequestUpdate invalidClientUpdate = ClientRequestUpdate.builder()
                 .nombre("J")
                 .apellidos("Perez123")
@@ -537,29 +643,29 @@ class ClientRestControllerTest {
                 .build();
 
         MockHttpServletResponse response = mockMvc.perform(
-                        put(endpoint + "/1")
+                        put(endpoint+"/me/profile")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(invalidClientUpdate))
-                                .accept(MediaType.APPLICATION_JSON)
-                )
+                                .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
         assertEquals(400, response.getStatus());
 
-        verify(service, times(0)).update(anyLong(), any(ClientRequestUpdate.class));
+        verify(service, times(0)).updateMe(anyString(), any(ClientRequestUpdate.class));
     }
 
 
     @Test
-    void updateDni() throws Exception {
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void updateMeDni() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "dni.png", MediaType.IMAGE_PNG_VALUE, "dummy content".getBytes());
 
-        when(service.updateDni(1L, file)).thenReturn(clientResponse);
+        when(service.updateMeDni(user.getGuuid(), file)).thenReturn(clientResponse);
 
         MockHttpServletResponse response = mockMvc.perform(
-                        multipart(endpoint + "/dni/1")
+                        multipart(endpoint+"/me/profile/dni")
                                 .file(file)
-                                .contentType(MediaType.MULTIPART_FORM_DATA)
+                                .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                                 .with(request -> {
                                     request.setMethod("PATCH");
                                     return request;
@@ -575,19 +681,20 @@ class ClientRestControllerTest {
                 () -> assertEquals("Juan", res.getNombre())
         );
 
-        verify(service, times(1)).updateDni(1L, file);
+        verify(service, times(1)).updateMeDni(user.getGuuid(), file);
     }
 
     @Test
-    void updateDniNotFound() throws Exception {
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void updateMeDniNotFound() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "dni.png", MediaType.IMAGE_PNG_VALUE, "dummy content".getBytes());
 
-        when(service.updateDni(1L, file)).thenThrow(new ClientNotFound("1"));
+        when(service.updateMeDni("guuid-unknown", file)).thenThrow(new ClientNotFound("guuid-unknown"));
 
         MockHttpServletResponse response = mockMvc.perform(
-                        multipart(endpoint + "/dni/1")
+                        multipart(endpoint+"/me/profile/dni")
                                 .file(file)
-                                .contentType(MediaType.MULTIPART_FORM_DATA)
+                                .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                                 .with(request -> {
                                     request.setMethod("PATCH");
                                     return request;
@@ -595,24 +702,22 @@ class ClientRestControllerTest {
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
-        assertAll(
-                () -> assertEquals(404, response.getStatus())
-        );
+        assertEquals(404, response.getStatus());
 
-        verify(service, times(1)).updateDni(1L, file);
+        verify(service, times(1)).updateMeDni("guuid-unknown", file);
     }
 
-
     @Test
-    void updatePerfil() throws Exception {
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void updateMePerfil() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "perfil.png", MediaType.IMAGE_PNG_VALUE, "dummy content".getBytes());
 
-        when(service.updatePerfil(1L, file)).thenReturn(clientResponse);
+        when(service.updateMePerfil(user.getGuuid(), file)).thenReturn(clientResponse);
 
         MockHttpServletResponse response = mockMvc.perform(
-                        multipart(endpoint + "/perfil/1")
+                        multipart(endpoint+"/me/profile/perfil")
                                 .file(file)
-                                .contentType(MediaType.MULTIPART_FORM_DATA)
+                                .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                                 .with(request -> {
                                     request.setMethod("PATCH");
                                     return request;
@@ -628,21 +733,20 @@ class ClientRestControllerTest {
                 () -> assertEquals("Juan", res.getNombre())
         );
 
-        verify(service, times(1)).updatePerfil(1L, file);
+        verify(service, times(1)).updateMePerfil(user.getGuuid(), file);
     }
 
-
-
     @Test
-    void updatePerfilNotFound() throws Exception {
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void updateMePerfilNotFound() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "perfil.png", MediaType.IMAGE_PNG_VALUE, "dummy content".getBytes());
 
-        when(service.updatePerfil(1L, file)).thenThrow(new ClientNotFound("1"));
+        when(service.updateMePerfil("guuid-unknown", file)).thenThrow(new ClientNotFound("guuid-unknown"));
 
         MockHttpServletResponse response = mockMvc.perform(
-                        multipart(endpoint + "/perfil/1")
+                        multipart("/me/profile/perfil")
                                 .file(file)
-                                .contentType(MediaType.MULTIPART_FORM_DATA)
+                                .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                                 .with(request -> {
                                     request.setMethod("PATCH");
                                     return request;
@@ -650,49 +754,50 @@ class ClientRestControllerTest {
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
-        assertAll(
-                () -> assertEquals(404, response.getStatus())
-        );
+        assertEquals(404, response.getStatus());
 
-        verify(service, times(1)).updatePerfil(1L, file);
+
+        verify(service, times(1)).updateMePerfil("guuid-unknown", file);
     }
 
 
-
     @Test
-    void deleteCliente() throws Exception {
-        doNothing().when(service).delete(1L);
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void deleteMe() throws Exception {
+        doNothing().when(service).deleteMe(user.getGuuid());
 
         MockHttpServletResponse response = mockMvc.perform(
-                        delete(endpoint + "/1")
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        assertEquals(204, response.getStatus());
-
-        verify(service, times(1)).delete(1L);
-    }
-
-    @Test
-    void deleteClientNotFound() throws Exception {
-        doThrow(new ClientNotFound("1")).when(service).delete(1L);
-
-        MockHttpServletResponse response = mockMvc.perform(
-                        delete(endpoint + "/1")
+                        delete(endpoint+"/me/profile")
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
         assertAll(
+                () -> assertEquals(204, response.getStatus())
+        );
+
+        verify(service, times(1)).deleteMe(user.getGuuid());
+    }
+
+    @Test
+    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    void deleteMeNotFound() throws Exception {
+        doThrow(new ClientNotFound("guuid-unknown")).when(service).deleteMe("guuid-unknown");
+
+        MockHttpServletResponse response = mockMvc.perform(
+                        delete("/me/profile")
+                                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertAll(
                 () -> assertEquals(404, response.getStatus())
         );
 
-        verify(service, times(1)).delete(1L);
+        verify(service, times(1)).deleteMe("guuid-unknown");
     }
-
 
     @Test
     void testValidationError() throws Exception {
-        ClientRequestCreate invalidClientRequest = new ClientRequestCreate("", "", "", null, "", "");
+        ClientRequestCreate invalidClientRequest = new ClientRequestCreate("", "", "", null, "");
 
         MockHttpServletResponse response = mockMvc.perform(
                         post(endpoint)
@@ -703,6 +808,7 @@ class ClientRestControllerTest {
 
         assertEquals(400, response.getStatus());
     }
+
 
 
 }

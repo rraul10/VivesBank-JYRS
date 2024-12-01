@@ -8,6 +8,8 @@ import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponse;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class BankAccountMapper {
 
@@ -47,6 +49,12 @@ public class BankAccountMapper {
                 .balance(0.0)
                 .creditCard(null)
                 .build();
+    }
+
+    public List<BankAccountResponse> toListAccountReesponseDto(List<BankAccount> products) {
+        List<BankAccountResponse> lista = List.of();
+        products.forEach(account -> lista.add(toResponse(account)));
+        return lista;
     }
 
 

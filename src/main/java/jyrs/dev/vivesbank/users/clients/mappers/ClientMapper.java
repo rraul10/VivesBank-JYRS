@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.users.clients.mappers;
 
+import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
@@ -11,8 +12,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClientMapper {
 
+    private final BankAccountMapper accountMapper;
 
-    public Client toClientCreate(ClientRequestCreate clientRequestCreate) {
+    public ClientMapper(BankAccountMapper productMapper) {
+        this.accountMapper = productMapper;
+    }
+
+
+    public Client fromClientCreate(ClientRequestCreate clientRequestCreate) {
         if (clientRequestCreate == null) {
             return null;
         }
@@ -22,13 +29,12 @@ public class ClientMapper {
                 .nombre(clientRequestCreate.getNombre())
                 .apellidos(clientRequestCreate.getApellidos())
                 .numTelefono(clientRequestCreate.getNumTelefono())
-                .email(clientRequestCreate.getEmail())
                 .direccion(toAdress(clientRequestCreate.getDireccion()))
                 .build();
 
     }
 
-    public Client toClientUpdate(ClientRequestUpdate clientRequestUpdate) {
+    public Client fromClientUpdate(ClientRequestUpdate clientRequestUpdate) {
         if (clientRequestUpdate == null) {
             return null;
         }
@@ -55,7 +61,7 @@ public class ClientMapper {
                 .numTelefono(client.getNumTelefono())
                 .email(client.getEmail())
                 .direccion(toAddresDto(client.getDireccion()))
-                .cuentas(client.getCuentas())
+                .cuentas(accountMapper.toListAccountReesponseDto(client.getCuentas()))
                 .build();
     }
 
@@ -88,6 +94,4 @@ public class ClientMapper {
                 address.getCp()
         );
     }
-
-
 }
