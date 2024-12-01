@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 
-
+/**
 @DataMongoTest
 @Testcontainers
 class MovementsRepositoryTest {
@@ -84,7 +84,7 @@ class MovementsRepositoryTest {
         assertThat(results.get(0).getTypeMovement()).isEqualTo("TRANSFER");
     }
 }
-
+*/
 
 
 

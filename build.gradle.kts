@@ -55,6 +55,12 @@ dependencies {
 
     // Test Runtime
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // RETROFIT
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.jakewharton.retrofit:retrofit2-reactor-adapter:2.1.0")
+
 }
 
 tasks.withType<Test> {
