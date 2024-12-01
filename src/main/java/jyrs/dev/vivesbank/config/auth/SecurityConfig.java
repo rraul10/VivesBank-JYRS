@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank/" + apiVersion + "/users" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET,"/vivesbank/" + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/users/{id}").hasRole("ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/users/users/name/{name}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/users/name/{name}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/users").permitAll())
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT, "/vivesbank/" + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,"/vivesbank/" + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
