@@ -28,7 +28,7 @@ import java.util.Optional;
 
 @RestController
 @Slf4j
-@RequestMapping("${api.path:/api}/${api.version:/v1}/users")
+@RequestMapping("${api.path:/api}${api.version:/v1}/users")
 public class UsersController {
     private final UsersService usersService;
     private final PaginationLinksUtils paginationLinksUtils;
