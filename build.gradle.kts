@@ -53,7 +53,8 @@ dependencies {
 
     testImplementation ("org.springframework.boot:spring-boot-starter-test")
     testImplementation ("org.testcontainers:junit-jupiter:1.17.6")
-    testImplementation ("org.testcontainers:mongodb:1.17.6")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.0")
+    testImplementation("org.testcontainers:mongodb:1.19.0")
 
     // Para usar con jackson el controlador las fechas: LocalDate, LocalDateTime, etc
     // Lo podemos usar en el test o en el controlador, si hiciese falta, por eso está aquí
@@ -64,6 +65,8 @@ dependencies {
     //testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
+
 
     // Dependencias para Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
