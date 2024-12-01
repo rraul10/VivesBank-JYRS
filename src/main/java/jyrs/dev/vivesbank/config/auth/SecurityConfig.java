@@ -26,11 +26,10 @@ public class SecurityConfig {
     private final UserDetailsService userService;
     private final JwtAuthenticationFilter authenticationFilter;
     @Value("${api.version}")
-    private String _apiVersion;
+    private String apiVersion;
     @Value("${api.path}")
     private String apipath;
 
-    String apiVersion = "/"+_apiVersion;
 
     public SecurityConfig(UserDetailsService userService, JwtAuthenticationFilter authenticationFilter) {
         this.userService = userService;
@@ -46,12 +45,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/users" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/users/users/name/{name}").hasRole("ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST, apipath + apiVersion + "/users").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/users/name/{name}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST, apipath+ apiVersion + "/users").permitAll())
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+                 // clients
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/storage" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/clients" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/clients/{id}").hasRole("ADMIN"))
@@ -63,9 +63,26 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/dni" ).hasRole("CLIENT"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/perfil" ).hasRole("CLIENT"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/clients/me/profile" ).hasRole("CLIENT"))
+
+                // MOVEMENTS
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements").hasRole("ADMIN")) // GET ALL MOVEMENTS
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/client/{clientId}").hasRole( "ADMIN")) // GET MOVEMENTS BY CLIENT ID
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/tipo/{typeMovement}").hasRole("ADMIN")) // GET MOVEMENTS BY TYPE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank" + apiVersion + "/movements").hasRole("ADMIN")) // CREATE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank" + apiVersion + "/movements/{id}/reverse").hasRole("CLIENT")) // Reverse movement
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank" + apiVersion + "/movements/{id}").hasRole("CLIENT")) // DELETE MOVEMENT BY ID
+
+                //API FRANKFURTER
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency").permitAll()) // Permitir acceso público a todas las monedas
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/{symbol}").hasAnyRole("USER", "ADMIN")) // Detalles de moneda por símbolo
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/history/{date}").hasAnyRole("USER", "ADMIN")) // Historial de moneda
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/convert").hasAnyRole("USER", "ADMIN")) // Conversión de moneda
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/timeseries").hasAnyRole("USER", "ADMIN")) // Series temporales
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/latest").permitAll()) // Últimos tipos de cambio
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/currencies").permitAll())
+
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;
-
         return http.build();
     }
     @Bean

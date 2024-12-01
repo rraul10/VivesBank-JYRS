@@ -48,7 +48,7 @@ public class AuthServiceImpl implements AuthService {
         if(!userValidator.validateUserName(request.getUsername())){
             throw new AuthSignUpInvalid("El nombre de usuario debe de ser un correo electrónico válido: " + request.getUsername());
         }
-        if(!userValidator.validateUserName(request.getPassword())){
+        if(!userValidator.validatePassword(request.getPassword())){
             throw new UserPasswordBadRequest("Las contraseñas no puede tener menos de 8 caracteres....");
         }
         if(request.getPassword().contentEquals(request.getCheckPassword())){

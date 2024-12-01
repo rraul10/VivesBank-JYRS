@@ -34,7 +34,7 @@ import java.util.Optional;
 
 @Slf4j
 @RestController
-@RequestMapping("${api.path:/api}/${api.version:/v1}/clients")
+@RequestMapping("${api.path:/api}${api.version:/v1}/clients")
 public class ClientRestController {
 
     private final ClientsService service;

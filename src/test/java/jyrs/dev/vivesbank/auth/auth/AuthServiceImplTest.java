@@ -50,6 +50,7 @@ public class AuthServiceImplTest {
         request.setFotoPerfil("test.png");
         User userStored = new User();
         when(userValidator.validateUserName(request.getUsername())).thenReturn(true);
+        when(userValidator.validatePassword(request.getPassword())).thenReturn(true);
         when(authUserRepository.save(any(User.class))).thenReturn(userStored);
         String token = "test_token";
         when(jwtService.generateToken(userStored)).thenReturn(token);
@@ -70,6 +71,7 @@ public class AuthServiceImplTest {
         request.setCheckPassword("123456Abc@");
         request.setFotoPerfil("test.png");
         when(userValidator.validateUserName(request.getUsername())).thenReturn(true);
+        when(userValidator.validatePassword(request.getPassword())).thenReturn(true);
         when(authUserRepository.save(any(User.class))).thenThrow(DataIntegrityViolationException.class);
         assertThrows(UserAuthNameOrEmailExisten.class, () -> authService.singUp(request));
     }
@@ -81,6 +83,7 @@ public class AuthServiceImplTest {
         request.setCheckPassword("123456Abe@");
         request.setFotoPerfil("test.png");
         when(userValidator.validateUserName(request.getUsername())).thenReturn(true);
+        when(userValidator.validatePassword(request.getPassword())).thenReturn(true);
         assertThrows(UserDiferentePasswords.class, () -> authService.singUp(request));
     }
 
@@ -108,6 +111,7 @@ public class AuthServiceImplTest {
         request.setCheckPassword("123");
         request.setFotoPerfil("test.png");
         when(userValidator.validateUserName(request.getUsername())).thenReturn(true);
+        when(userValidator.validatePassword(request.getPassword())).thenReturn(false);
         assertThrows(UserPasswordBadRequest.class, () -> authService.singUp(request));
     }
 
