@@ -4,11 +4,9 @@ package jyrs.dev.vivesbank.users.clients.dto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import jyrs.dev.vivesbank.products.bankAccounts.dto.AccountResponseDto;
-import lombok.AllArgsConstructor;
+import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -33,7 +31,7 @@ public class ClientResponse {
 
     private AddressDto direccion;
 
-    private List<AccountResponseDto> cuentas;
+    private List<BankAccountResponse> cuentas;
 
     @JsonCreator
     public ClientResponse(
@@ -43,7 +41,7 @@ public class ClientResponse {
             @JsonProperty("numTelefono") String numTelefono,
             @JsonProperty("email") String email,
             @JsonProperty("direccion") AddressDto direccion,
-            @JsonProperty("cuentas") List<AccountResponseDto> cuentas
+            @JsonProperty("cuentas") List<BankAccountResponse> cuentas
     ) {
         this.dni = dni;
         this.nombre = nombre;

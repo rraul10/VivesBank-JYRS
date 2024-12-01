@@ -16,21 +16,22 @@ public interface ClientsService {
 
     ClientResponse getById(Long id);
 
-    //ClientResponse getByUsername(String username);
 
     ClientResponse getByDni(String dni);
 
+    ClientResponse getByUserGuuid(String dni);
+
     ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image, User user);
 
-    ClientResponse update(Long id, ClientRequestUpdate clienteRequest);
+    ClientResponse updateMe(String id, ClientRequestUpdate clienteRequest);
 
-    ClientResponse updateDni(Long id,  MultipartFile fotoDni);
+    ClientResponse updateMeDni(String id, MultipartFile fotoDni);
 
-    ClientResponse updatePerfil(Long id,  MultipartFile fotoPerfil);
+    ClientResponse updateMePerfil(String id, MultipartFile fotoPerfil);
 
-    //List<ClientResponse> getAllIsDeleted(Boolean isDeleted);
 
     void delete(Long id);
+    void deleteMe(String id);
 
 
 }

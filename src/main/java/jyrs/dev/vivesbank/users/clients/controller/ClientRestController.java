@@ -7,8 +7,11 @@ import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.users.models.User;
-import jyrs.dev.vivesbank.utils.PageResponse;
-import jyrs.dev.vivesbank.utils.PaginationLinksUtils;
+import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
+import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
+import jyrs.dev.vivesbank.utils.pagination.PageResponse;
+import jyrs.dev.vivesbank.utils.pagination.PaginationLinksUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -28,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("${api.path:/api}/${api.version:/v1}/clients")
 public class ClientRestController {
@@ -52,6 +57,8 @@ public class ClientRestController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request) {
+        log.info("Obteniendo tddos los clientes");
+
 
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name())
                 ? Sort.by(sortBy).ascending()
@@ -67,30 +74,19 @@ public class ClientRestController {
     }
 
 
-/*
-    @GetMapping("{isdeleted}")
-    public ResponseEntity<List<ClientResponse>>getAllClienteIsDeleted(@PathVariable Boolean isdeleted) {
-        return ResponseEntity.ok(service.getAllIsDeleted(isdeleted));
-    }
-
- */
-
     @GetMapping("{id}")
     public ResponseEntity<ClientResponse> getClienteById(@PathVariable Long id) {
+        log.info("Obteniendo cliente por id {}", id);
+
         return ResponseEntity.ok(service.getById(id));
     }
 
     @GetMapping("/dni/{dni}")
     public ResponseEntity<ClientResponse> getClienteByDni(@PathVariable String dni) {
+        log.info("Obteniendo cliente por dni {}", dni);
+
         return ResponseEntity.ok(service.getByDni(dni));
     }
-/*
-    @GetMapping("{/username/username}")
-    public ResponseEntity<ClientResponse> getClienteById(@PathVariable String username) {
-        return ResponseEntity.ok(service.getByUsername(username));
-    }
-    
- */
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ClientResponse> createCliente(
@@ -99,9 +95,11 @@ public class ClientRestController {
             @RequestPart("file") MultipartFile file
     ) {
 
+        log.info("Guardando cliente {}", clientRequestCreate);
+
         if (!file.isEmpty()) {
 
-            ClientResponse cliente = service.create(clientRequestCreate,file,user);
+            ClientResponse cliente = service.create(clientRequestCreate, file, user);
             return ResponseEntity.status(HttpStatus.CREATED).body(cliente);
 
         } else {
@@ -110,28 +108,46 @@ public class ClientRestController {
 
     }
 
-    @PutMapping(value="{id}")
-    public ResponseEntity<ClientResponse> updateCliente(@PathVariable Long id, @RequestBody @Valid ClientRequestUpdate clientRequest) {
-        var result= service.update(id, clientRequest);
-        return ResponseEntity.ok(result);
-    }
-
-    @PatchMapping(value="/dni/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ClientResponse> updateClienteDni(@PathVariable Long id,  @RequestPart("file") MultipartFile file) {
-        var result= service.updateDni(id, file);
-        return ResponseEntity.ok(result);
-    }
-
-    @PatchMapping(value="/perfil/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ClientResponse> updateClientePerfil(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
-        var result= service.updatePerfil(id, file);
-        return ResponseEntity.ok(result);
-    }
-
-
     @DeleteMapping("{id}")
     public ResponseEntity<Void> deleteCliente(@PathVariable Long id) {
+        log.info("Eliminando cliente con id{}", id);
+
         service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me/profile")
+    public ResponseEntity<ClientResponse> me(@AuthenticationPrincipal User user) {
+        log.info("Obteniendo cliente");
+        return ResponseEntity.ok(service.getByUserGuuid(user.getGuuid()));
+    }
+
+    @PutMapping("/me/profile")
+    public ResponseEntity<ClientResponse> updateMe(@AuthenticationPrincipal User user, @Valid @RequestBody ClientRequestUpdate clientRequestUpdate) {
+        log.info("updateMe: cliente: {}, clienteRequest: {}", user, clientRequestUpdate);
+        return ResponseEntity.ok(service.updateMe(user.getGuuid(), clientRequestUpdate));
+    }
+
+    @PatchMapping(value="/me/profile/dni", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClientResponse> updateMeDni(@AuthenticationPrincipal User user,  @RequestPart("file") MultipartFile file) {
+        log.info("ActualizandoMe foto dni");
+
+        var result= service.updateMeDni(user.getGuuid(), file);
+        return ResponseEntity.ok(result);
+    }
+
+    @PatchMapping(value="/me/profile/perfil", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ClientResponse> updateMePerfil(@AuthenticationPrincipal User user, @RequestPart("file") MultipartFile file) {
+        log.info("ActualizandoMe foto perfil");
+        var result= service.updateMePerfil(user.getGuuid(), file);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/me/profile")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<Void> deleteMe(@AuthenticationPrincipal User user) {
+        log.info("deleteMe: CLIENT: {}", user);
+        service.deleteMe(user.getGuuid());
         return ResponseEntity.noContent().build();
     }
 

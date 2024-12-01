@@ -1,8 +1,6 @@
 package jyrs.dev.vivesbank.users.clients.mappers;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
-import jakarta.validation.ValidatorFactory;
+import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
@@ -13,8 +11,9 @@ import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
-import javax.xml.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -23,12 +22,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ClientMapperTest {
 
-    private ClientMapper mapper;
+
     private AddressDto addressDto;
+    @Mock
+    private BankAccountMapper accountMapper;
+
+    @InjectMocks
+    private ClientMapper mapper;
 
     @BeforeEach
     void setUp() {
-        mapper = new ClientMapper();
+        mapper = new ClientMapper(accountMapper);
 
         addressDto = AddressDto.builder()
                 .calle("TEST")
@@ -40,7 +44,7 @@ class ClientMapperTest {
                 .build();
     }
     @Test
-    void toClientCreateOk(){
+    void fromClientCreateOk(){
         ClientRequestCreate clienteRequest = new ClientRequestCreate(
                 "11111111",
                 "test",
@@ -50,23 +54,23 @@ class ClientMapperTest {
         );
 
 
-        Client cliente = mapper.toClientCreate(clienteRequest);
+        Client cliente = mapper.fromClientCreate(clienteRequest);
 
         assertEquals(cliente.getNombre(),clienteRequest.getNombre());
         assertEquals(cliente.getDni(),clienteRequest.getDni());
     }
 
     @Test
-    void toClientCreateNull(){
+    void fromClientCreateNull(){
         ClientRequestCreate clienteRequest = null;
 
-        Client cliente = mapper.toClientCreate(clienteRequest);
+        Client cliente = mapper.fromClientCreate(clienteRequest);
 
         assertNull(cliente);
     }
 
     @Test
-    void toClientUpdateOk(){
+    void fromClientUpdateOk(){
         ClientRequestUpdate clienteRequest = new ClientRequestUpdate(
                 "test",
                 "test",
@@ -76,16 +80,16 @@ class ClientMapperTest {
                 "test"
         );
 
-        Client cliente = mapper.toClientUpdate(clienteRequest);
+        Client cliente = mapper.fromClientUpdate(clienteRequest);
 
         assertEquals(cliente.getNombre(),clienteRequest.getNombre());
     }
 
     @Test
-    void toClientUpdateNull(){
+    void fromClientUpdateNull(){
         ClientRequestUpdate clienteRequest = null;
 
-        Client cliente = mapper.toClientUpdate(clienteRequest);
+        Client cliente = mapper.fromClientUpdate(clienteRequest);
 
         assertNull(cliente);
     }

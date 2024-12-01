@@ -1,8 +1,6 @@
 package jyrs.dev.vivesbank.users.clients.mappers;
 
-import jyrs.dev.vivesbank.products.dto.ProductResponseDto;
-import jyrs.dev.vivesbank.products.mapper.ProductMapper;
-import jyrs.dev.vivesbank.products.models.Product;
+import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.users.clients.dto.AddressDto;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
@@ -11,19 +9,17 @@ import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
 public class ClientMapper {
 
-    private final ProductMapper productMapper;
+    private final BankAccountMapper accountMapper;
 
-    public ClientMapper(ProductMapper productMapper) {
-        this.productMapper = productMapper;
+    public ClientMapper(BankAccountMapper productMapper) {
+        this.accountMapper = productMapper;
     }
 
 
-    public Client toClientCreate(ClientRequestCreate clientRequestCreate) {
+    public Client fromClientCreate(ClientRequestCreate clientRequestCreate) {
         if (clientRequestCreate == null) {
             return null;
         }
@@ -38,7 +34,7 @@ public class ClientMapper {
 
     }
 
-    public Client toClientUpdate(ClientRequestUpdate clientRequestUpdate) {
+    public Client fromClientUpdate(ClientRequestUpdate clientRequestUpdate) {
         if (clientRequestUpdate == null) {
             return null;
         }
@@ -65,7 +61,7 @@ public class ClientMapper {
                 .numTelefono(client.getNumTelefono())
                 .email(client.getEmail())
                 .direccion(toAddresDto(client.getDireccion()))
-                .cuentas((client.getCuentas()))
+                .cuentas(accountMapper.toListAccountReesponseDto(client.getCuentas()))
                 .build();
     }
 
@@ -98,8 +94,4 @@ public class ClientMapper {
                 address.getCp()
         );
     }
-
-
-
-
 }

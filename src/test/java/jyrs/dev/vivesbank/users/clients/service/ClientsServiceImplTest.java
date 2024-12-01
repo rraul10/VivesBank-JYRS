@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -329,7 +328,7 @@ class ClientsServiceImplTest {
         var tipo = "DNI-"+cliente.getEmail();
         MultipartFile image = mock(MultipartFile.class);
 
-        when(mapper.toClientCreate(clienteCreate)).thenReturn(cliente);
+        when(mapper.fromClientCreate(clienteCreate)).thenReturn(cliente);
         when(storageService.store(image,tipo)).thenReturn("path/dni.jpg");
 
         when(repository.getByDni(cliente.getDni())).thenReturn(Optional.ofNullable(cliente));
@@ -343,7 +342,7 @@ class ClientsServiceImplTest {
                 () -> assertEquals(clientResponse.getNombre(), result.getNombre())
         );
 
-        verify(mapper, times(1)).toClientCreate(clienteCreate);
+        verify(mapper, times(1)).fromClientCreate(clienteCreate);
         verify(storageService, times(1)).store(image, tipo);
         verify(repository, times(1)).getByDni(cliente.getDni());
         verify(repository, times(1)).save(cliente);
@@ -355,7 +354,7 @@ class ClientsServiceImplTest {
         var tipo = "DNI-"+cliente.getEmail();
         MultipartFile image = mock(MultipartFile.class);
 
-        when(mapper.toClientCreate(clienteCreate)).thenReturn(cliente);
+        when(mapper.fromClientCreate(clienteCreate)).thenReturn(cliente);
         when(storageService.store(image,tipo)).thenReturn("path/dni.jpg");
         when(repository.getByDni(cliente.getDni())).thenReturn(Optional.empty());
 
@@ -364,7 +363,7 @@ class ClientsServiceImplTest {
 
         assertEquals("El cliente: 1 no encontrado", exception.getMessage());
 
-        verify(mapper, times(1)).toClientCreate(clienteCreate);
+        verify(mapper, times(1)).fromClientCreate(clienteCreate);
         verify(storageService, times(1)).store(image, tipo);
         verify(repository, times(1)).getByDni(cliente.getDni());
         verify(repository, times(1)).save(any());
@@ -376,7 +375,7 @@ class ClientsServiceImplTest {
 
         when(repository.findById(id)).thenReturn(Optional.of(cliente));
 
-        when(mapper.toClientUpdate(clienteUpdate)).thenReturn(cliente);
+        when(mapper.fromClientUpdate(clienteUpdate)).thenReturn(cliente);
 
         when(repository.save(cliente)).thenReturn(cliente);
 
@@ -392,7 +391,7 @@ class ClientsServiceImplTest {
 
         verify(repository, times(1)).findById(id);
         verify(repository, times(1)).save(cliente);
-        verify(mapper, times(1)).toClientUpdate(clienteUpdate);
+        verify(mapper, times(1)).fromClientUpdate(clienteUpdate);
         verify(mapper, times(1)).toResponse(cliente);
     }
 

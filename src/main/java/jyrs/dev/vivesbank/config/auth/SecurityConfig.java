@@ -27,6 +27,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter authenticationFilter;
     @Value("${api.version}")
     private String apiVersion;
+    @Value("${api.path}")
+    private String apipath;
 
     public SecurityConfig(UserDetailsService userService, JwtAuthenticationFilter authenticationFilter) {
         this.userService = userService;
@@ -38,16 +40,36 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(manager ->manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request ->request.requestMatchers("/error/**").permitAll())
-                .authorizeHttpRequests(request -> request.requestMatchers("/vivesbank/" + apiVersion + "/auth/**").permitAll())
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank/" + apiVersion + "/users" ).hasRole("ADMIN"))
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET,"/vivesbank/" + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/users/{id}").hasRole("ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/users/users/name/{name}").hasRole("ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/users").permitAll())
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT, "/vivesbank/" + apiVersion + "/users/{id}").hasRole("ADMIN"))
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,"/vivesbank/" + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, "/vivesbank/" + apiVersion + "/users/{id}").hasRole("ADMIN"))
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,"/vivesbank/" + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(apipath + apiVersion + "/auth/**").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/users" ).hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/users/users/name/{name}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST, apipath + apiVersion + "/users").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/clients" ).hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/clients/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/clients/dni/{dni}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST,apipath + apiVersion + "/clients" ).hasRole("USER"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/clients/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/clients/me/profile" ).hasRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT,apipath + apiVersion + "/clients/me/profile" ).hasRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/dni" ).hasRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/perfil" ).hasRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/clients/me/profile" ).hasRole("CLIENT"))
+
+
+
+
+
+
+
+
+
+
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;
 
