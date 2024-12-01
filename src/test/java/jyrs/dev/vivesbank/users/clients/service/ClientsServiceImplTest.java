@@ -13,6 +13,7 @@ import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -58,11 +60,11 @@ class ClientsServiceImplTest {
     void setUp() {
         user = User.builder()
                 .id(1L)
-                .guuid("12345-abcde-67890")
-                .username("test@example.com")
+                .guuid("puZjCDm_xCg")
+                .username("juan.perez@example.com")
                 .password("password123")
-                .fotoPerfil("path/to/foto.png")
-                .roles(Set.of(Role.USER))
+                .fotoPerfil("profile.png")
+                .roles(new HashSet<>(Set.of(Role.USER)))
                 .build();
         address = Address.builder()
                 .calle("TEST")
@@ -117,18 +119,14 @@ class ClientsServiceImplTest {
                 .apellidos("Pérez")
                 .numTelefono("66666666")
                 .direccion(addressDto)
+                .cuentas(List.of())
                 .email("juan.perez@example.com")
                 .build();
 
         cliente = Client.builder()
                 .dni("11111111A")
-                .nombre("Juan")
-                .user(User.builder()
-                        .username("usuario@correo.com")
-                        .password("password123")
-                        .fotoPerfil("profile.jpg")
-                        .roles(Set.of( Role.USER))
-                        .build())
+                .nombre("Yahya")
+                .user(user)
                 .apellidos("Pérez")
                 .direccion(address)
                 .fotoDni("fotoDni.jpg")
@@ -324,18 +322,52 @@ class ClientsServiceImplTest {
     }
 
     @Test
+    void getByGuuid() {
+
+        String guuid = "12345-abcde-67890";
+        when(repository.getByUser_Guuid(guuid)).thenReturn(Optional.of(cliente));
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        var res = service.getByUserGuuid(guuid);
+
+        assertAll(
+                () -> assertNotNull(res),
+                () -> assertEquals(clientResponse.getNombre(), res.getNombre()),
+                () -> assertEquals(clientResponse.getApellidos(), res.getApellidos())
+        );
+
+        verify(repository, times(1)).getByUser_Guuid(guuid);
+        verify(mapper, times(1)).toResponse(cliente);
+
+    }
+
+    @Test
+    void getByGuuidNotFound() {
+        String guuid = "111";
+
+        when(repository.getByUser_Guuid(guuid)).thenReturn(Optional.empty());
+        var exception = assertThrows(ClientNotFound.class, () -> service.getByUserGuuid(guuid));
+
+        assertEquals("El cliente: 111 no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).getByUser_Guuid(guuid);
+    }
+
+    @Test
     void create() {
-        var tipo = "DNI-"+cliente.getEmail();
+        var tipo = "DNI-" + cliente.getEmail();
         MultipartFile image = mock(MultipartFile.class);
 
-        when(mapper.fromClientCreate(clienteCreate)).thenReturn(cliente);
-        when(storageService.store(image,tipo)).thenReturn("path/dni.jpg");
+        user.getRoles().add(Role.CLIENT);
 
-        when(repository.getByDni(cliente.getDni())).thenReturn(Optional.ofNullable(cliente));
+        when(mapper.fromClientCreate(clienteCreate)).thenReturn(cliente);
+        when(storageService.store(image, tipo)).thenReturn("path/dni.jpg");
+
+        when(repository.getByDni(cliente.getDni())).thenReturn(Optional.empty());
         when(repository.save(cliente)).thenReturn(cliente);
         when(mapper.toResponse(cliente)).thenReturn(clientResponse);
 
-        ClientResponse result = service.create(clienteCreate, image,user);
+        ClientResponse result = service.create(clienteCreate, image, user);
 
         assertAll(
                 () -> assertNotNull(result),
@@ -347,41 +379,34 @@ class ClientsServiceImplTest {
         verify(repository, times(1)).getByDni(cliente.getDni());
         verify(repository, times(1)).save(cliente);
         verify(mapper, times(1)).toResponse(cliente);
-
     }
+
     @Test
     void createExists() {
         var tipo = "DNI-"+cliente.getEmail();
         MultipartFile image = mock(MultipartFile.class);
 
         when(mapper.fromClientCreate(clienteCreate)).thenReturn(cliente);
-        when(storageService.store(image,tipo)).thenReturn("path/dni.jpg");
-        when(repository.getByDni(cliente.getDni())).thenReturn(Optional.empty());
-
-        //ClientResponse result = service.create(clienteCreate, image,user);
+        when(repository.getByDni(cliente.getDni())).thenReturn(Optional.ofNullable(cliente));
         var exception = assertThrows(ClienteExists.class, () -> service.create(clienteCreate,image,user));
 
-        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+        assertEquals("El cliente con id: 11111111A ya existe", exception.getMessage());
 
         verify(mapper, times(1)).fromClientCreate(clienteCreate);
-        verify(storageService, times(1)).store(image, tipo);
         verify(repository, times(1)).getByDni(cliente.getDni());
-        verify(repository, times(1)).save(any());
+
     }
 
     @Test
-    void update() {
-        Long id = 1L;
+    void updateMe() {
+        String id = "12345-abcde-67890";
 
-        when(repository.findById(id)).thenReturn(Optional.of(cliente));
-
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.of(cliente));
         when(mapper.fromClientUpdate(clienteUpdate)).thenReturn(cliente);
-
         when(repository.save(cliente)).thenReturn(cliente);
-
         when(mapper.toResponse(cliente)).thenReturn(clientResponse);
 
-        var result = service.update(id, clienteUpdate);
+        var result = service.updateMe(id, clienteUpdate);
 
         assertAll(
                 () -> assertNotNull(result),
@@ -389,143 +414,118 @@ class ClientsServiceImplTest {
                 () -> assertEquals(clientResponse.getEmail(), result.getEmail())
         );
 
-        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).getByUser_Guuid(id);
         verify(repository, times(1)).save(cliente);
         verify(mapper, times(1)).fromClientUpdate(clienteUpdate);
         verify(mapper, times(1)).toResponse(cliente);
     }
 
     @Test
-    void updateNotFound() {
-        Long id = 1L;
+    void updateMeNotFound() {
+        String id = "user-uuid";
 
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.empty());
 
-        var exception = assertThrows(ClientNotFound.class, () -> service.update(id, clienteUpdate));
+        var exception = assertThrows(ClientNotFound.class, () -> service.updateMe(id, clienteUpdate));
 
-        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+        assertEquals("El cliente: user-uuid no encontrado", exception.getMessage());
 
-        verify(repository, times(1)).findById(id);
-        verify(mapper,times(0)).toResponse(cliente);
-        verify(repository, times(0)).save(any());
+        verify(repository, times(1)).getByUser_Guuid(id);
+    }
+
+
+
+    @Test
+    void updateMeDni() {
+        String id = "puZjCDm_xCg";
+        String storedDniImageUrl = "fotoDniUpdate.jpg";
+        MultipartFile newDniImage = mock(MultipartFile.class);
+        String fotoVieja = cliente.getFotoDni();
+
+
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.of(cliente));
+
+        when(storageService.store(newDniImage, "DNI-" + cliente.getEmail())).thenReturn(storedDniImageUrl);
+
+        doNothing().when(storageService).delete(fotoVieja);
+
+        when(repository.save(cliente)).thenReturn(cliente);
+
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        var result = service.updateMeDni(id, newDniImage);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(clientResponse.getNombre(), result.getNombre())  // Verifica que el nombre coincide
+        );
+
+        verify(repository, times(1)).getByUser_Guuid(id);
+        verify(storageService, times(1)).store(newDniImage, "DNI-" + cliente.getEmail());
+        verify(storageService, times(1)).delete(fotoVieja);
+        verify(repository, times(1)).save(cliente);
+        verify(mapper, times(1)).toResponse(cliente);
     }
 
 
     @Test
-    void updateDni() {
-        Client clienteUpdate= Client.builder()
-                .dni("11111111A")
-                .nombre("Juan")
-                .apellidos("Pérez")
-                .direccion(address)
-                .fotoDni("fotoDniUpdate.jpg")
-                .numTelefono("666666666")
-                .email("juan.perez@example.com")
-                .cuentas(List.of())
-                .build();
-        Long id = 1L;
-        String storedImageUrl = "fotoDni.jpg";
-        MultipartFile newDniImage = mock(MultipartFile.class);
+    void updateMeDniNotFound() {
+        String id = "user-uuid";
+        MultipartFile dniImagen = mock(MultipartFile.class);
 
-        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.empty());
 
-        when(storageService.store(newDniImage, "DNI-" + cliente.getEmail())).thenReturn(storedImageUrl);
+        var exception = assertThrows(ClientNotFound.class, () -> service.updateMeDni(id, dniImagen));
 
-        doNothing().when(storageService).delete(cliente.getFotoDni());
+        assertEquals("El cliente: user-uuid no encontrado", exception.getMessage());
 
-        cliente.setDni(storedImageUrl);
-        when(repository.save(cliente)).thenReturn(clienteUpdate);
+        verify(repository, times(1)).getByUser_Guuid(id);
 
-        when(mapper.toResponse(clienteUpdate)).thenReturn(clientResponse);
+    }
 
-        var result = service.updateDni(id, newDniImage);
+
+
+    @Test
+    void updateMePerfil() {
+        String id = "puZjCDm_xCg";
+        String storedImageUrl = "gggg.jpg";
+        MultipartFile newProfileImage = mock(MultipartFile.class);
+        String fotoVieja = user.getFotoPerfil();
+
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.of(cliente));
+        when(storageService.store(newProfileImage, "PROFILE-" + user.getUsername())).thenReturn(storedImageUrl);
+        doNothing().when(storageService).delete(fotoVieja);
+        when(repository.save(cliente)).thenReturn(cliente);
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        var result = service.updateMePerfil(id, newProfileImage);
 
         assertAll(
                 () -> assertNotNull(result),
                 () -> assertEquals(clientResponse.getNombre(), result.getNombre())
         );
 
-        verify(repository, times(1)).findById(id);
-        verify(storageService, times(1)).store(newDniImage, "DNI-" + cliente.getEmail());
-        verify(storageService, times(1)).delete(cliente.getFotoDni());
-        verify(repository, times(1)).save(cliente);
-        verify(mapper, times(1)).toResponse(clienteUpdate);
-    }
-
-    @Test
-    void updateDniNotFound() {
-        Long id = 1L;
-        MultipartFile dniImagen = mock(MultipartFile.class);
-
-        when(repository.findById(id)).thenReturn(Optional.empty());
-
-        var exception = assertThrows(ClientNotFound.class,
-                () -> service.updateDni(id, dniImagen));
-
-        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
-
-        verify(repository, times(1)).findById(id);
-        verifyNoInteractions(storageService);
-        verify(repository, times(0)).save(any());
-        verify(mapper, times(0)).toResponse(any());
-    }
-
-
-    @Test
-    void updatePerfil() {
-        User user = User.builder()
-                .username("usuario@correo.com")
-                .password("password123")
-                .fotoPerfil("profile.jpg")
-                .roles(Set.of( Role.USER))
-                .build();
-        Long id = 1L;
-        String storedImageUrl = "perfil";
-        MultipartFile newProfileImage = mock(MultipartFile.class);
-
-        when(repository.findById(id)).thenReturn(Optional.of(cliente));
-
-        when(storageService.store(newProfileImage, "PROFILE-" + user.getUsername())).thenReturn(storedImageUrl);
-
-        doNothing().when(storageService).delete(user.getUsername());
-
-        user.setFotoPerfil(storedImageUrl);
-        cliente.setUser(user);
-
-        when(repository.save(cliente)).thenReturn(cliente);
-
-        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
-
-        var result = service.updatePerfil(id, newProfileImage);
-
-        assertAll(
-                () -> assertNotNull(result),
-                () -> assertEquals(clientResponse.getNombre(), result.getNombre()),
-                () -> assertEquals(storedImageUrl, user.getFotoPerfil())
-        );
-
-        verify(repository, times(1)).findById(id);
+        verify(repository, times(1)).getByUser_Guuid(id);
         verify(storageService, times(1)).store(newProfileImage, "PROFILE-" + user.getUsername());
-        verify(storageService, times(1)).delete(user.getUsername());
+        verify(storageService, times(1)).delete(fotoVieja);
         verify(repository, times(1)).save(cliente);
         verify(mapper, times(1)).toResponse(cliente);
     }
+
+
+
     @Test
-    void updatePerfilNotFound() {
-        Long id = 1L;
+    void updateMePerfilNotFound() {
+        String id = "user-uuid";
         MultipartFile newProfileImage = mock(MultipartFile.class);
 
-        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.empty());
 
-        var exception = assertThrows(ClientNotFound.class,
-                () -> service.updatePerfil(id, newProfileImage));
+        var exception = assertThrows(ClientNotFound.class, () -> service.updateMePerfil(id, newProfileImage));
 
-        assertEquals("El cliente: 1 no encontrado", exception.getMessage());
+        assertEquals("El cliente: user-uuid no encontrado", exception.getMessage());
 
-        verify(repository, times(1)).findById(id);
-        verifyNoInteractions(storageService);
-        verify(repository, times(0)).save(any());
-        verify(mapper, times(0)).toResponse(any());
+        verify(repository, times(1)).getByUser_Guuid(id);
     }
 
 
@@ -592,5 +592,68 @@ class ClientsServiceImplTest {
         verify(repository, times(1)).findById(id);
         verify(repository, times(0)).save(any());
     }
+
+    @Test
+    void deleteMe() {
+        String id = "12345-abcde-67890";
+
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.of(cliente));
+
+        doNothing().when(repository).deleteById(cliente.getId());
+        doNothing().when(storageService).delete(cliente.getFotoDni());
+
+        service.deleteMe(id);
+
+        verify(repository, times(1)).getByUser_Guuid(id);
+        verify(repository, times(1)).deleteById(cliente.getId());
+        verify(storageService, times(1)).delete(cliente.getFotoDni());
+    }
+
+    @Test
+    void deleteMeNotFound() {
+        String id = "user-uuid";
+
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ClientNotFound.class, () -> service.deleteMe(id));
+
+        assertEquals("El cliente: user-uuid no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).getByUser_Guuid(id);
+        verify(repository, times(0)).deleteById(any());
+        verify(storageService, times(0)).delete(any());
+    }
+
+    @Test
+    void deleteMeLog() {
+        String id = "12345-abcde-67890";
+
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.of(cliente));
+
+        when(repository.save(cliente)).thenReturn(cliente);
+
+        service.deleteMeLog(id);
+
+        assertTrue(cliente.getUser().getIsDeleted());
+
+        verify(repository, times(1)).getByUser_Guuid(id);
+        verify(repository, times(1)).save(cliente);
+    }
+
+    @Test
+    void deleteMeLogNotFound() {
+        String id = "user-uuid";
+
+        when(repository.getByUser_Guuid(id)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ClientNotFound.class, () -> service.deleteMeLog(id));
+
+        assertEquals("El cliente: user-uuid no encontrado", exception.getMessage());
+
+        verify(repository, times(1)).getByUser_Guuid(id);
+        verify(repository, times(0)).save(any());
+    }
+
+
 
 }

@@ -9,6 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.File;
@@ -29,6 +30,7 @@ class StorageControllerTest {
     private StorageService storageService;
 
     @Test
+    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
     void serveFile() throws Exception {
         String filename = "testfile.png";
         Resource file = mock(Resource.class);

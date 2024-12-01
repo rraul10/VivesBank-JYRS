@@ -133,10 +133,11 @@ public class ClientsServiceImpl implements ClientsService {
     @Override
     public ClientResponse updateMeDni(String id, MultipartFile fotoDni) {
         var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+        String fotoVieja = cliente.getFotoDni();
         var email = cliente.getEmail();
         var tipo = "DNI-" + email;
         String imageStored = storageService.store(fotoDni, tipo);
-        storageService.delete(cliente.getFotoDni());
+        storageService.delete(fotoVieja);
 
         cliente.setFotoDni(imageStored);
 
@@ -148,13 +149,15 @@ public class ClientsServiceImpl implements ClientsService {
 
     @Override
     public ClientResponse updateMePerfil(String id, MultipartFile fotoPerfil) {
-        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id.toString()));
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
 
         User user = cliente.getUser();
+        String fotoVieja = user.getFotoPerfil();
         var email = user.getUsername();
         var tipo = "PROFILE-" + email;
         String imageStored = storageService.store(fotoPerfil, tipo);
-        storageService.delete(user.getUsername());
+
+        storageService.delete(fotoVieja);
 
         user.setFotoPerfil(imageStored);
 
@@ -163,6 +166,7 @@ public class ClientsServiceImpl implements ClientsService {
 
         return mapper.toResponse(clienteActualizado);
     }
+
 
     @Override
     public void delete(Long id) {

@@ -11,15 +11,22 @@ import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ClientMapperTest {
 
 
@@ -126,9 +133,13 @@ class ClientMapperTest {
                 .user(use)
                 .build();
 
+        when(accountMapper.toListAccountReesponseDto(List.of())).thenReturn(List.of());
+
         ClientResponse clienteResponse = mapper.toResponse(cliente);
 
         assertEquals(cliente.getNombre(),clienteResponse.getNombre());
+
+        verify(accountMapper,times(1)).toListAccountReesponseDto(List.of());
     }
 
     @Test
