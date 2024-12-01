@@ -38,6 +38,8 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(manager ->manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request ->request.requestMatchers("/error/**").permitAll())
+
+                // USERS
                 .authorizeHttpRequests(request -> request.requestMatchers("/vivesbank/" + apiVersion + "/auth/**").permitAll())
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank/" + apiVersion + "/users" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET,"/vivesbank/" + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
@@ -48,9 +50,25 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,"/vivesbank/" + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, "/vivesbank/" + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,"/vivesbank/" + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+
+                // MOVEMENTS
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements").hasRole("ADMIN")) // GET ALL MOVEMENTS
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements/client/{clientId}").hasRole( "ADMIN")) // GET MOVEMENTS BY CLIENT ID
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank/" + apiVersion + "/movements/tipo/{typeMovement}").hasRole("ADMIN")) // GET MOVEMENTS BY TYPE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/movements").hasRole("ADMIN")) // CREATE MOVEMENT
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank/" + apiVersion + "/movements/{id}/reverse").hasRole("CLIENT")) // Reverse movement
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank/" + apiVersion + "/movements/{id}").hasRole("CLIENT")) // DELETE MOVEMENT BY ID
+
+                //API FRANKFURTER
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency").permitAll()) // Permitir acceso público a todas las monedas
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/{symbol}").hasAnyRole("USER", "ADMIN")) // Detalles de moneda por símbolo
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/history/{date}").hasAnyRole("USER", "ADMIN")) // Historial de moneda
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/convert").hasAnyRole("USER", "ADMIN")) // Conversión de moneda
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/timeseries").hasAnyRole("USER", "ADMIN")) // Series temporales
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/latest").permitAll()) // Últimos tipos de cambio
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/currencies").permitAll())
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;
-
         return http.build();
     }
     @Bean

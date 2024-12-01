@@ -15,12 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -29,12 +31,14 @@ public class ClientsServiceImpl implements ClientsService {
     private final ClientsRepository repository;
     private final StorageService storageService;
     private final ClientMapper mapper;
-    @Autowired
+    private final RedisTemplate<String, Object> redisTemplate;
 
-    public ClientsServiceImpl(ClientsRepository repository, StorageService storageService, ClientMapper mapper) {
+    @Autowired
+    public ClientsServiceImpl(ClientsRepository repository, StorageService storageService, ClientMapper mapper, RedisTemplate<String, Object> redisTemplate) {
         this.repository = repository;
         this.storageService = storageService;
         this.mapper = mapper;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -78,9 +82,23 @@ public class ClientsServiceImpl implements ClientsService {
 
     @Override
     public ClientResponse getById(Long id) {
+        String redisKey = "client:id:" + id;
+        ClientResponse cachedClient = (ClientResponse) redisTemplate.opsForValue().get(redisKey);
+
+        if (cachedClient != null) {
+            log.info("Cliente obtenido desde caché de Redis");
+            return cachedClient;
+        }
+
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
-        return mapper.toResponse(cliente);
+
+        cachedClient = mapper.toResponse(cliente);
+        redisTemplate.opsForValue().set(redisKey, cachedClient, 10, TimeUnit.MINUTES);
+
+        log.info("Cliente obtenido desde la base de datos y almacenado en caché Redis");
+        return cachedClient;
     }
+
 /*
     @Override
     public ClientResponse getByUsername(String username) {
@@ -92,9 +110,23 @@ public class ClientsServiceImpl implements ClientsService {
 
     @Override
     public ClientResponse getByDni(String dni) {
+        String redisKey = "client:dni:" + dni;
+        ClientResponse cachedClient = (ClientResponse) redisTemplate.opsForValue().get(redisKey);
+
+        if (cachedClient != null) {
+            log.info("Cliente con DNI {} obtenido desde caché de Redis", dni);
+            return cachedClient;
+        }
+
         var cliente = repository.getByDni(dni).orElseThrow(() -> new ClientNotFound(dni));
-        return mapper.toResponse(cliente);
+
+        cachedClient = mapper.toResponse(cliente);
+        redisTemplate.opsForValue().set(redisKey, cachedClient, 10, TimeUnit.MINUTES);
+
+        log.info("Cliente con DNI {} obtenido desde la base de datos y almacenado en caché Redis", dni);
+        return cachedClient;
     }
+
 
     @Override
     public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image) {
@@ -114,7 +146,6 @@ public class ClientsServiceImpl implements ClientsService {
     @Override
     public ClientResponse update(Long id, ClientRequestUpdate clienteRequest) {
         var cliente = mapper.toClientUpdate(clienteRequest);
-
         var res = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
 
         res.setNombre(cliente.getNombre() != null ? cliente.getNombre() : res.getNombre());
@@ -128,10 +159,12 @@ public class ClientsServiceImpl implements ClientsService {
         user.setPassword(clienteRequest.getPassword() != null ? clienteRequest.getPassword() : user.getPassword());
         res.setUser(user);
 
-        var clienteActualizado = repository.save(res);
+        redisTemplate.delete("client:id:" + id);
 
+        var clienteActualizado = repository.save(res);
         return mapper.toResponse(clienteActualizado);
     }
+
 
     @Override
     public ClientResponse updateDni(Long id, MultipartFile fotoDni) {
