@@ -105,19 +105,31 @@ public class MovementsServiceImplTest {
     @Test
     void reverseMovement() {
         String movementId = "1";
-        Movement movement = new Movement();
-        movement.setIsReversible(true);
 
+        // Configuración inicial del movimiento
+        Movement movement = new Movement();
+        movement.setIsReversible(true); // Asegúrate de que sea reversible
+        movement.setDate(LocalDateTime.now().minusHours(12)); // Fecha dentro del rango permitido
+
+        // Configuración de mocks
         when(movementsRepository.findById(movementId)).thenReturn(Optional.of(movement));
-        doNothing().when(movementValidator).validateReversible(any(Movement.class));
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
 
+        // Llama al método que quieres probar
         movementsService.reverseMovement(movementId);
 
+        // Verifica que se llamó al validador
         verify(movementValidator).validateReversible(movement);
+
+        // Verifica que el movimiento se guardó
         verify(movementsRepository).save(movement);
+
+        // Verifica que el movimiento se marcó como no reversible
         assertFalse(movement.getIsReversible());
     }
+
+
+
 
     @Test
     void reverseMovementNotFound() {
