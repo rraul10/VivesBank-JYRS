@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.validation.constraints.Email;
@@ -67,6 +68,12 @@ public class Client {
     @OneToMany
     @JoinColumn(name = "BANK_ACCOUNTS_id")
     private List<BankAccount> cuentas;
+
+    public <E> Client(long l, String sender, ArrayList<E> es) {
+    }
+
+    public Client(String client1) {
+    }
 
     public void setUsername() {
         this.email = user.getUsername();
