@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Service
 public class MovementValidator {
-    public void validateReversible(Movement movement) {
+    public static void validateReversible(Movement movement) {
 
         if (!movement.getIsReversible()) {
             throw new IllegalStateException("Movement cannot be reversed, it is already irreversible");
