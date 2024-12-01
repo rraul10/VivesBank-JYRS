@@ -10,6 +10,7 @@ import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
+import jyrs.dev.vivesbank.users.clients.service.storage.ClientStorage;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +44,8 @@ class ClientsServiceImplTest {
     private StorageService storageService;
     @Mock
     private ClientMapper mapper;
+    @Mock
+    private ClientStorage storage;
 
     @InjectMocks
     private ClientsServiceImpl service;
@@ -652,6 +656,30 @@ class ClientsServiceImplTest {
 
         verify(repository, times(1)).getByUser_Guuid(id);
         verify(repository, times(0)).save(any());
+    }
+
+    @Test
+    void testImportJson() throws Exception {
+        File file = mock(File.class);
+        List<Client> clients = List.of(cliente);
+
+        when(storage.importJson(file)).thenReturn(clients);
+
+        service.importJson(file);
+
+        verify(storage).importJson(file);
+        verify(repository).saveAll(clients);
+    }
+
+    @Test
+    void testExportJson() throws Exception {
+        File file = mock(File.class);
+        List<Client> clients = List.of(cliente);
+
+        doNothing().when(storage).exportJson(file,clients);
+        service.exportJson(file, clients);
+
+        verify(storage).exportJson(file, clients);
     }
 
 
