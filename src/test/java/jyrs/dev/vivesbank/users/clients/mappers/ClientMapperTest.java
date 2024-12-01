@@ -93,14 +93,15 @@ class ClientMapperTest {
 
     @Test
     void toResponseOk(){
-        User use = new User(1L,
-                "TEST",
-                "TEST",
-                "TEST",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                false,
-                Set.of(Role.UN_LOG));
+        User use = User.builder()
+                .id(1L)
+                .username("TEST")
+                .password("TEST")
+                .fotoPerfil("TEST")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .roles(Set.of(Role.UN_LOG))
+                .build();
         Address address = Address.builder()
                 .calle("TEST")
                 .numero(1)

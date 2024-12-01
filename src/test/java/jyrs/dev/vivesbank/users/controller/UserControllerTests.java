@@ -168,7 +168,7 @@ public class UserControllerTests {
 
     @Test
     void getUserById() throws Exception {
-        when(usersService.getUserById(1L)).thenReturn(responseDto);
+        when(usersService.getUserById(user.getGuuid())).thenReturn(responseDto);
         MockHttpServletResponse response = mockMvc.perform(
                         get(myEndpoint + "/{id}", 1L)
                                 .accept(MediaType.APPLICATION_JSON))
@@ -179,18 +179,18 @@ public class UserControllerTests {
                 () -> assertEquals(responseDto, res)
         );
 
-        verify(usersService, times(1)).getUserById(1L);
+        verify(usersService, times(1)).getUserById(user.getGuuid());
     }
     @Test
     void getUserByIdNotFound() throws Exception {
-        when(usersService.getUserById(1L)).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado usuario con id: "+ 1L));
+        when(usersService.getUserById(user.getGuuid())).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado usuario con id: "+ 1L));
         MockHttpServletResponse response = mockMvc.perform(
                         get(myEndpoint + "/{id}", 1L)
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
         assertEquals(404, response.getStatus());
 
-        verify(usersService, times(1)).getUserById(1L);
+        verify(usersService, times(1)).getUserById(user.getGuuid());
     }
     @Test
     void getUserByName() throws Exception {
@@ -305,7 +305,7 @@ public class UserControllerTests {
                .fotoPerfil("nuevaFoto.jpg")
                .isDeleted(false)
                .build();
-        when(usersService.updateUser(1L, userRequestDto)).thenReturn(responseDto);
+        when(usersService.updateUser(user.getGuuid(), userRequestDto)).thenReturn(responseDto);
         MockHttpServletResponse response = mockMvc.perform(
                         put(myEndpoint + "/{id}", 1L)
                                .contentType(MediaType.APPLICATION_JSON)
@@ -316,7 +316,7 @@ public class UserControllerTests {
                 () -> assertEquals(200, response.getStatus()),
                 () -> assertEquals(responseDto, res)
         );
-        verify(usersService, times(1)).updateUser(1L, userRequestDto);
+        verify(usersService, times(1)).updateUser(user.getGuuid(), userRequestDto);
     }
 
     @Test
@@ -327,7 +327,7 @@ public class UserControllerTests {
                .fotoPerfil("nuevaFoto.jpg")
                .isDeleted(false)
                .build();
-        when(usersService.updateUser(9999999999L, userRequestDto)).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado user con id: " + 9999999999L));
+        when(usersService.updateUser("9999999999L", userRequestDto)).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado user con id: " + 9999999999L));
         MockHttpServletResponse response = mockMvc.perform(
                         put(myEndpoint + "/{id}", 9999999999L)
                                .contentType(MediaType.APPLICATION_JSON)
@@ -335,7 +335,7 @@ public class UserControllerTests {
                                .andReturn().getResponse();
         assertEquals(404, response.getStatus());
 
-        verify(usersService, times(1)).updateUser(9999999999L, userRequestDto);
+        verify(usersService, times(1)).updateUser("9999999999L", userRequestDto);
     }
 
     @Test
@@ -353,7 +353,7 @@ public class UserControllerTests {
                                .andReturn().getResponse();
         assertEquals(400, response.getStatus());
 
-        verify(usersService, times(0)).updateUser(1L, userRequestDto);
+        verify(usersService, times(0)).updateUser(user.getGuuid(), userRequestDto);
     }
     @Test
     void updateUserBadRequestBadUserName() throws Exception {
@@ -370,7 +370,7 @@ public class UserControllerTests {
                 .andReturn().getResponse();
         assertEquals(400, response.getStatus());
 
-        verify(usersService, times(0)).updateUser(1L, userRequestDto);
+        verify(usersService, times(0)).updateUser(user.getGuuid(), userRequestDto);
     }
 
     @Test
@@ -388,7 +388,7 @@ public class UserControllerTests {
                                .andReturn().getResponse();
         assertEquals(400, response.getStatus());
 
-        verify(usersService, times(0)).updateUser(1L, userRequestDto);
+        verify(usersService, times(0)).updateUser(user.getGuuid(), userRequestDto);
     }
 
     @Test
@@ -406,29 +406,29 @@ public class UserControllerTests {
                                .andReturn().getResponse();
         assertEquals(400, response.getStatus());
 
-        verify(usersService, times(0)).updateUser(1L, userRequestDto);
+        verify(usersService, times(0)).updateUser(user.getGuuid(), userRequestDto);
     }
 
     @Test
     void deleteUser() throws Exception {
-        doNothing().when(usersService).deleteUser(1L);
+        doNothing().when(usersService).deleteUser(user.getGuuid());
         MockHttpServletResponse response = mockMvc.perform(
-                        delete(myEndpoint + "/{id}", 1L))
+                        delete(myEndpoint + "/{id}", user.getGuuid()))
                                .andReturn().getResponse();
         assertEquals(204, response.getStatus());
 
-        verify(usersService, times(1)).deleteUser(1L);
+        verify(usersService, times(1)).deleteUser(user.getGuuid());
     }
 
     @Test
     void deleteUserNotFound() throws Exception {
-        doThrow(new UserExceptions.UserNotFound("no se ha encontrado user con id: " + 100L)).when(usersService).deleteUser(100L);
+        doThrow(new UserExceptions.UserNotFound("no se ha encontrado user con id: " + 100L)).when(usersService).deleteUser("100L");
         MockHttpServletResponse response = mockMvc.perform(
                         delete(myEndpoint + "/{id}", 100L))
                                .andReturn().getResponse();
         assertEquals(404, response.getStatus());
 
-        verify(usersService, times(1)).deleteUser(100L);
+        verify(usersService, times(1)).deleteUser("100L");
     }
 
 }

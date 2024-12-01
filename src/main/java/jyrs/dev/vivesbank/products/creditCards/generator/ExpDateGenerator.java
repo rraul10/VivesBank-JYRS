@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Component
 public class ExpDateGenerator {
 
-    public static String generator() {
+    public String generator() {
         // Fecha actual
         LocalDate hoy = LocalDate.now();
 
@@ -21,7 +21,7 @@ public class ExpDateGenerator {
         LocalDate fechaCaducidad = hoy.plusYears(anosCaducidad).withMonth(mesCaducidad);
 
         // Formatear la fecha al formato MM/YY
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM_yy");
         return fechaCaducidad.format(formatter);
     }
 }

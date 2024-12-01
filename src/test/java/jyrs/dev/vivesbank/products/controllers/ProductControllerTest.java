@@ -78,7 +78,7 @@ class ProductControllerTest {
     @Autowired
     public ProductControllerTest (ProductServices productServices){
         this.productServices = productServices;
-        mapper.registerModule(new JavaTimeModule()); // Necesario para que funcione LocalDateTime
+        mapper.registerModule(new JavaTimeModule());
     }
     @Test
     void findAll() throws Exception {
@@ -183,8 +183,6 @@ class ProductControllerTest {
 
     @Test
     void create() throws Exception {
-
-
 
         ProductDto productCreatedDto = ProductDto.builder()
                .productType(ProductType.CREDIT_CARD)

@@ -50,7 +50,7 @@ public class CreditCardServiceImpl implements CreditCardService{
     @Override
     public CreditCard getById(Long id) {
         log.info("Buscando tarjeta con id: " + id);
-        return repository.findById(id).orElseThrow(() -> new CreditCardNotFoundException("Tarjeta no encontrada con id: " + id));
+        return repository.findById(id).orElseThrow(() -> new CreditCardNotFoundException(id));
     }
 
     @Override
@@ -75,13 +75,13 @@ public class CreditCardServiceImpl implements CreditCardService{
     @Override
     public void delete(Long id) {
         log.info("Eliminando tarjeta con id: " + id);
-        var creditCard = repository.findById(id).orElseThrow(() -> new CreditCardNotFoundException("Tarjeta no encontrada con id: " + id));
+        var creditCard = repository.findById(id).orElseThrow(() -> new CreditCardNotFoundException(id));
         repository.delete(creditCard);
 
     }
 
     @Override
-    public Page<CreditCard> findByExpirationDateContains(String expiryDate, Pageable pageable) throws DataFormatException {
+    public Page<CreditCard> getByExpirationDateContains(String expiryDate, Pageable pageable) throws DataFormatException {
         log.info("Buscando tarjetas de credito con fecha de expiracion: " +expiryDate);
         if(!expDateValidator.validator(expiryDate)) throw new DataFormatException("La fecha no esta en un formato valido");
         return repository.findAllByExpirationDateContains(expiryDate, pageable);
@@ -89,10 +89,10 @@ public class CreditCardServiceImpl implements CreditCardService{
     }
 
     @Override
-    public Page<CreditCard> findAllByExpirationDateIsBefore(String expirationDateBefore, Pageable pageable) throws DataFormatException {
+    public Page<CreditCard> getAllByExpirationDateIsBefore(String expirationDateBefore, Pageable pageable) throws DataFormatException {
         log.info("Buscando tarjetas de credito con fecha caducidad anterior a: " + expirationDateBefore);
         if(!expDateValidator.validator(expirationDateBefore)) throw new DataFormatException("La fecha no esta en un formato valido");
-        return findAllByExpirationDateIsBefore(expirationDateBefore, pageable);
+        return repository.findAllByExpirationDateIsBefore(expirationDateBefore, pageable);
     }
 
 }

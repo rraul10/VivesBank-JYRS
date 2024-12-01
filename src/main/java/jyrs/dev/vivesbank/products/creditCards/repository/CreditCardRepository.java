@@ -16,5 +16,5 @@ public interface CreditCardRepository extends JpaRepository<CreditCard, Long>, J
 
     Page<CreditCard> findAllByExpirationDateIsBefore(String expirationDateBefore, Pageable pageable);
 
-    Boolean findCreditCardByNumberEquals(String number);
+    Boolean existsByNumber(String number);
 }

@@ -2,6 +2,7 @@ package jyrs.dev.vivesbank.products.repositories;
 
 import jyrs.dev.vivesbank.products.base.models.Product;
 import jyrs.dev.vivesbank.products.base.models.type.ProductType;
+import jyrs.dev.vivesbank.products.base.repositories.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProductRepositoryTest {
 
     @Autowired
-    private jyrs.dev.vivesbank.products.base.repositories.ProductRepository ProductRepository;
+    private ProductRepository productRepository;
 
     @Autowired
     private TestEntityManager entityManager;
@@ -43,7 +44,7 @@ class ProductRepositoryTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         // Act
-        Page<Product> result = ProductRepository.findAllByType(productTest.getType(), pageable);
+        Page<Product> result = productRepository.findAllByType(productTest.getType(), pageable);
 
         // Assert
         assertNotNull(result);
@@ -58,7 +59,7 @@ class ProductRepositoryTest {
         Pageable pageable = PageRequest.of(0, 10);
 
         // Act
-        Page<Product> result = ProductRepository.findAllByType(productTest.getType(), pageable);
+        Page<Product> result = productRepository.findAllByType(productTest.getType(), pageable);
 
         // Assert
         assertNotNull(result);
@@ -72,7 +73,7 @@ class ProductRepositoryTest {
         entityManager.merge(productTest);
         entityManager.flush();
 
-        Optional<Product> result = ProductRepository.findBySpecificationContainingIgnoreCase("test_account");
+        Optional<Product> result = productRepository.findBySpecificationContainingIgnoreCase("test_account");
 
         assertAll(
                 () -> assertNotNull(result),
@@ -83,7 +84,7 @@ class ProductRepositoryTest {
 
     @Test
     void findBySpecificationContainingIgnoreCaseNotFound(){
-        Optional<Product> result = ProductRepository.findBySpecificationContainingIgnoreCase("test");
+        Optional<Product> result = productRepository.findBySpecificationContainingIgnoreCase("test");
 
         assertNotNull(result);
     }

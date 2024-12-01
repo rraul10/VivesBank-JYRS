@@ -21,7 +21,7 @@ public interface CreditCardService {
 
     void delete(Long id);
 
-    Page<CreditCard> findByExpirationDateContains(String expiryDate, Pageable pageable) throws DataFormatException;
+    Page<CreditCard> getByExpirationDateContains(String expiryDate, Pageable pageable) throws DataFormatException;
 
-    Page<CreditCard> findAllByExpirationDateIsBefore(String expirationDateBefore, Pageable pageable) throws DataFormatException;
+    Page<CreditCard> getAllByExpirationDateIsBefore(String expirationDateBefore, Pageable pageable) throws DataFormatException;
 }

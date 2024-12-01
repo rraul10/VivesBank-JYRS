@@ -22,7 +22,7 @@ public class CreditCardGenerator {
         String numeroTarjeta;
         do {
             numeroTarjeta = generarNumeroTarjeta(16);
-        }while (!validator.validarNumeroTarjeta(numeroTarjeta) && repository.findCreditCardByNumberEquals(numeroTarjeta));
+        }while (!validator.validarNumeroTarjeta(numeroTarjeta) && repository.existsByNumber(numeroTarjeta));
         return numeroTarjeta;
     }
 

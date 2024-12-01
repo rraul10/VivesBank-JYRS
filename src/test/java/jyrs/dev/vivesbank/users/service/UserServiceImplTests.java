@@ -37,7 +37,7 @@ public class UserServiceImplTests {
             .roles(Set.of( Role.USER))
             .build();
     private final UserResponseDto userResponseDto =  UserResponseDto.builder()
-            .id(user.getId())
+            .guuid(String.valueOf(user.getId()))
             .username("usuario@correo.com")
             .fotoPerfil("profile.jpg")
             .isDeleted(false)
@@ -127,7 +127,7 @@ public class UserServiceImplTests {
         Long id = user.getId();
         when(usersRepository.findById(id)).thenReturn(Optional.of(expectedUser));
         when(userMapper.toUserResponse(expectedUser)).thenReturn(userResponseDto);
-        UserResponseDto actualUserResponse = usersService.getUserById(id);
+        UserResponseDto actualUserResponse = usersService.getUserById(user.getGuuid());
         assertAll(
                 () -> assertNotNull(actualUserResponse),
                 () -> assertEquals(userResponseDto, actualUserResponse)
@@ -139,7 +139,7 @@ public class UserServiceImplTests {
     void getUserByIdNotFound(){
         var id = 9999999999L;
         when(usersRepository.findById(id)).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado user con id: " + id));
-        var result = assertThrows(UserExceptions.UserNotFound.class, () ->usersService.getUserById(id));
+        var result = assertThrows(UserExceptions.UserNotFound.class, () ->usersService.getUserById(user.getGuuid()));
         verify(usersRepository, times(1)).findById(id);
     }
     @Test
@@ -185,7 +185,7 @@ public class UserServiceImplTests {
         UserResponseDto res = usersService.saveUser(userRequestDto);
         assertAll(
                 () -> assertNotNull(res),
-                () -> assertEquals(responseDto.getId(), res.getId()),
+                () -> assertEquals(responseDto.getGuuid(), res.getGuuid()),
                 () -> assertEquals(responseDto.getUsername(), res.getUsername())
         );
         verify(usersRepository, times(1)).save(user);
@@ -233,7 +233,7 @@ public class UserServiceImplTests {
         when(userMapper.toUserResponse(updatedUser)).thenReturn(userResponseDto);
 
         // Llamada al método
-        UserResponseDto result = usersService.updateUser(userId, userRequestDto);
+        UserResponseDto result = usersService.updateUser(String.valueOf(userId), userRequestDto);
 
         // Afirmaciones
         assertAll(
@@ -266,7 +266,7 @@ public class UserServiceImplTests {
 
         // Llamada al método y verificación de excepción
         var exception = assertThrows(UserExceptions.UserNotFound.class,
-                () -> usersService.updateUser(userId, userRequestDto));
+                () -> usersService.updateUser(String.valueOf(userId), userRequestDto));
 
         // Afirmaciones
         assertAll(
@@ -285,7 +285,7 @@ public class UserServiceImplTests {
     void deleteUser(){
         when(usersRepository.findById(user.getId())).thenReturn(Optional.of(user));
         when(usersRepository.save(user)).thenReturn(user);
-        usersService.deleteUser(user.getId());
+        usersService.deleteUser(String.valueOf(user.getId()));
         assert(user.getIsDeleted());
         verify(usersRepository, times(1)).findById(user.getId());
     }
@@ -293,7 +293,7 @@ public class UserServiceImplTests {
     void deleteUserNotFound(){
         var id = 99999L;
         when(usersRepository.findById(id)).thenThrow(new UserExceptions.UserNotFound("no se ha encontrado user con id: " + id));
-        var result = assertThrows(UserExceptions.UserNotFound.class, () ->usersService.getUserById(id));
+        var result = assertThrows(UserExceptions.UserNotFound.class, () ->usersService.getUserById(String.valueOf(id)));
         verify(usersRepository, times(1)).findById(id);
         verify(usersRepository, times(0)).save(user);
     }

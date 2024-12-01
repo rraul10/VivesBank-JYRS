@@ -76,7 +76,7 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody ProductUpdatedDto updatedProduct){
         log.info("Actualizando producto con id: " + id);
         return ResponseEntity.ok(productServices.update(updatedProduct, id));
