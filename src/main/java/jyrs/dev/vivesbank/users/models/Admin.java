@@ -1,7 +1,7 @@
 package jyrs.dev.vivesbank.users.models;
 
 import jakarta.persistence.*;
-import jyrs.dev.vivesbank.utils.idGenerator;
+import jyrs.dev.vivesbank.utils.IdGenerator;
 
 @Entity
 public class Admin {
@@ -16,7 +16,7 @@ public class Admin {
     @PrePersist
     public void generateUniqueId() {
         if (this.guuid == null || this.guuid.isEmpty()) {
-            this.guuid = idGenerator.HashGenerator.generateHash();
+            this.guuid = IdGenerator.generateHash();
         }
     }
 }

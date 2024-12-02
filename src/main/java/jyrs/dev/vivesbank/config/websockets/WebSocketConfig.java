@@ -25,4 +25,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
         return new WebSocketHandler("cuentas");
     }
 
+    @Bean
+    public WebSocketHandler webSocketUserHandler() {
+        return new WebSocketHandler("users");
+    }
+
 }

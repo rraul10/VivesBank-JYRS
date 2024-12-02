@@ -1,6 +1,9 @@
 package jyrs.dev.vivesbank.users.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolationException;
+import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
+import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
@@ -9,16 +12,18 @@ import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
 import jyrs.dev.vivesbank.users.users.mappers.UserMapper;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.services.UsersServiceImpl;
-import jyrs.dev.vivesbank.users.users.storage.UserStorage;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.UserNotificationMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.Arrays;
@@ -45,15 +50,22 @@ public class UserServiceImplTests {
             .fotoPerfil("profile.jpg")
             .isDeleted(false)
             .build();
-
+    WebSocketHandler webSocketHandlerMock = mock(WebSocketHandler.class);
+    @Mock
+    private WebSocketConfig webSocketConfig;
+    @Mock
+    private UserNotificationMapper userNotificationMapper;
     @Mock
     private UsersRepository usersRepository;
     @Mock
     private UserMapper userMapper;
-    @Mock
-    private UserStorage storage;
     @InjectMocks
     private UsersServiceImpl usersService;
+    @BeforeEach
+    void setUp() {
+        usersService.setWebSocketService(webSocketHandlerMock);
+    }
+
 
     @Test
     void findAllNoArgumentsProvided() {
@@ -166,40 +178,31 @@ public class UserServiceImplTests {
     }
 
     @Test
-    void saveUser(){
+    void saveUser() throws IOException {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("usuario@correo.com")
                 .password("17j$e7cS")
                 .fotoPerfil("foto.jpg")
                 .isDeleted(false)
                 .build();
-        User user = User.builder()
-                .username("usuario@correo.com")
-                .password("17j$e7cS")
-                .fotoPerfil("foto.jpg")
-                .isDeleted(false)
-                .build();
-        UserResponseDto responseDto = UserResponseDto.builder()
-                .username("usuario@correo.com")
-                .fotoPerfil("foto.jpg")
-                .isDeleted(false)
-                .build();
-        when(usersRepository.save(user)).thenReturn(user);
-        when(userMapper.toUserResponse(user)).thenReturn(responseDto);
         when(userMapper.fromUserDto(userRequestDto)).thenReturn(user);
+        when(usersRepository.save(user)).thenReturn(user);
+        when(userMapper.toUserResponse(user)).thenReturn(userResponseDto);
+        doNothing().when(webSocketHandlerMock).sendMessage(any());
         UserResponseDto res = usersService.saveUser(userRequestDto);
         assertAll(
                 () -> assertNotNull(res),
-                () -> assertEquals(responseDto.getGuuid(), res.getGuuid()),
-                () -> assertEquals(responseDto.getUsername(), res.getUsername())
+                () -> assertEquals(userResponseDto.getGuuid(), res.getGuuid()),
+                () -> assertEquals(userResponseDto.getUsername(), res.getUsername())
         );
         verify(usersRepository, times(1)).save(user);
+        verify(webSocketHandlerMock, times(1)).sendMessage(any());
         verify(userMapper, times(1)).toUserResponse(user);
-        verify(userMapper, times(1)).fromUserDto(userRequestDto);
+        verify(userMapper, times(2)).fromUserDto(userRequestDto);
     }
 
     @Test
-    void updateUserSuccess() {
+    void updateUserSuccess() throws IOException {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("nuevoUsuario")
                 .password("17j$e7cS")
@@ -231,6 +234,7 @@ public class UserServiceImplTests {
 
         // Configuración de mocks
         when(usersRepository.findByGuuid(user.getGuuid())).thenReturn(existingUser);
+        doNothing().when(webSocketHandlerMock).sendMessage(any());
         when(userMapper.toUser(userRequestDto, existingUser)).thenReturn(updatedUser);
         when(usersRepository.save(updatedUser)).thenReturn(updatedUser);
         when(userMapper.toUserResponse(updatedUser)).thenReturn(userResponseDto);
@@ -249,6 +253,7 @@ public class UserServiceImplTests {
         // Verificaciones de mocks
         verify(usersRepository, times(1)).findByGuuid(user.getGuuid());
         verify(usersRepository, times(1)).save(updatedUser);
+        verify(webSocketHandlerMock, times(1)).sendMessage(any());
         verify(userMapper, times(1)).toUser(userRequestDto, existingUser);
         verify(userMapper, times(1)).toUserResponse(updatedUser);
     }
@@ -298,31 +303,6 @@ public class UserServiceImplTests {
         var result = assertThrows(UserExceptions.UserNotFound.class, () ->usersService.getUserById(id));
         verify(usersRepository, times(1)).findByGuuid(id);
         verify(usersRepository, times(0)).save(user);
-    }
-
-    @Test
-    void importJson() throws Exception {
-        File file = mock(File.class);
-        List<User> users = List.of(user);
-
-        when(storage.importJson(file)).thenReturn(users);
-
-        usersService.importJson(file);
-
-        verify(storage).importJson(file);
-
-        verify(usersRepository).saveAll(users);
-    }
-
-    @Test
-    void exportJson() throws Exception {
-        File file = mock(File.class);
-        List<User> users = List.of(user);
-
-        doNothing().when(storage).exportJson(file,users);
-        usersService.exportJson(file, users);
-
-        verify(storage).exportJson(file, users);
     }
 
 }
