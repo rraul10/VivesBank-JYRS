@@ -13,6 +13,7 @@ import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.UserNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.UserNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
@@ -34,13 +35,15 @@ public class UsersServiceImpl implements UsersService {
     private final WebSocketConfig webSocketConfig;
     private final ObjectMapper objectMapper;
     private final UsersRepository usersRepository;
+    @Setter
     private WebSocketHandler webSocketService;
     private final UserNotificationMapper userNotificationMapper;
     @Autowired
-    public UsersServiceImpl(UserMapper userMapper, WebSocketConfig webSocketConfig, ObjectMapper objectMapper, UsersRepository usersRepository, UserNotificationMapper userNotificationMapper) {
+    public UsersServiceImpl(UserMapper userMapper, WebSocketConfig webSocketConfig, UsersRepository usersRepository, UserNotificationMapper userNotificationMapper) {
         this.userMapper = userMapper;
+        objectMapper= new ObjectMapper();
         this.webSocketConfig = webSocketConfig;
-        this.objectMapper = objectMapper;
+        webSocketService = webSocketConfig.webSocketUserHandler();
         this.usersRepository = usersRepository;
         this.userNotificationMapper = userNotificationMapper;
     }
@@ -90,6 +93,7 @@ public class UsersServiceImpl implements UsersService {
         onChange(Notificacion.Tipo.CREATE, userMapper.fromUserDto(user));
         return res;
     }
+
 
     @Override
     public UserResponseDto updateUser(String id, UserRequestDto user) {
@@ -141,10 +145,6 @@ public class UsersServiceImpl implements UsersService {
         }catch (JsonProcessingException e){
             log.error("Error al convertir la notificación a JSON", e);
         }
-
-    }
-    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
-        this.webSocketService = webSocketHandlerMock;
 
     }
 }
