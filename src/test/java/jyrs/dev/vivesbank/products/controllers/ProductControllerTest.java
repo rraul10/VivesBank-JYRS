@@ -3,14 +3,14 @@ package jyrs.dev.vivesbank.products.controllers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jyrs.dev.vivesbank.products.dto.ProductDto;
-import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
-import jyrs.dev.vivesbank.products.exceptions.ProductExistingException;
-import jyrs.dev.vivesbank.products.exceptions.ProductNotFoundException;
-import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.products.models.type.ProductType;
-import jyrs.dev.vivesbank.products.repositories.ProductRepository;
-import jyrs.dev.vivesbank.products.services.ProductServices;
+import jyrs.dev.vivesbank.products.base.dto.ProductDto;
+import jyrs.dev.vivesbank.products.base.dto.ProductUpdatedDto;
+import jyrs.dev.vivesbank.products.base.exceptions.ProductExistingException;
+import jyrs.dev.vivesbank.products.base.exceptions.ProductNotFoundException;
+import jyrs.dev.vivesbank.products.base.models.Product;
+import jyrs.dev.vivesbank.products.base.models.type.ProductType;
+import jyrs.dev.vivesbank.products.base.repositories.ProductRepository;
+import jyrs.dev.vivesbank.products.base.services.ProductServices;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -78,7 +78,7 @@ class ProductControllerTest {
     @Autowired
     public ProductControllerTest (ProductServices productServices){
         this.productServices = productServices;
-        mapper.registerModule(new JavaTimeModule()); // Necesario para que funcione LocalDateTime
+        mapper.registerModule(new JavaTimeModule());
     }
     @Test
     void findAll() throws Exception {
@@ -183,8 +183,6 @@ class ProductControllerTest {
 
     @Test
     void create() throws Exception {
-
-
 
         ProductDto productCreatedDto = ProductDto.builder()
                .productType(ProductType.CREDIT_CARD)
