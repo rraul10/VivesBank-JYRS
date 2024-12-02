@@ -3,7 +3,7 @@ package jyrs.dev.vivesbank.users.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jyrs.dev.vivesbank.utils.idGenerator;
+import jyrs.dev.vivesbank.utils.IdGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -82,7 +82,7 @@ public class User implements UserDetails {
     @PrePersist
     public void generateUniqueId() {
         if (this.guuid == null || this.guuid.isEmpty()) {
-            this.guuid = idGenerator.HashGenerator.generateHash();
+            this.guuid = IdGenerator.generateHash();
         }
     }
 
