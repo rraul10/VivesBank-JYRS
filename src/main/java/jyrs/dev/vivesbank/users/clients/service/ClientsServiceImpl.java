@@ -9,6 +9,7 @@ import jyrs.dev.vivesbank.users.clients.exceptions.ClienteExists;
 import jyrs.dev.vivesbank.users.clients.mappers.ClientMapper;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
+import jyrs.dev.vivesbank.users.clients.service.storage.ClientStorage;
 import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
@@ -21,6 +22,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -31,13 +34,15 @@ public class ClientsServiceImpl implements ClientsService {
     private final ClientsRepository repository;
     private final StorageService storageService;
     private final ClientMapper mapper;
+    private final ClientStorage storage;
     private final RedisTemplate<String, Object> redisTemplate;
-
     @Autowired
-    public ClientsServiceImpl(ClientsRepository repository, StorageService storageService, ClientMapper mapper, RedisTemplate<String, Object> redisTemplate) {
+
+    public ClientsServiceImpl(ClientsRepository repository,RedisTemplate<String, Object> redisTemplate, StorageService storageService, ClientMapper mapper, ClientStorage storage) {
         this.repository = repository;
         this.storageService = storageService;
         this.mapper = mapper;
+        this.storage = storage;
         this.redisTemplate = redisTemplate;
     }
 
@@ -226,6 +231,22 @@ public class ClientsServiceImpl implements ClientsService {
         repository.deleteById(cliente.getId());
         storageService.delete(cliente.getFotoDni());
 
+    }
+
+    @Override
+    public void exportJson(File file, List<Client> clients) {
+        log.info("Exportando clients a JSON");
+
+        storage.exportJson(file,clients);
+    }
+
+    @Override
+    public void importJson(File file) {
+        log.info("Importando clients desde JSON");
+
+        List<Client> clients= storage.importJson(file);
+
+        repository.saveAll(clients);
     }
 
     public void deleteMeLog(String id) {

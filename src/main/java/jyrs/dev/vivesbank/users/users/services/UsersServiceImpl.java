@@ -1,13 +1,16 @@
 package jyrs.dev.vivesbank.users.users.services;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jyrs.dev.vivesbank.users.clients.storage.service.StorageService;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
 import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
 import jyrs.dev.vivesbank.users.users.mappers.UserMapper;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
+import jyrs.dev.vivesbank.users.users.storage.UserStorage;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,7 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 @Service
 @Slf4j
@@ -26,10 +31,12 @@ import java.util.Optional;
 public class UsersServiceImpl implements UsersService {
     private final UserMapper userMapper;
     private final UsersRepository usersRepository;
+    private final UserStorage storage;
     @Autowired
-    public UsersServiceImpl(UserMapper userMapper, UsersRepository usersRepository) {
+    public UsersServiceImpl(UserMapper userMapper, UsersRepository usersRepository, UserStorage storage) {
         this.userMapper = userMapper;
         this.usersRepository = usersRepository;
+        this.storage = storage;
     }
 
     @Override
@@ -96,5 +103,22 @@ public class UsersServiceImpl implements UsersService {
         }
         result.setIsDeleted(true);
         usersRepository.save(result);
+    }
+
+    @Override
+    public void exportJson(File file, List<User> users) {
+        log.info("Exportando Users a JSON");
+
+        storage.exportJson(file,users);
+
+    }
+
+    @Override
+    public void importJson(File file) {
+        log.info("Importando Users desde JSON");
+
+        List<User> users= storage.importJson(file);
+
+        usersRepository.saveAll(users);
     }
 }

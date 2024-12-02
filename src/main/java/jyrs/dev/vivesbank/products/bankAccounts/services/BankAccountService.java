@@ -6,6 +6,8 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.io.File;
+import java.util.List;
 import java.util.Optional;
 
 public interface BankAccountService {
@@ -14,4 +16,6 @@ public interface BankAccountService {
     BankAccountResponse findBankAccountByIban(String iban);
     BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest);
     void deleteBankAccount(Long id);
+    void exportJson(File file, List<BankAccount> accounts);
+    void importJson(File file);
 }
