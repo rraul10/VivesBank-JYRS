@@ -10,6 +10,8 @@ import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
 import jyrs.dev.vivesbank.users.users.mappers.UserMapper;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
+import jyrs.dev.vivesbank.users.users.storage.UserStorage;
+import jyrs.dev.vivesbank.users.users.storage.UserStorageImpl;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.UserNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.UserNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
@@ -25,7 +27,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 @Service
 @Slf4j
@@ -36,10 +40,12 @@ public class UsersServiceImpl implements UsersService {
     private final ObjectMapper objectMapper;
     private final UsersRepository usersRepository;
     private WebSocketHandler webSocketService;
+    private final UserStorage storage;
     private final UserNotificationMapper userNotificationMapper;
     @Autowired
-    public UsersServiceImpl(UserMapper userMapper, WebSocketConfig webSocketConfig, UsersRepository usersRepository, UserNotificationMapper userNotificationMapper) {
+    public UsersServiceImpl(UserMapper userMapper, WebSocketConfig webSocketConfig, UsersRepository usersRepository, UserStorage storage, UserNotificationMapper userNotificationMapper) {
         this.userMapper = userMapper;
+        this.storage = storage;
         objectMapper= new ObjectMapper();
         this.webSocketConfig = webSocketConfig;
         webSocketService = webSocketConfig.webSocketUserHandler();
@@ -118,6 +124,23 @@ public class UsersServiceImpl implements UsersService {
         usersRepository.save(result);
         onChange(Notificacion.Tipo.DELETE, result);
     }
+
+    @Override
+    public void exportJson(File file, List<User> users) {
+        log.info("Exportando Users a JSON");
+
+        storage.exportJson(file,users);
+    }
+
+    @Override
+    public void importJson(File file) {
+        log.info("Importando Users desde JSON");
+
+        List<User> users= storage.importJson(file);
+
+        usersRepository.saveAll(users);
+    }
+
     void onChange(Notificacion.Tipo tipo, User data){
         log.info("Servicio de funkos onChange con tipo: " +  tipo + " y datos: " + data);
         if(webSocketService == null){
