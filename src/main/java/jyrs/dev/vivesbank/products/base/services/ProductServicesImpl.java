@@ -1,13 +1,14 @@
-package jyrs.dev.vivesbank.products.services;
+package jyrs.dev.vivesbank.products.base.services;
 
-import jyrs.dev.vivesbank.products.dto.ProductDto;
-import jyrs.dev.vivesbank.products.dto.ProductUpdatedDto;
-import jyrs.dev.vivesbank.products.exceptions.ProductExistingException;
-import jyrs.dev.vivesbank.products.exceptions.ProductNotFoundException;
-import jyrs.dev.vivesbank.products.mapper.ProductMapper;
-import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.products.models.type.ProductType;
-import jyrs.dev.vivesbank.products.repositories.ProductRepository;
+import jyrs.dev.vivesbank.products.base.dto.ProductDto;
+import jyrs.dev.vivesbank.products.base.dto.ProductUpdatedDto;
+import jyrs.dev.vivesbank.products.base.exceptions.ProductExistingException;
+import jyrs.dev.vivesbank.products.base.exceptions.ProductNotFoundException;
+import jyrs.dev.vivesbank.products.base.mapper.ProductMapper;
+import jyrs.dev.vivesbank.products.base.models.Product;
+import jyrs.dev.vivesbank.products.base.models.type.ProductType;
+import jyrs.dev.vivesbank.products.base.repositories.ProductRepository;
+import jyrs.dev.vivesbank.products.base.services.ProductServices;
 import jyrs.dev.vivesbank.products.storage.ProductStorage;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import lombok.extern.slf4j.Slf4j;

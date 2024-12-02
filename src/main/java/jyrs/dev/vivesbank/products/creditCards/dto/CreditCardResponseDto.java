@@ -1,20 +1,23 @@
 package jyrs.dev.vivesbank.products.creditCards.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreditCardResponseDto {
-
-    private final Long id;
-    private final String number;
-    private final String expirationDate;
-    private final String cvv;
-    private final String pin;
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
-    private final Boolean isDeleted;
+    Long id;
+    String number;
+    String expirationDate;
+    String cvv;
+    String pin;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
+    Boolean isDeleted;
 }

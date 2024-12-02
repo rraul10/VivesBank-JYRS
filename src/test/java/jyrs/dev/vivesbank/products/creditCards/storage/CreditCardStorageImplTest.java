@@ -39,8 +39,8 @@ class CreditCardStorageImplTest {
         creditCard = CreditCard.builder()
                 .id(1L)
                 .number("1234567812345678")
-                .cvc("123")
-                .expirationDate(LocalDate.now().plusMonths(12))
+                .cvv("123")
+                .expirationDate(String.valueOf(LocalDate.now().plusMonths(12)))
                 .pin("1234")
                 .build();
     }

@@ -14,7 +14,6 @@ import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
-import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;

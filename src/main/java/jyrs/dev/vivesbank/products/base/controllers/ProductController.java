@@ -9,7 +9,7 @@ import jyrs.dev.vivesbank.products.base.mapper.ProductMapper;
 import jyrs.dev.vivesbank.products.base.models.Product;
 import jyrs.dev.vivesbank.products.base.models.type.ProductType;
 import jyrs.dev.vivesbank.products.base.services.ProductServices;
-import jyrs.dev.vivesbank.utils.PageResponse;
+import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;

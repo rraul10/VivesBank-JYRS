@@ -10,7 +10,7 @@ import jyrs.dev.vivesbank.products.creditCards.exceptions.CreditCardNotFoundExce
 import jyrs.dev.vivesbank.products.creditCards.mappers.CreditCardMapper;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import jyrs.dev.vivesbank.products.creditCards.service.CreditCardService;
-import jyrs.dev.vivesbank.utils.PageResponse;
+import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;

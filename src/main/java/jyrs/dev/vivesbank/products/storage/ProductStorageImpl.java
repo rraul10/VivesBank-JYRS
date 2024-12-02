@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jyrs.dev.vivesbank.products.models.Product;
+import jyrs.dev.vivesbank.products.base.models.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

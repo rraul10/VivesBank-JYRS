@@ -32,11 +32,11 @@ public class BankAccountMapper {
             return null;
         }
 
-        return new CreditCardResponseDto(
-                creditCard.getNumber(),
-                creditCard.getExpirationDate().toString(),
-                creditCard.getCvv()
-        );
+        var response =  new CreditCardResponseDto();
+        response.setNumber(response.getNumber());
+        response.setExpirationDate(response.getExpirationDate());
+        response.setCvv(response.getCvv());
+        return response;
     }
 
     public BankAccount toBankAccount(BankAccountRequest bankAccountRequest) {
