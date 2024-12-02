@@ -80,6 +80,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/timeseries").hasAnyRole("USER", "ADMIN")) // Series temporales
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/latest").permitAll()) // Últimos tipos de cambio
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/currencies").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers("/api/creditcard/**").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers("/api/products/**").permitAll())
 
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;

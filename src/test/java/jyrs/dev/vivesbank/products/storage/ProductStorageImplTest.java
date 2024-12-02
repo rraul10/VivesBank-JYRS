@@ -2,8 +2,8 @@ package jyrs.dev.vivesbank.products.storage;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.products.models.type.ProductType;
+import jyrs.dev.vivesbank.products.base.models.Product;
+import jyrs.dev.vivesbank.products.base.models.type.ProductType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
