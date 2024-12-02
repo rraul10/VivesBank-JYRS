@@ -35,7 +35,6 @@ public class UsersServiceImpl implements UsersService {
     private final WebSocketConfig webSocketConfig;
     private final ObjectMapper objectMapper;
     private final UsersRepository usersRepository;
-    @Setter
     private WebSocketHandler webSocketService;
     private final UserNotificationMapper userNotificationMapper;
     @Autowired
@@ -127,7 +126,7 @@ public class UsersServiceImpl implements UsersService {
         }
         try {
             Notificacion<UserNotificationResponse> notification = new Notificacion<>(
-                    "FUNKOS",
+                    "USERS",
                     tipo,
                     userNotificationMapper.toUserNotificationResponse(data),
                     LocalDateTime.now().toString()
@@ -146,5 +145,8 @@ public class UsersServiceImpl implements UsersService {
             log.error("Error al convertir la notificación a JSON", e);
         }
 
+    }
+    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
+        this.webSocketService = webSocketHandlerMock;
     }
 }

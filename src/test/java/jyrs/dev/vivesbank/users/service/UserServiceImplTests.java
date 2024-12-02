@@ -61,6 +61,11 @@ public class UserServiceImplTests {
     private UserMapper userMapper;
     @InjectMocks
     private UsersServiceImpl usersService;
+    @BeforeEach
+    void setUp() {
+        usersService.setWebSocketService(webSocketHandlerMock);
+    }
+
 
     @Test
     void findAllNoArgumentsProvided() {
@@ -193,11 +198,11 @@ public class UserServiceImplTests {
         verify(usersRepository, times(1)).save(user);
         verify(webSocketHandlerMock, times(1)).sendMessage(any());
         verify(userMapper, times(1)).toUserResponse(user);
-        verify(userMapper, times(1)).fromUserDto(userRequestDto);
+        verify(userMapper, times(2)).fromUserDto(userRequestDto);
     }
 
     @Test
-    void updateUserSuccess() {
+    void updateUserSuccess() throws IOException {
         UserRequestDto userRequestDto = UserRequestDto.builder()
                 .username("nuevoUsuario")
                 .password("17j$e7cS")
@@ -229,6 +234,7 @@ public class UserServiceImplTests {
 
         // Configuración de mocks
         when(usersRepository.findByGuuid(user.getGuuid())).thenReturn(existingUser);
+        doNothing().when(webSocketHandlerMock).sendMessage(any());
         when(userMapper.toUser(userRequestDto, existingUser)).thenReturn(updatedUser);
         when(usersRepository.save(updatedUser)).thenReturn(updatedUser);
         when(userMapper.toUserResponse(updatedUser)).thenReturn(userResponseDto);
@@ -247,6 +253,7 @@ public class UserServiceImplTests {
         // Verificaciones de mocks
         verify(usersRepository, times(1)).findByGuuid(user.getGuuid());
         verify(usersRepository, times(1)).save(updatedUser);
+        verify(webSocketHandlerMock, times(1)).sendMessage(any());
         verify(userMapper, times(1)).toUser(userRequestDto, existingUser);
         verify(userMapper, times(1)).toUserResponse(updatedUser);
     }
