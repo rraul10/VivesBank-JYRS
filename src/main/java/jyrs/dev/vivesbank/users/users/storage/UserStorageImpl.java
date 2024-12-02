@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jyrs.dev.vivesbank.users.models.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -17,7 +18,7 @@ import java.util.List;
 @Component
 public class UserStorageImpl implements UserStorage{
     private final ObjectMapper objectMapper;
-
+    @Autowired
     public UserStorageImpl(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
