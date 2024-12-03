@@ -5,8 +5,6 @@ import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
 import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
-import jyrs.dev.vivesbank.products.models.Product;
-import jyrs.dev.vivesbank.products.storage.ProductStorage;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import org.junit.jupiter.api.Test;

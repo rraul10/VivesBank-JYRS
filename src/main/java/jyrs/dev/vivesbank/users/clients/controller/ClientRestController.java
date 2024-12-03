@@ -7,8 +7,6 @@ import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.users.models.User;
-import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
-import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import jyrs.dev.vivesbank.utils.pagination.PaginationLinksUtils;
 import lombok.extern.slf4j.Slf4j;
