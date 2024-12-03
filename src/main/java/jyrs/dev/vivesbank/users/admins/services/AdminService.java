@@ -2,6 +2,7 @@ package jyrs.dev.vivesbank.users.admins.services;
 
 import jyrs.dev.vivesbank.users.admins.dto.AdminRequestDto;
 import jyrs.dev.vivesbank.users.admins.dto.AdminResponseDto;
+import jyrs.dev.vivesbank.users.admins.dto.AdminUpdateRequest;
 import jyrs.dev.vivesbank.users.admins.exceptions.AdminExceptions;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
@@ -16,7 +17,7 @@ public interface AdminService {
     Page<AdminResponseDto> getAllAdmins(Optional<String> username, Optional<Boolean> isDeleted, Pageable pageable);
     AdminResponseDto getUserByAdmin(String id);
     AdminResponseDto saveAdmin(AdminRequestDto requestDto) throws AdminExceptions.AdminAlreadyExists;
-    AdminResponseDto updateAdmin(String id, AdminRequestDto user);
+    AdminResponseDto updateAdmin(String id, AdminUpdateRequest user);
     void deleteAdmin(String id);
     void exportJson(File file, List<User> users);
     void importJson(File file);

@@ -1,6 +1,7 @@
 package jyrs.dev.vivesbank.users.admins.services;
 
 import jyrs.dev.vivesbank.users.admins.dto.AdminRequestDto;
+import jyrs.dev.vivesbank.users.admins.dto.AdminUpdateRequest;
 import jyrs.dev.vivesbank.users.admins.exceptions.AdminExceptions;
 import jyrs.dev.vivesbank.users.admins.repository.AdminRepository;
 import jyrs.dev.vivesbank.users.admins.dto.AdminResponseDto;
@@ -81,13 +82,23 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public AdminResponseDto updateAdmin(String id, AdminRequestDto user) {
-        return null;
+    public AdminResponseDto updateAdmin(String id, AdminUpdateRequest user) {
+        log.info("Buscando administrador en el sistema: " + user);
+        var adminToUpdate = adminRepository.findByGuuid(id);
+        var userToUpdate = adminToUpdate.getUser();
+        userToUpdate.setUsername(user.getUsername());
+        userToUpdate.setFotoPerfil(user.getFotoPerfil());
+        adminToUpdate.setUser(userToUpdate);
+        return adminMappers.fromAdminToResponse(adminToUpdate);
     }
 
     @Override
     public void deleteAdmin(String id) {
-
+        log.info("Eliminando admin con guuid: " + id);
+        var adminToDelete = adminRepository.findByGuuid(id);
+        var userToDelete =  adminToDelete.getUser();
+        userToDelete.getRoles().remove(Role.ADMIN);
+        userToDelete.setIsDeleted(true);
     }
 
     @Override
