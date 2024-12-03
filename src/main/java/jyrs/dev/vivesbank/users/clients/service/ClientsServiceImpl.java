@@ -121,7 +121,7 @@ public class ClientsServiceImpl implements ClientsService {
 
     @Override
     public ClientResponse create(ClientRequestCreate clienteRequest, MultipartFile image,User user) {
-
+        log.info("  Haciendo mapeo {}", clienteRequest);
         var cliente = mapper.fromClientCreate(clienteRequest);
 
 

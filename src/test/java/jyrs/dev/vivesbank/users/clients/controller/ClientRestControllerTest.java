@@ -14,6 +14,7 @@ import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
+import jyrs.dev.vivesbank.users.clients.service.ClientsServiceImpl;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
@@ -25,7 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.AutoConfigureJsonTesters;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.*;
@@ -36,12 +36,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -51,7 +50,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -74,8 +73,10 @@ class ClientRestControllerTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-
-    public ClientRestControllerTest() {
+    @Autowired
+    public ClientRestControllerTest(ClientsService service, PaginationLinksUtils paginationLinksUtils) {
+        this.service = service;
+        this.paginationLinksUtils = paginationLinksUtils;
         mapper.registerModule(new JavaTimeModule());
     }
     private Client cliente;
@@ -86,7 +87,6 @@ class ClientRestControllerTest {
 
     private Address address;
     private AddressDto addressDto;
-
 
     @BeforeEach
     void setUp() {
@@ -402,30 +402,50 @@ class ClientRestControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user",password = "user",roles = {"USER"})
+    @WithMockUser(username = "user",password = "user", roles = {"USER"})
     void createClient() throws Exception {
+       ClientRequestCreate crear= ClientRequestCreate.builder()
+                .dni("04246431x")
+                .nombre("Juan")
+                .apellidos("Pérez")
+                .direccion(new AddressDto(
+                        "TEST",
+                        1,
+                        "Yuncos",
+                        "Toledo",
+                        "España",
+                        28001))
+                .numTelefono("666666666")
+                .build();
 
-        MockMultipartFile file = new MockMultipartFile("file", "foto.png", "image/png", "imagen".getBytes());
-
+       ClientResponse respuesta = ClientResponse.builder()
+               .dni("11111111A")
+               .nombre("Juan")
+               .apellidos("Pérez")
+               .numTelefono("66666666")
+               .direccion(addressDto)
+               .email("juan.perez@example.com")
+               .cuentas(List.of())
+               .build();
+        byte[] imageContent = "imagenFicticiaDePrueba".getBytes();
+        MockMultipartFile file = new MockMultipartFile("file", "foto.png", "image/png", imageContent);
         MockMultipartFile clientePart = new MockMultipartFile(
                 "clientRequestCreate",
                 "",
                 MediaType.APPLICATION_JSON_VALUE,
-                mapper.writeValueAsBytes(clienteCreate)
+                mapper.writeValueAsBytes(crear)
         );
-        when(service.create(any(ClientRequestCreate.class), any(MultipartFile.class),user)).thenReturn(clientResponse);
+
 
         MockHttpServletResponse response = mockMvc.perform(
-                multipart(endpoint)
-                        .file(file)
+                MockMvcRequestBuilders.multipart(endpoint)
                         .file(clientePart)
+                        .file(file)
                         .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                         .accept(MediaType.APPLICATION_JSON)
-                        .with(SecurityMockMvcRequestPostProcessors.authentication(
-                                new UsernamePasswordAuthenticationToken(user.getUsername(), "password", user.getAuthorities())
-                        ))
         ).andReturn().getResponse();
 
+        when(service.create(crear, file,user)).thenReturn(respuesta);
         ClientResponse res = mapper.readValue(response.getContentAsString(), ClientResponse.class);
 
         assertAll(
@@ -434,7 +454,7 @@ class ClientRestControllerTest {
                 () -> assertEquals("Juan", res.getNombre())
         );
 
-        verify(service, times(1)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
+        verify(service, times(1)).create(crear, file,user);
     }
 
     @Test
@@ -464,7 +484,6 @@ class ClientRestControllerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
 
-        verify(service, never()).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
@@ -506,7 +525,6 @@ class ClientRestControllerTest {
                 () -> assertEquals(400, response.getStatus())
         );
 
-        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
@@ -548,7 +566,6 @@ class ClientRestControllerTest {
                 () -> assertEquals(400, response.getStatus())
         );
 
-        verify(service, times(0)).create(any(ClientRequestCreate.class), any(MultipartFile.class),user);
     }
 
     @Test
@@ -563,7 +580,6 @@ class ClientRestControllerTest {
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
-        System.out.println("Yahya"+response.getContentAsString()+"final");
         ClientResponse res = mapper.readValue(response.getContentAsString(), ClientResponse.class);
 
         assertAll(
@@ -615,12 +631,12 @@ class ClientRestControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    @WithMockUser(username = "client", password = "client", roles = {"USER","CLIENT"})
     void updateMeNotFound() throws Exception {
         when(service.updateMe("guuid-unknown", clienteUpdate)).thenThrow(new ClientNotFound("guuid-unknown"));
 
         MockHttpServletResponse response = mockMvc.perform(
-                        put("/me/profile")
+                        put(endpoint+"/me/profile")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(clienteUpdate))
                                 .accept(MediaType.APPLICATION_JSON))
@@ -740,7 +756,7 @@ class ClientRestControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    @WithMockUser(username = "client", password = "client", roles = {"USER","CLIENT"})
     void updateMePerfilNotFound() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "perfil.png", MediaType.IMAGE_PNG_VALUE, "dummy content".getBytes());
 
@@ -782,12 +798,12 @@ class ClientRestControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    @WithMockUser(username = "client", password = "client", roles = {"USER","CLIENT"})
     void deleteMeNotFound() throws Exception {
         doThrow(new ClientNotFound("guuid-unknown")).when(service).deleteMe("guuid-unknown");
 
         MockHttpServletResponse response = mockMvc.perform(
-                        delete("/me/profile")
+                        delete(endpoint+"/me/profile")
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 

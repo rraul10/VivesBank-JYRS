@@ -13,7 +13,6 @@ import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +23,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 @Slf4j
-@Service
 public class StorageServiceImpl implements StorageService {
 
     private static final String TEMP_DIR_NAME = "StorageServiceTemp";
@@ -42,7 +40,6 @@ public class StorageServiceImpl implements StorageService {
     private final ProductRepository productRepository;
     private final CreditCardRepository creditCardRepository;
     private final MovementsRepository movementsRepository;
-    
 
     private static final File DEFAULT_BACKUP_FILE = new File("backup.zip");
 
