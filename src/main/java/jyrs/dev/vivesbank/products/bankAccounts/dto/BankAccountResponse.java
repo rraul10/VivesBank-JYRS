@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nullable;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
-import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponseDto;
+import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponse;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,7 +15,7 @@ public class BankAccountResponse {
     private AccountType accountType;
     private double balance;
     @Nullable
-    private CreditCardResponseDto creditCard;
+    private CreditCardResponse creditCard;
     private Long clientId;
 
     @JsonCreator
@@ -23,11 +23,12 @@ public class BankAccountResponse {
             @JsonProperty("iban") String iban,
             @JsonProperty("accountType") AccountType accountType,
             @JsonProperty("balance") double balance,
-            @JsonProperty("creditCard") CreditCardResponseDto creditCard,
+            @JsonProperty("creditCard") CreditCardResponse creditCard,
             @JsonProperty("clientId") Long clientId) {
         this.iban = iban;
         this.accountType = accountType;
         this.balance = balance;
         this.creditCard = creditCard;
+        this.clientId = clientId;
     }
 }
