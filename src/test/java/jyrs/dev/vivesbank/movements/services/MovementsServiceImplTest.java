@@ -2,8 +2,11 @@ package jyrs.dev.vivesbank.movements.services;
 
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
+import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
 import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import jyrs.dev.vivesbank.products.models.Product;
+import jyrs.dev.vivesbank.products.storage.ProductStorage;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import org.junit.jupiter.api.Test;
@@ -12,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +36,8 @@ public class MovementsServiceImplTest {
 
     @Mock
     private MovementValidator movementValidator;
+    @Mock
+    private MovementsStorage storage;
 
     @InjectMocks
     private MovementsServiceImpl movementsService;
@@ -246,5 +252,66 @@ public class MovementsServiceImplTest {
         assertThrows(IllegalArgumentException.class, () -> {
             movementsService.deleteMovement(movementId);
         });
+    }
+
+    @Test
+    void importJson() throws Exception {
+        BankAccount origin = new BankAccount();
+        BankAccount destination = new BankAccount();
+        String typeMovement = "TRANSFER";
+        Double amount = 100.0;
+
+        Client senderClient = new Client(1L, "Sender", new ArrayList<>());
+        Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
+        Movement movement = Movement.builder()
+                .senderClient(senderClient)
+                .recipientClient(recipientClient)
+                .origin(origin)
+                .destination(destination)
+                .typeMovement(typeMovement)
+                .amount(amount)
+                .balance(1000.0 - amount)
+                .isReversible(true)
+                .transferDeadlineDate(LocalDateTime.now().plusDays(7))
+                .build();
+        File file = mock(File.class);
+        List<Movement> movements = List.of(movement);
+
+        when(storage.importJson(file)).thenReturn(movements);
+
+        movementsService.importJson(file);
+
+        verify(storage).importJson(file);
+
+        verify(movementsRepository).saveAll(movements);
+    }
+
+    @Test
+    void exportJson() throws Exception {
+        BankAccount origin = new BankAccount();
+        BankAccount destination = new BankAccount();
+        String typeMovement = "TRANSFER";
+        Double amount = 100.0;
+
+        Client senderClient = new Client(1L, "Sender", new ArrayList<>());
+        Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
+        Movement movement = Movement.builder()
+                .senderClient(senderClient)
+                .recipientClient(recipientClient)
+                .origin(origin)
+                .destination(destination)
+                .typeMovement(typeMovement)
+                .amount(amount)
+                .balance(1000.0 - amount)
+                .isReversible(true)
+                .transferDeadlineDate(LocalDateTime.now().plusDays(7))
+                .build();
+        File file = mock(File.class);
+        List<Movement> movements = List.of(movement);
+
+        doNothing().when(storage).exportJson(file,movements);
+        movementsService.exportJson(file, movements);
+
+        verify(storage).exportJson(file, movements);
     }
 }
