@@ -14,7 +14,6 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
-import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import org.junit.jupiter.api.BeforeEach;
@@ -202,14 +201,14 @@ class BankAccountServiceImplTest {
         verifyNoInteractions(bankAccountMapper);
     }
 
-//    @Test
-//    void onChange_ShouldSendMessage_WhenValidDataProvided() throws IOException {
-//        doNothing().when(webSocketHandlerMock).sendMessage(any(String.class));
-//
-//        bankAccountService.onChange(Notificacion.Tipo.CREATE, mock(BankAccount.class));
-//
-//        verify(webSocketHandlerMock).sendMessage(any(String.class));
-//    }
+    @Test
+    void onChange_ShouldSendMessage_WhenValidDataProvided() throws IOException {
+        doNothing().when(webSocketHandlerMock).sendMessage(any(String.class));
+
+        bankAccountService.onChange(Notificacion.Tipo.CREATE, mock(BankAccount.class));
+
+        verify(webSocketHandlerMock).sendMessage(any(String.class));
+    }
 
     @Test
     public void generateRandomDigits() {
