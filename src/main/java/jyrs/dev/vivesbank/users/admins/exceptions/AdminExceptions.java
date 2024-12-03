@@ -20,4 +20,10 @@ public abstract class AdminExceptions extends RuntimeException  {
             super(message);
         }
     }
+
+    public static class AdminCannotBeDeleted extends Throwable {
+        public AdminCannotBeDeleted(String message) {
+            super(message);
+        }
+    }
 }

@@ -18,7 +18,7 @@ public interface AdminService {
     AdminResponseDto getUserByAdmin(String id);
     AdminResponseDto saveAdmin(AdminRequestDto requestDto) throws AdminExceptions.AdminAlreadyExists;
     AdminResponseDto updateAdmin(String id, AdminUpdateRequest user);
-    void deleteAdmin(String id);
+    void deleteAdmin(String id) throws AdminExceptions.AdminCannotBeDeleted;
     void exportJson(File file, List<User> users);
     void importJson(File file);
 }

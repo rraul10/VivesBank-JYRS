@@ -13,6 +13,7 @@ import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -28,6 +29,7 @@ public class AdminServiceImpl implements AdminService {
     private final AdminRepository adminRepository;
     private final AdminMappers adminMappers;
     private final UsersRepository usersRepository;
+    @Autowired
 
     public AdminServiceImpl(AdminRepository adminRepository, AdminMappers adminMappers, UsersRepository usersRepository) {
         this.adminRepository = adminRepository;
@@ -93,10 +95,13 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void deleteAdmin(String id) {
+    public void deleteAdmin(String id) throws AdminExceptions.AdminCannotBeDeleted {
         log.info("Eliminando admin con guuid: " + id);
         var adminToDelete = adminRepository.findByGuuid(id);
         var userToDelete =  adminToDelete.getUser();
+        if(userToDelete.getGuuid().equals("puZjCDm_xCg")){
+            throw new AdminExceptions.AdminCannotBeDeleted("No se puede eliminar el administrador root");
+        }
         userToDelete.getRoles().remove(Role.ADMIN);
         userToDelete.setIsDeleted(true);
     }

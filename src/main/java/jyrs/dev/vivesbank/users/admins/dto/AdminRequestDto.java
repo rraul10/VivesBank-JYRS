@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AdminRequestDto {
-        @NotBlank(message = "El guuid no puede estar vacío")
+    @NotBlank(message = "El guuid no puede estar vacío")
     String guuid;
 
 }
