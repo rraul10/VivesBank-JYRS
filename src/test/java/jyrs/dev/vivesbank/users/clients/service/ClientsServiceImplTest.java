@@ -23,6 +23,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -30,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +49,11 @@ class ClientsServiceImplTest {
     private ClientMapper mapper;
     @Mock
     private ClientStorage storage;
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Object> valueOperations;
 
     @InjectMocks
     private ClientsServiceImpl service;
@@ -261,11 +269,14 @@ class ClientsServiceImplTest {
     }
 
     @Test
-    void getById() {
+    void getByIdCache() {
         Long id = 1L;
+        String redisKey = "client:id:" + id;
 
-        when(repository.findById(id)).thenReturn(Optional.of(cliente));
-        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(redisKey)).thenReturn(clientResponse);
+
 
         ClientResponse result = service.getById(id);
 
@@ -275,6 +286,34 @@ class ClientsServiceImplTest {
                 () -> assertEquals(clientResponse.getApellidos(), result.getApellidos())
         );
 
+        verify(redisTemplate, times(1)).opsForValue();
+        verify(valueOperations, times(1)).get(redisKey);
+    }
+
+    @Test
+    void getByIdDatabase() {
+        Long id = 1L;
+        String redisKey = "client:id:" + id;
+
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(redisKey)).thenReturn(null);
+        when(repository.findById(id)).thenReturn(Optional.of(cliente));
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        doNothing().when(valueOperations).set(eq(redisKey), eq(clientResponse), eq(10L), eq(TimeUnit.MINUTES));
+
+
+        ClientResponse result = service.getById(id);
+
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(clientResponse.getNombre(), result.getNombre()),
+                () -> assertEquals(clientResponse.getApellidos(), result.getApellidos())
+        );
+
+        verify(redisTemplate, times(2)).opsForValue();
+        verify(valueOperations, times(1)).get(redisKey);
         verify(repository, times(1)).findById(id);
         verify(mapper, times(1)).toResponse(cliente);
     }
@@ -282,22 +321,31 @@ class ClientsServiceImplTest {
     @Test
     void getByIdNotFound() {
         Long id = 1L;
+        String redisKey = "client:id:" + id;
 
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(redisKey)).thenReturn(null);
         when(repository.findById(id)).thenReturn(Optional.empty());
+
         var exception = assertThrows(ClientNotFound.class, () -> service.getById(id));
 
         assertEquals("El cliente: 1 no encontrado", exception.getMessage());
 
+        verify(redisTemplate, times(1)).opsForValue();
+        verify(valueOperations, times(1)).get(redisKey);
         verify(repository, times(1)).findById(id);
         verify(mapper, times(0)).toResponse(any(Client.class));
     }
 
     @Test
-    void getByDni() {
-
+    void getByDniCache() {
         String dni = "11111111A";
-        when(repository.getByDni(dni)).thenReturn(Optional.of(cliente));
-        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+        String redisKey = "client:dni:" + dni;
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(redisKey)).thenReturn(clientResponse);
+
+
 
         var res = service.getByDni(dni);
 
@@ -307,6 +355,33 @@ class ClientsServiceImplTest {
                 () -> assertEquals(clientResponse.getApellidos(), res.getApellidos())
         );
 
+        verify(redisTemplate, times(1)).opsForValue();
+        verify(valueOperations, times(1)).get(redisKey);
+
+    }
+
+    @Test
+    void getByDniDatabase() {
+        String dni = "11111111A";
+        String redisKey = "client:dni:" + dni;
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(redisKey)).thenReturn(null);
+        when(repository.getByDni(dni)).thenReturn(Optional.of(cliente));
+        when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        doNothing().when(valueOperations).set(eq(redisKey), eq(clientResponse), eq(10L), eq(TimeUnit.MINUTES));
+
+        var res = service.getByDni(dni);
+
+        assertAll(
+                () -> assertNotNull(res),
+                () -> assertEquals(clientResponse.getNombre(), res.getNombre()),
+                () -> assertEquals(clientResponse.getApellidos(), res.getApellidos())
+        );
+
+        verify(redisTemplate, times(2)).opsForValue();
+        verify(valueOperations, times(1)).get(redisKey);
         verify(repository, times(1)).getByDni(dni);
         verify(mapper, times(1)).toResponse(cliente);
 
@@ -315,12 +390,18 @@ class ClientsServiceImplTest {
     @Test
     void getByDniNotFound() {
         String dni = "11111111A";
+        String redisKey = "client:dni:" + dni;
 
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(redisKey)).thenReturn(null);
         when(repository.getByDni(dni)).thenReturn(Optional.empty());
         var exception = assertThrows(ClientNotFound.class, () -> service.getByDni(dni));
 
         assertEquals("El cliente: 11111111A no encontrado", exception.getMessage());
 
+        verify(redisTemplate, times(1)).opsForValue();
+        verify(valueOperations, times(1)).get(redisKey);
         verify(repository, times(1)).getByDni(dni);
         verify(mapper, times(0)).toResponse(any(Client.class));
     }
@@ -404,11 +485,15 @@ class ClientsServiceImplTest {
     @Test
     void updateMe() {
         String id = "12345-abcde-67890";
+        String redisKey = "client:id:" + id;
 
         when(repository.getByUser_Guuid(id)).thenReturn(Optional.of(cliente));
         when(mapper.fromClientUpdate(clienteUpdate)).thenReturn(cliente);
         when(repository.save(cliente)).thenReturn(cliente);
         when(mapper.toResponse(cliente)).thenReturn(clientResponse);
+
+        when(redisTemplate.delete(redisKey)).thenReturn(true);
+
 
         var result = service.updateMe(id, clienteUpdate);
 
@@ -419,6 +504,7 @@ class ClientsServiceImplTest {
         );
 
         verify(repository, times(1)).getByUser_Guuid(id);
+        verify(redisTemplate,times(1)).delete(redisKey);
         verify(repository, times(1)).save(cliente);
         verify(mapper, times(1)).fromClientUpdate(clienteUpdate);
         verify(mapper, times(1)).toResponse(cliente);
