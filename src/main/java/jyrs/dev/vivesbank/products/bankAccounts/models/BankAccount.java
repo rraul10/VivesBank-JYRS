@@ -1,10 +1,11 @@
 package jyrs.dev.vivesbank.products.bankAccounts.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
-import jyrs.dev.vivesbank.products.base.models.Product;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
+import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -40,7 +42,7 @@ public class BankAccount {
     private CreditCard creditCard;
 
     @ManyToOne
-    @JoinColumn(name = "CLIENT_ID")
+    @JoinColumn(name = "Clients_ID")
     private Client client;
 
     @OneToOne
