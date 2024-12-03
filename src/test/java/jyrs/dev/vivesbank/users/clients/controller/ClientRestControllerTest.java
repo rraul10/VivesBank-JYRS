@@ -66,7 +66,7 @@ class ClientRestControllerTest {
     MockMvc mockMvc;
 
     @MockBean
-    ClientsServiceImpl service;
+    ClientsService service;
 
     @MockBean
     PaginationLinksUtils paginationLinksUtils;
@@ -74,7 +74,7 @@ class ClientRestControllerTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
-    public ClientRestControllerTest(ClientsServiceImpl service, PaginationLinksUtils paginationLinksUtils) {
+    public ClientRestControllerTest(ClientsService service, PaginationLinksUtils paginationLinksUtils) {
         this.service = service;
         this.paginationLinksUtils = paginationLinksUtils;
         mapper.registerModule(new JavaTimeModule());
