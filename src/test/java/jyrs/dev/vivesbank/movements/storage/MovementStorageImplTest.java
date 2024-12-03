@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
-import jyrs.dev.vivesbank.products.models.Product;
+import jyrs.dev.vivesbank.products.base.models.Product;
 import jyrs.dev.vivesbank.products.storage.ProductStorageImpl;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import org.junit.jupiter.api.Test;
