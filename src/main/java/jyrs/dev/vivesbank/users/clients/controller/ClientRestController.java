@@ -99,7 +99,9 @@ public class ClientRestController {
 
         if (!file.isEmpty()) {
 
+
             ClientResponse cliente = service.create(clientRequestCreate, file, user);
+            System.out.println(ResponseEntity.status(HttpStatus.CREATED).body(cliente));
             return ResponseEntity.status(HttpStatus.CREATED).body(cliente);
 
         } else {
@@ -118,7 +120,7 @@ public class ClientRestController {
 
     @GetMapping("/me/profile")
     public ResponseEntity<ClientResponse> me(@AuthenticationPrincipal User user) {
-        log.info("Obteniendo cliente");
+        log.info("Obteniendo cliente"+ user.getGuuid());
         return ResponseEntity.ok(service.getByUserGuuid(user.getGuuid()));
     }
 
