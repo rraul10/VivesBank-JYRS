@@ -7,6 +7,7 @@ import jyrs.dev.vivesbank.users.admins.exceptions.AdminExceptions;
 import jyrs.dev.vivesbank.users.admins.mappers.AdminMappers;
 import jyrs.dev.vivesbank.users.admins.repository.AdminRepository;
 import jyrs.dev.vivesbank.users.admins.services.AdminServiceImpl;
+import jyrs.dev.vivesbank.users.admins.storage.AdminStorage;
 import jyrs.dev.vivesbank.users.models.Admin;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
@@ -19,7 +20,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -52,6 +55,10 @@ public class AdminServiceImplTests {
             .build();
     @Mock
     private AdminRepository adminRepository;
+    @Mock
+    private ObjectMapper objectMapper;
+    @Mock
+    private AdminStorage adminStorage;
     @Mock
     private AdminMappers adminMapper;
     @Mock
@@ -242,5 +249,30 @@ public class AdminServiceImplTests {
         when(adminRepository.findByGuuid(anyString())).thenThrow(new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: "+ admin.getGuuid()));
         var result = assertThrows(AdminExceptions.AdminNotFound.class, () -> adminService.deleteAdmin(admin.getGuuid()));
         verify(adminRepository, times(1)).findByGuuid(anyString());
+    }
+
+    @Test
+    void importJson() throws Exception {
+        File file = mock(File.class);
+        List<Admin> admins = List.of(admin);
+
+        when(adminStorage.importJson(file)).thenReturn(admins);
+
+        adminService.importJson(file);
+
+        verify(adminStorage, times(1)).importJson(file);
+
+        verify(adminRepository, times(1)).saveAll(admins);
+    }
+
+    @Test
+    void exportJson() throws Exception {
+        File file = mock(File.class);
+        List<Admin> admins = List.of(admin);
+
+        doNothing().when(adminStorage).exportJson(file,admins);
+        adminService.exportJson(file, admins);
+
+        verify(adminStorage, times(1)).exportJson(file, admins);
     }
 }
