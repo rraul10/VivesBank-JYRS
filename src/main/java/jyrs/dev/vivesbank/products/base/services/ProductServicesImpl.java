@@ -121,4 +121,13 @@ public class ProductServicesImpl implements ProductServices {
 
         productRepository.saveAll(products);
     }
+
+    @Override
+    public void loadCsv(File file) {
+        log.info("Importando products desde CSV");
+
+        List<Product> products= storage.loadCsv(file);
+
+        productRepository.saveAll(products);
+    }
 }
