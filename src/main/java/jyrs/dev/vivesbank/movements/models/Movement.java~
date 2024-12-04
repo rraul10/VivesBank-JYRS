@@ -47,5 +47,19 @@ public class Movement {
 
     public Movement(int i, String origin1, String destination1, double v) {
     }
+
+    public void setSenderClientId(String number) {
+    }
+
+    public void setRecipientClientId(String number) {
+    }
+
+    public String getSenderClientId() {
+        return "";
+    }
+
+    public String getRecipientClientId() {
+        return "";
+    }
 }
 

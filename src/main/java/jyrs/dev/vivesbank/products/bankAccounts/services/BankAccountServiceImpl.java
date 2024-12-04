@@ -59,7 +59,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         this.mapper = mapper != null ? mapper : new ObjectMapper();
         this.bankAccountNotificationMapper = bankAccountNotificationMapper;
         this.storage = storage;
-        this.webSocketService = webSocketService;  // Inyección del WebSocketHandler específico
+        this.webSocketService = webSocketService;
     }
 
     @Override

@@ -1,4 +1,6 @@
 package jyrs.dev.vivesbank.movements.services;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
@@ -6,7 +8,12 @@ import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.MovementNotificationMapper;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +32,26 @@ public class MovementsServiceImpl implements MovementsService {
     private final ClientsRepository clientsRepository;
     private final MovementValidator movementValidator;
     private final MovementsStorage storage;
+    private MovementNotificationMapper movementNotificationMapper;
+    private WebSocketHandler webSocketService;
     private final RedisTemplate<String, Movement> redisTemplate;
+
+    @Autowired
+        public MovementsServiceImpl(MovementsRepository movementsRepository,
+                                    ClientsRepository clientsRepository,
+                                   MovementValidator movementValidator,
+                                    MovementsStorage storage,
+                                   MovementNotificationMapper movementNotificationMapper,
+                                    RedisTemplate<String, Movement> redisTemplate,
+                                    @Qualifier("webSocketMovementsHandler") WebSocketHandler webSocketService) {
+        this.movementsRepository = movementsRepository;
+        this.clientsRepository = clientsRepository;
+        this.movementValidator = movementValidator;
+        this.storage = storage;
+        this.movementNotificationMapper = movementNotificationMapper;
+        this.webSocketService = webSocketService;
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public void createMovement(String senderClientId, String recipientClientId,
@@ -53,10 +79,8 @@ public class MovementsServiceImpl implements MovementsService {
                 .transferDeadlineDate(LocalDateTime.now().plusDays(7))
                 .build();
 
-        // Guardar el movimiento en Redis
         redisTemplate.opsForValue().set("MOVEMENT:" + movement.getId(), movement);
 
-        // Guardar el movimiento en la base de datos
         movementsRepository.save(movement);
     }
 
@@ -74,7 +98,6 @@ public class MovementsServiceImpl implements MovementsService {
         movement.setIsReversible(false);
         movementsRepository.save(movement);
 
-        // Actualizar el movimiento en Redis
         redisTemplate.opsForValue().set("MOVEMENT:" + movementId, movement);
     }
 
@@ -88,16 +111,14 @@ public class MovementsServiceImpl implements MovementsService {
         Movement movement = redisTemplate.opsForValue().get(redisKey);
 
         if (movement == null) {
-            // Si no hay en Redis, buscar en la base de datos
             var sentMovements = movementsRepository.findBySenderClient_Id(clientId);
             var receivedMovements = movementsRepository.findByRecipientClient_Id(clientId);
 
             movements.addAll(sentMovements);
             movements.addAll(receivedMovements);
 
-            // Guardar los movimientos individualmente en Redis
             for (Movement mov : movements) {
-                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);  // Guardar cada movimiento individualmente
+                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
             }
         }
 
@@ -108,17 +129,14 @@ public class MovementsServiceImpl implements MovementsService {
     public List<Movement> getAllMovements() {
         List<Movement> movements = new ArrayList<>();
 
-        // Buscar todos los movimientos en Redis
         String redisKey = "MOVEMENTS:ALL";
         movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
 
         if (movements == null || movements.isEmpty()) {
-            // Si no están en Redis, buscar en la base de datos
             movements = movementsRepository.findAll();
 
-            // Guardar los movimientos individualmente en Redis
             for (Movement mov : movements) {
-                redisTemplate.opsForValue().set("MOVEMENTS:ALL:" + mov.getId(), mov);  // Guardar cada movimiento individualmente
+                redisTemplate.opsForValue().set("MOVEMENTS:ALL:" + mov.getId(), mov);
             }
         }
 
@@ -130,31 +148,26 @@ public class MovementsServiceImpl implements MovementsService {
     public List<Movement> getMovementsByType(String typeMovement) {
         List<Movement> movements = new ArrayList<>();
 
-        // Buscar movimientos por tipo en Redis
         String redisKey = "MOVEMENTS:TYPE:" + typeMovement;
 
-        // Intentamos obtener cada movimiento individualmente de Redis
-        for (int i = 0; i < 100; i++) {  // Limitar la búsqueda a 100 elementos (ajustable)
-            Movement movement = redisTemplate.opsForValue().get(redisKey + ":" + i);  // Suponiendo que los movimientos están numerados
+        for (int i = 0; i < 100; i++) {
+            Movement movement = redisTemplate.opsForValue().get(redisKey + ":" + i);
             if (movement == null) {
-                break;  // Si no encontramos más movimientos, paramos
+                break;
             }
             movements.add(movement);
         }
 
         if (movements.isEmpty()) {
-            // Si no están en Redis, buscar en la base de datos
             movements = movementsRepository.findByTypeMovement(typeMovement);
 
-            // Guardar los movimientos por tipo en Redis
             for (int i = 0; i < movements.size(); i++) {
-                redisTemplate.opsForValue().set(redisKey + ":" + i, movements.get(i));  // Guardar cada movimiento individualmente en Redis
+                redisTemplate.opsForValue().set(redisKey + ":" + i, movements.get(i));
             }
         }
 
         return movements;
     }
-
 
 
     @Override
@@ -164,7 +177,6 @@ public class MovementsServiceImpl implements MovementsService {
 
         movementsRepository.delete(movement);
 
-        // Eliminar el movimiento de Redis
         redisTemplate.delete("MOVEMENT:" + movementId);
     }
 
@@ -183,6 +195,40 @@ public class MovementsServiceImpl implements MovementsService {
 
         movementsRepository.saveAll(movements);
     }
+
+    void onChanges(Notificacion.Tipo tipo, Movement data) {
+        log.debug("Servicio de movimientos de una cuenta de banco onChange con tipo: " + tipo + " y datos: " + data);
+
+        if (webSocketService == null) {
+            log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+        }
+
+        try {
+            Notificacion<MovementNotificationMapper> notificacion = new Notificacion<>(
+                    "BANK_ACCOUNT",
+                    tipo,
+                   movementNotificationMapper.toNotificationResponse(data),
+                    LocalDateTime.now().toString()
+            );
+
+            String json = mapper.writeValueAsString(notificacion);
+
+            log.info("Enviando mensaje a los clientes ws");
+            Thread senderThread = new Thread(() -> {
+                try {
+                    webSocketService.sendMessage(json);
+                } catch (Exception e) {
+                    log.error("Error al enviar el mensaje a través del servicio WebSocket", e);
+                }
+            });
+            senderThread.start();
+        } catch (JsonProcessingException e) {
+            log.error("Error al convertir la notificación a JSON", e);
+        }
+    }
+
+
+
 
 }
 
