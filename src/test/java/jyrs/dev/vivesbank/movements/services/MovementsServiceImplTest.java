@@ -163,21 +163,17 @@ public class MovementsServiceImplTest {
     void reverseMovementIsNotReversible() {
         String movementId = "1";
         Movement movement = new Movement();
-        movement.setIsReversible(false); // El movimiento no es reversible
+        movement.setIsReversible(false);
 
-        // Configuración del mock: el movimiento existe pero no es reversible
         when(movementsRepository.findById(movementId)).thenReturn(Optional.of(movement));
 
-        // Simulamos que se lanza una excepción de validación
         doThrow(new IllegalArgumentException("Movement is not reversible"))
                 .when(movementValidator).validateReversible(movement);
 
-        // Verificar que se lanza la excepción cuando el movimiento no es reversible
         assertThrows(IllegalArgumentException.class, () -> {
             movementsService.reverseMovement(movementId);
         });
 
-        // Verifica que no se ha intentado guardar nada en Redis
         verify(redisTemplate, never()).opsForValue();
     }
 
@@ -230,14 +226,12 @@ public class MovementsServiceImplTest {
     }
     @Test
     void getAllMovements() {
-        // Datos de prueba
         List<Movement> expectedMovements = new ArrayList<>();
         expectedMovements.add(new Movement("sent1"));
         expectedMovements.add(new Movement("received1"));
 
-        // Simulamos el comportamiento del RedisTemplate
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);  // Mock de opsForValue()
-        doReturn(expectedMovements).when(valueOperations).get("MOVEMENTS:ALL");  // Simulamos el comportamiento de get()
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doReturn(expectedMovements).when(valueOperations).get("MOVEMENTS:ALL");
 
         List<Movement> movements = movementsService.getAllMovements();
 
@@ -254,47 +248,36 @@ public class MovementsServiceImplTest {
     @Test
     void getMovementsByType() {
         String typeMovement = "TRANSFER";
-        Movement movement = new Movement();  // Supongamos que Movement tiene un constructor sin parámetros
+        Movement movement = new Movement();
         List<Movement> movements = List.of(movement);
 
-        // Configuramos el comportamiento de los mocks
-        // Mock de RedisTemplate para devolver el mock de ValueOperations
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
-        // Simulamos que no hay movimientos en Redis para este tipo de movimiento
-        when(valueOperations.get("MOVEMENTS:TYPE:" + typeMovement + ":0")).thenReturn(null);  // Simulamos que no hay movimientos en Redis
+        when(valueOperations.get("MOVEMENTS:TYPE:" + typeMovement + ":0")).thenReturn(null);
 
-        // Mock del repository para devolver los movimientos si no se encuentran en Redis
         when(movementsRepository.findByTypeMovement(typeMovement)).thenReturn(movements);
 
-        // Ejecución del método
         List<Movement> result = movementsService.getMovementsByType(typeMovement);
 
-        // Verificación
-        assertEquals(1, result.size());  // Verificamos que solo haya un movimiento
-        verify(redisTemplate.opsForValue(), times(1)).get("MOVEMENTS:TYPE:" + typeMovement + ":0");  // Verificamos que intentó obtener los movimientos de Redis
-        verify(movementsRepository, times(1)).findByTypeMovement(typeMovement); // Verificamos que el repositorio fue consultado
+        assertEquals(1, result.size());
+        verify(redisTemplate.opsForValue(), times(1)).get("MOVEMENTS:TYPE:" + typeMovement + ":0");
+        verify(movementsRepository, times(1)).findByTypeMovement(typeMovement);
     }
 
     @Test
     void getMovementsByTypeNotFound() {
         String typeMovement = "TRANSFER";
-        List<Movement> movements = new ArrayList<>();  // Lista vacía
+        List<Movement> movements = new ArrayList<>();
 
-        // Configuramos el mock de RedisTemplate para devolver el mock de ValueOperations
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
-        // Simulamos que no hay movimientos en Redis para este tipo de movimiento
-        when(valueOperations.get("MOVEMENTS:TYPE:" + typeMovement + ":0")).thenReturn(null);  // No hay movimientos en Redis
+        when(valueOperations.get("MOVEMENTS:TYPE:" + typeMovement + ":0")).thenReturn(null);
 
-        // Mock del repository para devolver una lista vacía
         when(movementsRepository.findByTypeMovement(typeMovement)).thenReturn(movements);
 
-        // Ejecución del método
         List<Movement> result = movementsService.getMovementsByType(typeMovement);
 
-        // Verificación: Esperamos una lista vacía
-        assertTrue(result.isEmpty());  // Verificamos que la lista esté vacía
+        assertTrue(result.isEmpty());
     }
 
     @Test
