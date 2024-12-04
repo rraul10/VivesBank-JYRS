@@ -20,8 +20,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -62,7 +64,7 @@ public class AdminServiceImpl implements AdminService {
         if (res == null){
             throw new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: " + id);
         }
-        return null;
+        return res;
     }
 
     @Override
@@ -76,7 +78,9 @@ public class AdminServiceImpl implements AdminService {
         if(user == null){
             throw new UserExceptions.UserNotFound("No se ha encontrado usuario con el guuid: " + request.getGuuid());
         }
-        user.getRoles().add(Role.ADMIN);
+        Set<Role> updatedRoles = new HashSet<>(user.getRoles());
+        updatedRoles.add(Role.ADMIN);
+        user.setRoles(updatedRoles);
         admin.setUser(user);
         admin.setGuuid(user.getGuuid());
         var adminGuardado = adminRepository.save(admin);
@@ -99,11 +103,15 @@ public class AdminServiceImpl implements AdminService {
     public void deleteAdmin(String id) throws AdminExceptions.AdminCannotBeDeleted {
         log.info("Eliminando admin con guuid: " + id);
         var adminToDelete = adminRepository.findByGuuid(id);
+        if(adminToDelete == null){
+            throw new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: " + id);
+        }
         var userToDelete =  adminToDelete.getUser();
         if(userToDelete.getGuuid().equals("puZjCDm_xCg")){
             throw new AdminExceptions.AdminCannotBeDeleted("No se puede eliminar el administrador root");
         }
-        userToDelete.getRoles().remove(Role.ADMIN);
+        Set<Role> updatedRoles = new HashSet<>(adminToDelete.getUser().getRoles());
+        updatedRoles.clear();
         userToDelete.setIsDeleted(true);
     }
 

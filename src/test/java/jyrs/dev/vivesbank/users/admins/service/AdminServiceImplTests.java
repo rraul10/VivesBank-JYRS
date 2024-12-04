@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.ctc.wstx.shaded.msv_core.grammar.Expression.anyString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -43,7 +42,7 @@ public class AdminServiceImplTests {
             .roles(Set.of( Role.USER))
             .build();
     private final Admin admin = Admin.builder()
-            .guuid(user.getGuuid())
+            .guuid("puZjCDm_xCg")
             .user(user).build();
     private final AdminResponseDto adminResponseDto = AdminResponseDto.builder()
             .guuid(admin.getGuuid())
@@ -66,14 +65,14 @@ public class AdminServiceImplTests {
         List<AdminResponseDto> expectedResponseAdmins = Arrays.asList(adminResponseDto);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
         Page<Admin> expectedPage = new PageImpl<>(admins);
-        when(adminRepository.findAll(any(Pageable.class))).thenReturn(expectedPage);
+        when(adminRepository.findAll(any(Specification.class),any(Pageable.class))).thenReturn(expectedPage);
         when(adminMapper.fromAdminToResponse(any(Admin.class))).thenReturn(adminResponseDto);
         Page<AdminResponseDto> actualResponseAdmins = adminService.getAllAdmins(Optional.empty(), Optional.empty(), pageable);
         assertAll(
                 () -> assertNotNull(actualResponseAdmins),
                 () -> assertEquals(expectedResponseAdmins, actualResponseAdmins.getContent())
         );
-        verify(adminRepository, times(1)).findAll(any(Pageable.class));
+        verify(adminRepository, times(1)).findAll(any(Specification.class),any(Pageable.class));
         verify(adminMapper, times(1)).fromAdminToResponse(any(Admin.class));
     }
     @Test
@@ -83,7 +82,7 @@ public class AdminServiceImplTests {
         List<AdminResponseDto> expectedResponseAdmins = Arrays.asList(adminResponseDto);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
         Page<Admin> expectedPage = new PageImpl<>(admins);
-        when(adminRepository.findAll(any(Pageable.class))).thenReturn(expectedPage);
+        when(adminRepository.findAll(any(Specification.class) ,any(Pageable.class))).thenReturn(expectedPage);
         when(adminMapper.fromAdminToResponse(any(Admin.class))).thenReturn(adminResponseDto);
         Page<AdminResponseDto> actualResponseAdmins = adminService.getAllAdmins(usernameProvided, Optional.empty(), pageable);
         assertAll(
@@ -100,7 +99,7 @@ public class AdminServiceImplTests {
         List<AdminResponseDto> expectedResponseAdmins = Arrays.asList(adminResponseDto);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
         Page<Admin> expectedPage = new PageImpl<>(admins);
-        when(adminRepository.findAll(any(Pageable.class))).thenReturn(expectedPage);
+        when(adminRepository.findAll(any(Specification.class),any(Pageable.class))).thenReturn(expectedPage);
         when(adminMapper.fromAdminToResponse(any(Admin.class))).thenReturn(adminResponseDto);
         Page<AdminResponseDto> actualResponseAdmins = adminService.getAllAdmins(Optional.empty(), isDeleted, pageable);
         assertAll(
@@ -119,7 +118,7 @@ public class AdminServiceImplTests {
         List<AdminResponseDto> expectedResponseAdmins = Arrays.asList(adminResponseDto);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
         Page<Admin> expectedPage = new PageImpl<>(admins);
-        when(adminRepository.findAll(any(Pageable.class))).thenReturn(expectedPage);
+        when(adminRepository.findAll(any(Specification.class),any(Pageable.class))).thenReturn(expectedPage);
         when(adminMapper.fromAdminToResponse(any(Admin.class))).thenReturn(adminResponseDto);
         Page<AdminResponseDto> actualResponseAdmins = adminService.getAllAdmins(usernameProvided, isDeleted, pageable);
         assertAll(
@@ -142,7 +141,7 @@ public class AdminServiceImplTests {
     @Test
     void getAdminByIdNotFound(){
         when(adminRepository.findByGuuid(anyString())).thenThrow(new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: "+ admin.getGuuid()));
-        var result = assertThrows(UserExceptions.UserNotFound.class, () -> adminService.getAdminByGuuid("adadada"));
+        var result = assertThrows(AdminExceptions.AdminNotFound.class, () -> adminService.getAdminByGuuid("adadada"));
         verify(adminRepository, times(1)).findByGuuid(anyString());
     }
 
@@ -152,6 +151,7 @@ public class AdminServiceImplTests {
                 .guuid("puZjCDm_xCg").build();
         when(adminRepository.findByGuuid(anyString())).thenReturn(null);
         when(userRepository.findByGuuid(anyString())).thenReturn(user);
+        when(adminRepository.save(any(Admin.class))).thenReturn(admin);
         when(adminMapper.fromAdminDto(adminRequestDto)).thenReturn(admin);
         when(adminMapper.fromAdminToResponse(admin)).thenReturn(adminResponseDto);
         var res = adminService.saveAdmin(adminRequestDto);
@@ -195,7 +195,7 @@ public class AdminServiceImplTests {
                 .fotoPerfil("fotoUpdated.png").build();
         when(adminRepository.findByGuuid(anyString())).thenReturn(admin);
         when(adminRepository.save(admin)).thenReturn(admin);
-        when(adminMapper.fromAdminDto(any(AdminRequestDto.class))).thenReturn(admin);
+        when(adminMapper.fromAdminToResponse(admin)).thenReturn(adminResponseDto);
         var res = adminService.updateAdmin(user.getGuuid() ,adminUpdateRequest);
         assertAll(
                 () -> assertEquals(adminResponseDto, res),
@@ -212,5 +212,35 @@ public class AdminServiceImplTests {
         when(adminRepository.findByGuuid(adminUpdateRequest.getGuuid())).thenThrow(AdminExceptions.AdminNotFound.class);
         var res = assertThrows(AdminExceptions.AdminNotFound.class ,() -> adminService.updateAdmin(adminUpdateRequest.getGuuid(), adminUpdateRequest ));
         verify(adminRepository, times(1)).findByGuuid(adminUpdateRequest.getGuuid());
+    }
+
+    @Test
+    void deleteAdmin(){
+        User userToDelete = User.builder()
+                .username("usuario@correo.com")
+                .guuid("puZjCDm_xCc")
+                .password("17j$e7cS")
+                .fotoPerfil("profile.jpg")
+                .roles(Set.of( Role.USER))
+                .build();
+         Admin adminToDelte = Admin.builder()
+                .guuid("puZjCDm_xCc")
+                .user(userToDelete).build();
+        when(adminRepository.findByGuuid(anyString())).thenReturn(adminToDelte);
+        adminService.deleteAdmin(adminToDelte.getGuuid());
+        verify(adminRepository, times(1)).findByGuuid(anyString());
+    }
+
+    @Test
+    void deleteAdmin_CannotSuperAdmin(){
+        when(adminRepository.findByGuuid(anyString())).thenReturn(admin);
+        var result = assertThrows(AdminExceptions.AdminCannotBeDeleted.class, () -> adminService.deleteAdmin(admin.getGuuid()));
+        verify(adminRepository, times(1)).findByGuuid(anyString());
+    }
+    @Test
+    void deleteAdminNotFound(){
+        when(adminRepository.findByGuuid(anyString())).thenThrow(new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: "+ admin.getGuuid()));
+        var result = assertThrows(AdminExceptions.AdminNotFound.class, () -> adminService.deleteAdmin(admin.getGuuid()));
+        verify(adminRepository, times(1)).findByGuuid(anyString());
     }
 }

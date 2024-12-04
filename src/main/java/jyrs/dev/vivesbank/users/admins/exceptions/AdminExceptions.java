@@ -15,13 +15,13 @@ public abstract class AdminExceptions extends RuntimeException  {
             }
         }
 
-    public static class AdminAlreadyExists extends Throwable {
+    public static class AdminAlreadyExists extends AdminExceptions {
         public AdminAlreadyExists(String message) {
             super(message);
         }
     }
 
-    public static class AdminCannotBeDeleted extends Throwable {
+    public static class AdminCannotBeDeleted extends AdminExceptions {
         public AdminCannotBeDeleted(String message) {
             super(message);
         }
