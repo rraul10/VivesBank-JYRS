@@ -1,9 +1,10 @@
-package jyrs.dev.vivesbank.products.storage;
+package jyrs.dev.vivesbank.products.base.storage;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jyrs.dev.vivesbank.products.base.models.Product;
 import jyrs.dev.vivesbank.products.base.models.type.ProductType;
+import jyrs.dev.vivesbank.products.storage.ProductStorageImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

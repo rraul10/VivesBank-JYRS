@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.products.services;
+package jyrs.dev.vivesbank.products.base.services;
 
 import jyrs.dev.vivesbank.products.base.dto.ProductDto;
 import jyrs.dev.vivesbank.products.base.dto.ProductUpdatedDto;

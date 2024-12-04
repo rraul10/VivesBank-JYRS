@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -46,9 +47,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureJsonTesters
 @ExtendWith(MockitoExtension.class)
+@WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "CLIENT"})
 class CreditCardControllerTest {
 
-    private final String myEndpoint = "/api/creditcard";
+    private final String myEndpoint = "/vivesbank/v1/creditcard";
 
     BankAccount cuenta = BankAccount.builder()
             .iban("ES12345678901234567890")
