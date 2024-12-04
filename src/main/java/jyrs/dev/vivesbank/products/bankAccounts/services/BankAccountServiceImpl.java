@@ -14,12 +14,12 @@ import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
-import jyrs.dev.vivesbank.products.models.Product;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -49,7 +49,14 @@ public class BankAccountServiceImpl implements BankAccountService {
     private final BankAccountStorage storage;
 
     @Autowired
-    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository, BankAccountMapper bankAccountMapper, WebSocketHandler webSocketHandler, ObjectMapper mapper, BankAccountNotificationMapper bankAccountNotificationMapper, BankAccountStorage storage) {
+    public BankAccountServiceImpl(
+            BankAccountRepository bankAccountRepository,
+            BankAccountMapper bankAccountMapper,
+            @Qualifier("webSocketBankAccountHandler") WebSocketHandler webSocketHandler,
+            ObjectMapper mapper,
+            BankAccountNotificationMapper bankAccountNotificationMapper,
+            BankAccountStorage storage
+    ) {
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
         this.webSocketService = webSocketHandler;

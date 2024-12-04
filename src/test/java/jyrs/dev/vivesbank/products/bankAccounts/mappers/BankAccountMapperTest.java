@@ -6,7 +6,7 @@ import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
-import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponse;
+import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponseDto;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
@@ -42,8 +42,8 @@ class BankAccountMapperTest {
         card = CreditCard.builder()
                 .id(1L)
                 .number("1234567812345678")
-                .cvc("123")
-                .expirationDate(LocalDate.of(2025, 12, 31))
+                .cvv("123")
+                .expirationDate("12_29")
                 .pin("1234")
                 .build();
 
@@ -109,8 +109,8 @@ class BankAccountMapperTest {
         assertThat(response.getClientId()).isEqualTo(client.getId());
         assertThat(response.getCreditCard()).isNotNull();
         assertThat(response.getCreditCard().getNumber()).isEqualTo(card.getNumber());
-        assertThat(response.getCreditCard().getExpirationDate()).isEqualTo("2025-12-31");
-        assertThat(response.getCreditCard().getCvc()).isEqualTo(card.getCvc());
+        assertThat(response.getCreditCard().getExpirationDate()).isEqualTo("12_29");
+        assertThat(response.getCreditCard().getCvv()).isEqualTo(card.getCvv());
     }
 
     @Test
@@ -122,17 +122,17 @@ class BankAccountMapperTest {
 
     @Test
     void toCardDtoToResponse() {
-        CreditCardResponse cardResponse = bankAccountMapper.toCardDto(card);
+        CreditCardResponseDto cardResponse = bankAccountMapper.toCardDto(card);
 
         assertThat(cardResponse).isNotNull();
         assertThat(cardResponse.getNumber()).isEqualTo(card.getNumber());
         assertThat(cardResponse.getExpirationDate()).isEqualTo(card.getExpirationDate().toString());
-        assertThat(cardResponse.getCvc()).isEqualTo(card.getCvc());
+        assertThat(cardResponse.getCvv()).isEqualTo(card.getCvv());
     }
 
     @Test
     void toCardDtoReturnNull() {
-        CreditCardResponse cardResponse = bankAccountMapper.toCardDto(null);
+        CreditCardResponseDto cardResponse = bankAccountMapper.toCardDto(null);
 
         assertThat(cardResponse).isNull();
     }

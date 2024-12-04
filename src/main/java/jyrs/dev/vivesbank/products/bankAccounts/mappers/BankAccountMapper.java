@@ -4,7 +4,7 @@ import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
-import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponse;
+import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardResponseDto;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import org.springframework.stereotype.Component;
 
@@ -27,15 +27,15 @@ public class BankAccountMapper {
                 .build();
     }
 
-    public CreditCardResponse toCardDto(CreditCard card) {
+    public CreditCardResponseDto toCardDto(CreditCard card) {
         if (card == null) {
             return null;
         }
 
-        return CreditCardResponse.builder()
+        return CreditCardResponseDto.builder()
                 .number(card.getNumber())
                 .expirationDate(card.getExpirationDate() != null ? card.getExpirationDate().toString() : null)
-                .cvc(card.getCvc())
+                .cvv(card.getCvv())
                 .build();
     }
 
