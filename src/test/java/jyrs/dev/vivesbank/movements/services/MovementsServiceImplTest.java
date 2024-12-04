@@ -17,10 +17,14 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +59,6 @@ public class MovementsServiceImplTest {
         String typeMovement = "TRANSFER";
         Double amount = 100.0;
 
-        // Crear clientes y movimiento
         Client senderClient = new Client(1L, "Sender", new ArrayList<>());
         Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
         Movement movement = Movement.builder()
@@ -70,21 +73,17 @@ public class MovementsServiceImplTest {
                 .transferDeadlineDate(LocalDateTime.now().plusDays(7))
                 .build();
 
-        // Mock de repositorios
         when(clientsRepository.findById(1L)).thenReturn(Optional.of(senderClient));
         when(clientsRepository.findById(2L)).thenReturn(Optional.of(recipientClient));
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
 
-        // Mock de redisTemplate y su opsForValue()
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);  // Mock de opsForValue
-        doNothing().when(valueOperations).set(anyString(), any(Movement.class));  // Simula que set no hace nada
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doNothing().when(valueOperations).set(anyString(), any(Movement.class));
 
-        // Ejecución del método
         movementsService.createMovement(senderClientId, recipientClientId, origin, destination, typeMovement, amount);
 
-        // Verificación
-        verify(movementsRepository).save(any(Movement.class));  // Verificamos que se haya guardado el movimiento en la base de datos
-        verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));  // Verificamos que se haya intentado guardar el movimiento en Redis
+        verify(movementsRepository).save(any(Movement.class));
+        verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));
     }
 
     @Test
@@ -142,61 +141,7 @@ public class MovementsServiceImplTest {
 
         assertFalse(movement.getIsReversible());
 
-<<<<<<< HEAD
-        List<Movement> movements = List.of(sentMovement, receivedMovement);
-
-        // Simula que Redis devuelve una lista de movimientos
-        when(redisTemplate.opsForValue().get("MOVEMENTS:CLIENT:" + clientId)).thenReturn((Movement) movements);
-
-        // Llamar al servicio
-        List<Movement> result = movementsService.getMovementsByClientId(clientId);
-
-        // Verifica que se obtuvieron los movimientos desde Redis
-        verify(redisTemplate.opsForValue()).get("MOVEMENTS:CLIENT:" + clientId);
-        assertEquals(2, result.size());  // Verifica que el número de movimientos es correcto
-    }
-    
-
-    @Test
-    void getMovementsByClientId_shouldGetFromDatabaseIfNotInRedis() throws Exception {
-        String clientId = "1";
-        Movement sentMovement = new Movement();
-        Movement receivedMovement = new Movement();
-
-        List<Movement> movements = List.of(sentMovement, receivedMovement);
-
-        // Simula que Redis no tiene movimientos, por lo que se consultará la base de datos
-        when(redisTemplate.opsForValue().get("MOVEMENTS:CLIENT:" + clientId)).thenReturn(null);
-        when(movementsRepository.findBySenderClient_Id(clientId)).thenReturn(List.of(sentMovement));
-        when(movementsRepository.findByRecipientClient_Id(clientId)).thenReturn(List.of(receivedMovement));
-
-        // Llamar al servicio
-        List<Movement> result = movementsService.getMovementsByClientId(clientId);
-
-        // Serializar la lista de movimientos a JSON
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonMovements = objectMapper.writeValueAsString(movements);
-
-        // Verifica que se guardaron los movimientos en Redis (como un string JSON)
-        verify(redisTemplate.opsForValue()).set("MOVEMENTS:CLIENT:" + clientId, jsonMovements);
-
-        // Verifica que se obtuvieron los movimientos desde la base de datos
-        verify(movementsRepository).findBySenderClient_Id(clientId);
-        verify(movementsRepository).findByRecipientClient_Id(clientId);
-
-        assertEquals(2, result.size());  // Verifica que el número de movimientos es correcto
-
-        // Recupera la lista de movimientos desde Redis (simulamos la deserialización)
-        String storedJson = jsonMovements; // Este es el valor que se guardó en Redis en el test
-        List<Movement> movementsFromRedis = objectMapper.readValue(storedJson, objectMapper.getTypeFactory().constructCollectionType(List.class, Movement.class));
-
-        // Verificar que la lista deserializada de Redis contiene los movimientos correctos
-        assertEquals(movements.size(), movementsFromRedis.size());
-        assertEquals(movements.get(0), movementsFromRedis.get(0));
-        assertEquals(movements.get(1), movementsFromRedis.get(1));
-=======
         verify(valueOperations).set("MOVEMENT:" + movementId, movement);
->>>>>>> feature/Movements
     }
 
 
