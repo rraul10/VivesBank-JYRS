@@ -78,21 +78,27 @@ public class MovementsServiceImpl implements MovementsService {
         redisTemplate.opsForValue().set("MOVEMENT:" + movementId, movement);
     }
 
+
     @Override
     public List<Movement> getMovementsByClientId(String clientId) {
-        // Primero, busca en Redis
-        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get("MOVEMENTS:CLIENT:" + clientId);
+        List<Movement> movements = new ArrayList<>();
 
-        if (movements == null) {
-            // Si no está en Redis, busca en la base de datos
+        // Buscar movimientos en Redis para el cliente
+        String redisKey = "MOVEMENTS:CLIENT:" + clientId;
+        Movement movement = redisTemplate.opsForValue().get(redisKey);
+
+        if (movement == null) {
+            // Si no hay en Redis, buscar en la base de datos
             var sentMovements = movementsRepository.findBySenderClient_Id(clientId);
             var receivedMovements = movementsRepository.findByRecipientClient_Id(clientId);
 
-            movements = new ArrayList<>(sentMovements);
+            movements.addAll(sentMovements);
             movements.addAll(receivedMovements);
 
-            // Guardar los movimientos en Redis
-            redisTemplate.opsForValue().set("MOVEMENTS:CLIENT:" + clientId, (Movement) movements);
+            // Guardar los movimientos individualmente en Redis
+            for (Movement mov : movements) {
+                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);  // Guardar cada movimiento individualmente
+            }
         }
 
         return movements;
@@ -100,35 +106,56 @@ public class MovementsServiceImpl implements MovementsService {
 
     @Override
     public List<Movement> getAllMovements() {
-        // Primero, busca todos los movimientos en Redis
-        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get("MOVEMENTS:ALL");
+        List<Movement> movements = new ArrayList<>();
 
-        if (movements == null) {
-            // Si no está en Redis, busca en la base de datos
+        // Buscar todos los movimientos en Redis
+        String redisKey = "MOVEMENTS:ALL";
+        movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
+
+        if (movements == null || movements.isEmpty()) {
+            // Si no están en Redis, buscar en la base de datos
             movements = movementsRepository.findAll();
 
-            // Guardar todos los movimientos en Redis
-            redisTemplate.opsForValue().set("MOVEMENTS:ALL", (Movement) movements);
+            // Guardar los movimientos individualmente en Redis
+            for (Movement mov : movements) {
+                redisTemplate.opsForValue().set("MOVEMENTS:ALL:" + mov.getId(), mov);  // Guardar cada movimiento individualmente
+            }
         }
 
         return movements;
     }
+
 
     @Override
     public List<Movement> getMovementsByType(String typeMovement) {
-        // Primero, busca los movimientos por tipo en Redis
-        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get("MOVEMENTS:TYPE:" + typeMovement);
+        List<Movement> movements = new ArrayList<>();
 
-        if (movements == null) {
-            // Si no está en Redis, busca en la base de datos
+        // Buscar movimientos por tipo en Redis
+        String redisKey = "MOVEMENTS:TYPE:" + typeMovement;
+
+        // Intentamos obtener cada movimiento individualmente de Redis
+        for (int i = 0; i < 100; i++) {  // Limitar la búsqueda a 100 elementos (ajustable)
+            Movement movement = redisTemplate.opsForValue().get(redisKey + ":" + i);  // Suponiendo que los movimientos están numerados
+            if (movement == null) {
+                break;  // Si no encontramos más movimientos, paramos
+            }
+            movements.add(movement);
+        }
+
+        if (movements.isEmpty()) {
+            // Si no están en Redis, buscar en la base de datos
             movements = movementsRepository.findByTypeMovement(typeMovement);
 
             // Guardar los movimientos por tipo en Redis
-            redisTemplate.opsForValue().set("MOVEMENTS:TYPE:" + typeMovement, (Movement) movements);
+            for (int i = 0; i < movements.size(); i++) {
+                redisTemplate.opsForValue().set(redisKey + ":" + i, movements.get(i));  // Guardar cada movimiento individualmente en Redis
+            }
         }
 
         return movements;
     }
+
+
 
     @Override
     public void deleteMovement(String movementId) {
@@ -156,6 +183,7 @@ public class MovementsServiceImpl implements MovementsService {
 
         movementsRepository.saveAll(movements);
     }
+
 }
 
 

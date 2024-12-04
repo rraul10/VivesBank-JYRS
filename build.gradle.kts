@@ -55,6 +55,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:1.19.0")
     testImplementation("org.testcontainers:mongodb:1.19.0")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation ("org.mockito:mockito-core:4.0.0")
+
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
