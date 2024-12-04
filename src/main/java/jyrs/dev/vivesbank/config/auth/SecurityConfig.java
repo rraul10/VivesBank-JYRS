@@ -52,7 +52,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
                  // clients
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/storage" ).hasRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/storage/**" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/clients" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/clients/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/clients/dni/{dni}").hasRole("ADMIN"))
