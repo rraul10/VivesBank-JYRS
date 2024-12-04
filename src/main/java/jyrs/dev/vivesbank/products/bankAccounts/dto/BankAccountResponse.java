@@ -29,6 +29,5 @@ public class BankAccountResponse {
         this.accountType = accountType;
         this.balance = balance;
         this.creditCard = creditCard;
-        this.clientId = clientId;
     }
 }
