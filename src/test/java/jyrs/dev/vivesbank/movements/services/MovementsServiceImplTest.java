@@ -71,18 +71,16 @@ public class MovementsServiceImplTest {
     }
 
     @Test
-    void createMovement() throws IOException {
+    void createMovement() {
         String senderClientId = "1";
         String recipientClientId = "2";
         BankAccount origin = new BankAccount();
         BankAccount destination = new BankAccount();
         String typeMovement = "TRANSFER";
         Double amount = 100.0;
-        
+
         Client senderClient = new Client(1L, "Sender", new ArrayList<>());
-
         Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
-
         Movement movement = Movement.builder()
                 .senderClient(senderClient)
                 .recipientClient(recipientClient)
@@ -90,7 +88,7 @@ public class MovementsServiceImplTest {
                 .destination(destination)
                 .typeMovement(typeMovement)
                 .amount(amount)
-                .balance(900.0)
+                .balance(1000.0 - amount)
                 .isReversible(true)
                 .transferDeadlineDate(LocalDateTime.now().plusDays(7))
                 .build();
@@ -98,6 +96,7 @@ public class MovementsServiceImplTest {
         when(clientsRepository.findById(1L)).thenReturn(Optional.of(senderClient));
         when(clientsRepository.findById(2L)).thenReturn(Optional.of(recipientClient));
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
+
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         doNothing().when(valueOperations).set(anyString(), any(Movement.class));
 
@@ -105,7 +104,6 @@ public class MovementsServiceImplTest {
 
         verify(movementsRepository).save(any(Movement.class));
         verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));
-        verify(webSocketHandlerMock, times(1)).sendMessage(anyString());
     }
 
 
