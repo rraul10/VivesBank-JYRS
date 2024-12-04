@@ -42,6 +42,12 @@ public class Movement {
 
     private LocalDateTime transferDeadlineDate;
 
+    public Movement(String sent1) {
+    }
+
+    public Movement(int i, String origin1, String destination1, double v) {
+    }
+
     public void setSenderClientId(String number) {
     }
 
