@@ -1,5 +1,7 @@
 package jyrs.dev.vivesbank.movements.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
 import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
@@ -9,6 +11,7 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.MovementNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.MovementNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import lombok.extern.slf4j.Slf4j;
@@ -34,20 +37,24 @@ public class MovementsServiceImpl implements MovementsService {
     private final MovementsStorage storage;
     private MovementNotificationMapper movementNotificationMapper;
     private WebSocketHandler webSocketService;
+    private final ObjectMapper objectMapper;
     private final RedisTemplate<String, Movement> redisTemplate;
+    private WebSocketConfig webSocketConfig;
+
 
     @Autowired
         public MovementsServiceImpl(MovementsRepository movementsRepository,
                                     ClientsRepository clientsRepository,
-                                   MovementValidator movementValidator,
+                                    MovementValidator movementValidator,
                                     MovementsStorage storage,
-                                   MovementNotificationMapper movementNotificationMapper,
+                                    MovementNotificationMapper movementNotificationMapper,
                                     RedisTemplate<String, Movement> redisTemplate,
                                     @Qualifier("webSocketMovementsHandler") WebSocketHandler webSocketService) {
         this.movementsRepository = movementsRepository;
         this.clientsRepository = clientsRepository;
         this.movementValidator = movementValidator;
         this.storage = storage;
+        objectMapper= new ObjectMapper();
         this.movementNotificationMapper = movementNotificationMapper;
         this.webSocketService = webSocketService;
         this.redisTemplate = redisTemplate;
@@ -74,14 +81,17 @@ public class MovementsServiceImpl implements MovementsService {
                 .typeMovement(typeMovement)
                 .date(LocalDateTime.now())
                 .amount(amount)
-                .balance(senderClient.getCuentas() != null ? senderClient.getCuentas().stream().mapToDouble(cuenta -> cuenta != null ? Double.parseDouble(String.valueOf(cuenta)) : 0.0).sum() - amount : 0.0)
+                .balance(senderClient.getCuentas() != null ? senderClient.getCuentas().stream()
+                        .mapToDouble(cuenta -> cuenta != null ? Double.parseDouble(String.valueOf(cuenta)) : 0.0).sum() - amount : 0.0)
                 .isReversible(true)
                 .transferDeadlineDate(LocalDateTime.now().plusDays(7))
                 .build();
 
+        movementsRepository.save(movement);
+
         redisTemplate.opsForValue().set("MOVEMENT:" + movement.getId(), movement);
 
-        movementsRepository.save(movement);
+        onChange(Notificacion.Tipo.CREATE, movement);
     }
 
     @Override
@@ -178,6 +188,7 @@ public class MovementsServiceImpl implements MovementsService {
         movementsRepository.delete(movement);
 
         redisTemplate.delete("MOVEMENT:" + movementId);
+        onChange(Notificacion.Tipo.DELETE, movement);
     }
 
     @Override
@@ -196,23 +207,23 @@ public class MovementsServiceImpl implements MovementsService {
         movementsRepository.saveAll(movements);
     }
 
-    void onChanges(Notificacion.Tipo tipo, Movement data) {
-        log.debug("Servicio de movimientos de una cuenta de banco onChange con tipo: " + tipo + " y datos: " + data);
+    void onChange(Notificacion.Tipo tipo, Movement data) {
+        log.info("Servicio de movimientos de una cuenta de banco onChange con tipo: " + tipo + " y datos: " + data);
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
+            webSocketService = this.webSocketConfig.webSocketUserHandler();
         }
 
         try {
-            Notificacion<MovementNotificationMapper> notificacion = new Notificacion<>(
-                    "BANK_ACCOUNT",
+            Notificacion<MovementNotificationResponse> notificacion = new Notificacion<>(
+                    "MOVEMENTS",
                     tipo,
-                   movementNotificationMapper.toNotificationResponse(data),
+                   MovementNotificationMapper.toMovementNotificationResponse(data),
                     LocalDateTime.now().toString()
             );
 
-            String json = mapper.writeValueAsString(notificacion);
-
+            String json = objectMapper.writeValueAsString(notificacion);
             log.info("Enviando mensaje a los clientes ws");
             Thread senderThread = new Thread(() -> {
                 try {
@@ -227,8 +238,9 @@ public class MovementsServiceImpl implements MovementsService {
         }
     }
 
-
-
+    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
+        this.webSocketService = webSocketHandlerMock;
+    }
 
 }
 

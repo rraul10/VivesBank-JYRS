@@ -1,5 +1,7 @@
 package jyrs.dev.vivesbank.movements.services;
 
+import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
+import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
@@ -7,6 +9,8 @@ import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.MovementNotificationMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,11 +18,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-
+import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -27,7 +32,13 @@ import static org.mockito.Mockito.*;
 public class MovementsServiceImplTest {
 
     @Mock
+    private ObjectMapper objectMapper; // Mock del ObjectMapper
+
+    @Mock
     private MovementsRepository movementsRepository;
+
+    @Mock
+    private WebSocketConfig webSocketConfig;
 
     @Mock
     private ClientsRepository clientsRepository;
@@ -39,25 +50,39 @@ public class MovementsServiceImplTest {
     private ValueOperations<String, Movement> valueOperations;
 
     @Mock
+    private MovementNotificationMapper movementNotificationMapper;
+
+    @Mock
+    private WebSocketHandler webSocketHandlerMock;
+
+    @Mock
     private MovementValidator movementValidator;
+
     @Mock
     private MovementsStorage storage;
 
     @InjectMocks
     private MovementsServiceImpl movementsService;
 
+    @BeforeEach
+    void setUp() throws JsonProcessingException {
+        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
+        movementsService.setWebSocketService(webSocketHandlerMock);
+    }
+
     @Test
-    void createMovement() {
+    void createMovement() throws IOException {
         String senderClientId = "1";
         String recipientClientId = "2";
         BankAccount origin = new BankAccount();
         BankAccount destination = new BankAccount();
         String typeMovement = "TRANSFER";
         Double amount = 100.0;
-
-        // Crear clientes y movimiento
+        
         Client senderClient = new Client(1L, "Sender", new ArrayList<>());
+
         Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
+
         Movement movement = Movement.builder()
                 .senderClient(senderClient)
                 .recipientClient(recipientClient)
@@ -65,27 +90,24 @@ public class MovementsServiceImplTest {
                 .destination(destination)
                 .typeMovement(typeMovement)
                 .amount(amount)
-                .balance(1000.0 - amount)
+                .balance(900.0)
                 .isReversible(true)
                 .transferDeadlineDate(LocalDateTime.now().plusDays(7))
                 .build();
 
-        // Mock de repositorios
         when(clientsRepository.findById(1L)).thenReturn(Optional.of(senderClient));
         when(clientsRepository.findById(2L)).thenReturn(Optional.of(recipientClient));
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doNothing().when(valueOperations).set(anyString(), any(Movement.class));
 
-        // Mock de redisTemplate y su opsForValue()
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);  // Mock de opsForValue
-        doNothing().when(valueOperations).set(anyString(), any(Movement.class));  // Simula que set no hace nada
-
-        // Ejecución del método
         movementsService.createMovement(senderClientId, recipientClientId, origin, destination, typeMovement, amount);
 
-        // Verificación
-        verify(movementsRepository).save(any(Movement.class));  // Verificamos que se haya guardado el movimiento en la base de datos
-        verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));  // Verificamos que se haya intentado guardar el movimiento en Redis
+        verify(movementsRepository).save(any(Movement.class));
+        verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));
+        verify(webSocketHandlerMock, times(1)).sendMessage(anyString());
     }
+
 
     @Test
     void createMovementSenderClientNotFound() {
