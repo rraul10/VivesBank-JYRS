@@ -121,9 +121,7 @@ public class MovementsServiceImplTest {
         verify(redisTemplate.opsForValue()).get("MOVEMENTS:CLIENT:" + clientId);
         assertEquals(2, result.size());  // Verifica que el número de movimientos es correcto
     }
-
-
-    import com.fasterxml.jackson.databind.ObjectMapper;
+    
 
     @Test
     void getMovementsByClientId_shouldGetFromDatabaseIfNotInRedis() throws Exception {
