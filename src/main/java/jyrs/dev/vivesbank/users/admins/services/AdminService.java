@@ -5,7 +5,6 @@ import jyrs.dev.vivesbank.users.admins.dto.AdminResponseDto;
 import jyrs.dev.vivesbank.users.admins.dto.AdminUpdateRequest;
 import jyrs.dev.vivesbank.users.admins.exceptions.AdminExceptions;
 import jyrs.dev.vivesbank.users.models.User;
-import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,7 +14,7 @@ import java.util.Optional;
 
 public interface AdminService {
     Page<AdminResponseDto> getAllAdmins(Optional<String> username, Optional<Boolean> isDeleted, Pageable pageable);
-    AdminResponseDto getUserByAdmin(String id);
+    AdminResponseDto getAdminByGuuid(String id);
     AdminResponseDto saveAdmin(AdminRequestDto requestDto) throws AdminExceptions.AdminAlreadyExists;
     AdminResponseDto updateAdmin(String id, AdminUpdateRequest user);
     void deleteAdmin(String id) throws AdminExceptions.AdminCannotBeDeleted;

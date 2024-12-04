@@ -7,14 +7,12 @@ import jyrs.dev.vivesbank.users.admins.dto.AdminResponseDto;
 import jyrs.dev.vivesbank.users.admins.dto.AdminUpdateRequest;
 import jyrs.dev.vivesbank.users.admins.exceptions.AdminExceptions;
 import jyrs.dev.vivesbank.users.admins.services.AdminService;
-import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import jyrs.dev.vivesbank.utils.pagination.PaginationLinksUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +57,7 @@ public class AdminController {
     @GetMapping("/{id}")
     public ResponseEntity<AdminResponseDto> getUserByAdmin(@PathVariable String id) {
         log.info("Obteniendo admin por id: " + id);
-        return ResponseEntity.ok(service.getUserByAdmin(id));
+        return ResponseEntity.ok(service.getAdminByGuuid(id));
     }
 
     @PostMapping

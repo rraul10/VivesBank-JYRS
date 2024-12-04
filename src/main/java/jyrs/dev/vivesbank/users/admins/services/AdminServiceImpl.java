@@ -56,7 +56,7 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
-    public AdminResponseDto getUserByAdmin(String id) {
+    public AdminResponseDto getAdminByGuuid(String id) {
         log.info("Buscando admin con guuid: " + id);
         var res = adminMappers.fromAdminToResponse(adminRepository.findByGuuid(id));
         if (res == null){
@@ -91,6 +91,7 @@ public class AdminServiceImpl implements AdminService {
         userToUpdate.setUsername(user.getUsername());
         userToUpdate.setFotoPerfil(user.getFotoPerfil());
         adminToUpdate.setUser(userToUpdate);
+        adminRepository.save(adminToUpdate);
         return adminMappers.fromAdminToResponse(adminToUpdate);
     }
 

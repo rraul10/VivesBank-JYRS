@@ -85,7 +85,7 @@ public class UserServiceImplTests {
     @Test
     void findAllWithUsernameProvided() {
         List<User> expectedUsers = Arrays.asList(user);
-        Optional<String> usernameProvided = Optional.of("usuario@correo.com");
+            Optional<String> usernameProvided = Optional.of("usuario@correo.com");
         List<UserResponseDto> expectedUsersResponse = Arrays.asList(userResponseDto);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
         Page<User> expectedPage = new PageImpl<>(expectedUsers);

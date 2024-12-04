@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.users.admins;
+package jyrs.dev.vivesbank.users.admins.repository;
 
 import jyrs.dev.vivesbank.users.admins.repository.AdminRepository;
 import jyrs.dev.vivesbank.users.models.Admin;
