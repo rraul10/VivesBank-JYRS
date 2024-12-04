@@ -6,6 +6,7 @@ import jyrs.dev.vivesbank.users.admins.exceptions.AdminExceptions;
 import jyrs.dev.vivesbank.users.admins.repository.AdminRepository;
 import jyrs.dev.vivesbank.users.admins.dto.AdminResponseDto;
 import jyrs.dev.vivesbank.users.admins.mappers.AdminMappers;
+import jyrs.dev.vivesbank.users.admins.storage.AdminStorage;
 import jyrs.dev.vivesbank.users.models.Admin;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
@@ -29,12 +30,14 @@ import java.util.Set;
 @Slf4j
 public class AdminServiceImpl implements AdminService {
     private final AdminRepository adminRepository;
+    private final AdminStorage adminStorage;
     private final AdminMappers adminMappers;
     private final UsersRepository usersRepository;
     @Autowired
 
-    public AdminServiceImpl(AdminRepository adminRepository, AdminMappers adminMappers, UsersRepository usersRepository) {
+    public AdminServiceImpl(AdminRepository adminRepository, AdminStorage adminStorage, AdminMappers adminMappers, UsersRepository usersRepository) {
         this.adminRepository = adminRepository;
+        this.adminStorage = adminStorage;
         this.adminMappers = adminMappers;
         this.usersRepository = usersRepository;
     }
@@ -116,12 +119,15 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void exportJson(File file, List<User> users) {
-
+    public void exportJson(File file, List<Admin> users) {
+        log.info("Exportando admins a json");
+        adminStorage.exportJson(file, users);
     }
 
     @Override
     public void importJson(File file) {
-
+        log.info("Importando admins desde json");
+        List<Admin> admins = adminStorage.importJson(file);
+        adminRepository.saveAll(admins);
     }
 }
