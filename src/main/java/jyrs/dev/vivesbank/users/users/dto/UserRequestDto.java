@@ -20,5 +20,4 @@ public class UserRequestDto{
         @NotBlank(message = "La ruta de la imagen no puede estar vacía")
         String fotoPerfil;
         Boolean isDeleted;
-
 }

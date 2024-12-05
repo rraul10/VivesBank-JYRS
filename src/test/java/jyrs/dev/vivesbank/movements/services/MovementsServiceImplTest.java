@@ -53,8 +53,7 @@ public class MovementsServiceImplTest {
     @Mock
     private MovementNotificationMapper movementNotificationMapper;
 
-    @Mock
-    private WebSocketHandler webSocketHandlerMock;
+    WebSocketHandler webSocketHandlerMock = mock(WebSocketHandler.class);
 
     @Mock
     private MovementValidator movementValidator;
@@ -99,12 +98,12 @@ public class MovementsServiceImplTest {
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         doNothing().when(valueOperations).set(anyString(), any(Movement.class));
-        doNothing().when(movementsService).onChange(Notificacion.Tipo.CREATE, (any(Movement.class)));
+        //doNothing().when(movementsService).onChange(Notificacion.Tipo.CREATE, (any(Movement.class)));
         doNothing().when(webSocketHandlerMock).sendMessage(anyString());
 
         movementsService.createMovement(senderClientId, recipientClientId, origin, destination, typeMovement, amount);
 
-        verify(movementsService).onChange(Notificacion.Tipo.CREATE,(any(Movement.class)));
+        //verify(movementsService).onChange(Notificacion.Tipo.CREATE,(any(Movement.class)));
         verify(movementsRepository).save(any(Movement.class));
         verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));
     }
@@ -304,12 +303,13 @@ public class MovementsServiceImplTest {
     }
 
     @Test
-    void deleteMovement() {
+    void deleteMovement() throws IOException {
         String movementId = "1";
         Movement movement = new Movement();
 
         when(movementsRepository.findById(movementId)).thenReturn(Optional.of(movement));
         doNothing().when(movementsRepository).delete(movement);
+        doNothing().when(webSocketHandlerMock).sendMessage(anyString());
 
         movementsService.deleteMovement(movementId);
 

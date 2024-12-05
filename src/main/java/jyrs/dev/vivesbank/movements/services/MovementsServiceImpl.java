@@ -78,7 +78,7 @@ public class MovementsServiceImpl implements MovementsService {
         this.webSocketConfig = webSocketConfig;
         this.movementNotificationMapper = movementNotificationMapper;
         this.redisTemplate = redisTemplate;
-        this.webSocketService = webSocketService;
+        this.webSocketService = webSocketConfig.webSocketMovementsHandler();
         this.objectMapper = new ObjectMapper();
     }
 
