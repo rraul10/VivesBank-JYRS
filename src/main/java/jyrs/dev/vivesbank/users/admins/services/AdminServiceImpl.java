@@ -94,6 +94,9 @@ public class AdminServiceImpl implements AdminService {
     public AdminResponseDto updateAdmin(String id, AdminUpdateRequest user) {
         log.info("Buscando administrador en el sistema: " + user);
         var adminToUpdate = adminRepository.findByGuuid(id);
+        if(adminToUpdate == null){
+            throw new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: " + id);
+        }
         var userToUpdate = adminToUpdate.getUser();
         userToUpdate.setUsername(user.getUsername());
         userToUpdate.setFotoPerfil(user.getFotoPerfil());

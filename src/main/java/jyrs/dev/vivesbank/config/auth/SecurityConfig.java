@@ -51,6 +51,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+                // admins
+                .authorizeHttpRequests(request -> request.requestMatchers(apipath + apiVersion + "/admins/**").hasRole("ADMIN"))
                  // clients
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/storage" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/clients" ).hasRole("ADMIN"))
