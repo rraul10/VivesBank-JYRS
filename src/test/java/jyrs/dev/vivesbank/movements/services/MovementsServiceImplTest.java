@@ -10,6 +10,7 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.MovementNotificationMapper;
+import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
@@ -29,10 +29,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
 public class MovementsServiceImplTest {
 
     @Mock
-    private ObjectMapper objectMapper; // Mock del ObjectMapper
+    private ObjectMapper objectMapper;
 
     @Mock
     private MovementsRepository movementsRepository;
@@ -65,13 +66,13 @@ public class MovementsServiceImplTest {
     private MovementsServiceImpl movementsService;
 
     @BeforeEach
-    void setUp() throws JsonProcessingException {
-        when(objectMapper.writeValueAsString(any())).thenReturn("{}");
-        movementsService.setWebSocketService(webSocketHandlerMock);
+    void setUp() {
+        movementsService.setWebSocketService(webSocketHandlerMock);  // Inyección del mock
+        assertNotNull(webSocketHandlerMock, "El mock debe estar correctamente inyectado");
     }
 
     @Test
-    void createMovement() {
+    void createMovement() throws IOException {
         String senderClientId = "1";
         String recipientClientId = "2";
         BankAccount origin = new BankAccount();
@@ -96,12 +97,14 @@ public class MovementsServiceImplTest {
         when(clientsRepository.findById(1L)).thenReturn(Optional.of(senderClient));
         when(clientsRepository.findById(2L)).thenReturn(Optional.of(recipientClient));
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
-
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         doNothing().when(valueOperations).set(anyString(), any(Movement.class));
+        doNothing().when(movementsService).onChange(Notificacion.Tipo.CREATE, (any(Movement.class)));
+        doNothing().when(webSocketHandlerMock).sendMessage(anyString());
 
         movementsService.createMovement(senderClientId, recipientClientId, origin, destination, typeMovement, amount);
 
+        verify(movementsService).onChange(Notificacion.Tipo.CREATE,(any(Movement.class)));
         verify(movementsRepository).save(any(Movement.class));
         verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));
     }
