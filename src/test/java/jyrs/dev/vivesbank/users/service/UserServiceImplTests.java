@@ -1,7 +1,5 @@
 package jyrs.dev.vivesbank.users.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.ConstraintViolationException;
 import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
 import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.users.models.Role;

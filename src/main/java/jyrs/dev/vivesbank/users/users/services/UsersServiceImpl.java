@@ -69,6 +69,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+
     @Cacheable
     public UserResponseDto getUserById(String id) {
         log.info("Obteniendo user por id: " + id);
