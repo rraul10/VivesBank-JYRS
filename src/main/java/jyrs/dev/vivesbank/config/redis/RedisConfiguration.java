@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.config.redis;
 
+import jyrs.dev.vivesbank.movements.models.Movement;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -22,8 +23,8 @@ public class RedisConfiguration {
     }
 
     @Bean
-    public RedisTemplate<String, Object> template() {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+    public RedisTemplate<String, Movement> template() {
+        RedisTemplate<String, Movement> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory());
 
         template.setKeySerializer(new StringRedisSerializer());
@@ -34,5 +35,6 @@ public class RedisConfiguration {
         return template;
     }
 }
+
 
 

@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.movements.controller;
 
+import jyrs.dev.vivesbank.VivesBankApplication;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,10 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 
-@SpringBootTest
+@SpringBootTest(classes = VivesBankApplication.class)
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
-@WithMockUser(username = "admin", password = "admin", roles = {"ADMIN"})
+@WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "CLIENT"})
 class MovementsControllerTest {
 
     @Mock
