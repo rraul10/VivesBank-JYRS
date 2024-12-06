@@ -22,4 +22,5 @@ public interface ProductServices {
     public void deleteById(Long id);
     void exportJson(File file, List<Product> products);
     void importJson(File file);
+    void loadCsv(File file);
 }
