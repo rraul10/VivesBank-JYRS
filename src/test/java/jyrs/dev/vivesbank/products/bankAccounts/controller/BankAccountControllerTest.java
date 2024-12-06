@@ -11,10 +11,6 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.bankAccounts.services.BankAccountService;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
-import jyrs.dev.vivesbank.users.clients.models.Address;
-import jyrs.dev.vivesbank.users.clients.models.Client;
-import jyrs.dev.vivesbank.users.models.Role;
-import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -39,16 +36,15 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureJsonTesters
-@WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "CLIENT"})
+@WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "USER"})
 @ExtendWith(MockitoExtension.class)
 class BankAccountControllerTest {
-    private final String myEndpoint = "/vivesbank/v1/accounts";
+    private final String myEndpoint = "${api.path:/api}/${api.version:/v1}/accounts";
 
     private final ObjectMapper mapper = new ObjectMapper();
     @Autowired
@@ -62,9 +58,6 @@ class BankAccountControllerTest {
     private CreditCard card;
     private BankAccountResponse bankAccountResponse;
     private BankAccountRequest bankAccountRequest;
-    private Client client;
-    private Address address;
-
 
     @Autowired
     public BankAccountControllerTest(BankAccountService accountService, BankAccountMapper bankAccountMapper) {
@@ -79,41 +72,12 @@ class BankAccountControllerTest {
  
         card = new CreditCard();
 
-        address = Address.builder()
-                .calle("TEST")
-                .numero(1)
-                .ciudad("Yuncos")
-                .provincia("Toledo")
-                .pais("España")
-                .cp(28001)
-                .build();
-
-        client = Client.builder()
-                .id(123L)
-                .dni("11111111A")
-                .nombre("Juan")
-                .user(User.builder()
-                        .username("usuario@correo.com")
-                        .password("password123")
-                        .fotoPerfil("profile.jpg")
-                        .roles(Set.of( Role.USER))
-                        .build())
-                .apellidos("Pérez")
-                .direccion(address)
-                .fotoDni("fotoDni.jpg")
-                .numTelefono("666666666")
-                .email("juan.perez@example.com")
-                .cuentas(List.of())
-                .build();
-
-
         account = BankAccount.builder()
                 .id(1L)
                 .iban("ES91 2100 0418 4502 0005 1332")
                 .accountType(AccountType.STANDARD)
                 .balance(1.0)
                 .creditCard(card)
-                .client(client)
                 .build();
 
         bankAccountResponse = BankAccountResponse.builder()
@@ -121,7 +85,6 @@ class BankAccountControllerTest {
                 .accountType(account.getAccountType())
                 .balance(account.getBalance())
                 .creditCard(bankAccountMapper.toCardDto(account.getCreditCard()))
-                .clientId(client.getId())
                 .build();
 
         bankAccountRequest = BankAccountRequest.builder()
@@ -133,7 +96,7 @@ class BankAccountControllerTest {
     void findAll() throws Exception {
         var accountList = List.of(bankAccountResponse);
         var pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
-        var page = new PageImpl<BankAccountResponse>(accountList);
+        var page = new PageImpl<>(accountList);
 
         when(accountService.findAllBankAccounts(Optional.empty(), pageable)).thenReturn(page);
 

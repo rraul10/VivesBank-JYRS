@@ -28,11 +28,13 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 public class AuthServiceImpl implements AuthService {
+
     private final AuthUserRepository authUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserValidator userValidator;
+
     @Autowired
     public AuthServiceImpl(AuthUserRepository authUserRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager, UserValidator userValidator) {
         this.authUserRepository = authUserRepository;

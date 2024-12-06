@@ -261,4 +261,19 @@ class ProductServicesImplTest {
         verify(storage).exportJson(file, products);
     }
 
+    @Test
+    void loadCsv() throws Exception {
+        File file = mock(File.class);
+        List<Product> products = List.of(productTest);
+
+        when(storage.loadCsv(file)).thenReturn(products);
+
+        productServices.loadCsv(file);
+
+        verify(storage).loadCsv(file);
+
+        verify(productRepository).saveAll(products);
+    }
+
+
 }

@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.currency.controller;
 
+import jyrs.dev.vivesbank.VivesBankApplication;
 import jyrs.dev.vivesbank.currency.rest.responses.CurrencyResponse;
 import jyrs.dev.vivesbank.currency.rest.responses.TimeSeriesResponse;
 import jyrs.dev.vivesbank.currency.rest.responses.getById.getCurrencyById;

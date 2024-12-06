@@ -9,4 +9,5 @@ import java.util.List;
 public interface ProductStorage {
     void exportJson(File file, List<Product> products);
     List<Product> importJson(File file);
+    List<Product> loadCsv(File file);
 }

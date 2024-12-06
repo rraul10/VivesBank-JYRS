@@ -9,9 +9,11 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +22,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-
+@ExtendWith(MockitoExtension.class)
 class BankAccountStorageImplTest {
 
     @Mock
@@ -69,14 +71,14 @@ class BankAccountStorageImplTest {
 
         List<BankAccount> bankAccounts = List.of(bankAccount);
 
-        when(objectMapper.readValue(file, new TypeReference<List<BankAccount>>() {})).thenReturn(bankAccounts);
+        when(objectMapper.readValue(any(File.class), any(TypeReference.class))).thenReturn(bankAccounts);
 
         List<BankAccount> result = bankAccountStorage.importJson(file);
 
         assertNotNull(result);
         assertEquals(1, result.size());
 
-        verify(objectMapper).readValue(file, new TypeReference<List<BankAccount>>() {});
+        verify(objectMapper).readValue(any(File.class), any(TypeReference.class));
     }
 
     @Test
@@ -90,6 +92,6 @@ class BankAccountStorageImplTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        verify(objectMapper).readValue(file, any(TypeReference.class));
+        verify(objectMapper).readValue(eq(file), any(TypeReference.class));
     }
 }
