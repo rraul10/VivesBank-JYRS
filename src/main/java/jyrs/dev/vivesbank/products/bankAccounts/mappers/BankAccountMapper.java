@@ -27,6 +27,7 @@ public class BankAccountMapper {
                 .build();
     }
 
+<<<<<<< HEAD
     public CreditCardResponseDto toCardDto(CreditCard creditCard){
         if (creditCard == null) {
             return null;
@@ -37,6 +38,18 @@ public class BankAccountMapper {
         response.setExpirationDate(response.getExpirationDate());
         response.setCvv(response.getCvv());
         return response;
+=======
+    public CreditCardResponseDto toCardDto(CreditCard card) {
+        if (card == null) {
+            return null;
+        }
+
+        return CreditCardResponseDto.builder()
+                .number(card.getNumber())
+                .expirationDate(card.getExpirationDate() != null ? card.getExpirationDate().toString() : null)
+                .cvv(card.getCvv())
+                .build();
+>>>>>>> rraul10/develop
     }
 
     public BankAccount toBankAccount(BankAccountRequest bankAccountRequest) {

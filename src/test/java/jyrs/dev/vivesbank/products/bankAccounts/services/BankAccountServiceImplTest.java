@@ -14,6 +14,10 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
+<<<<<<< HEAD
+=======
+import jyrs.dev.vivesbank.products.base.models.Product;
+>>>>>>> rraul10/develop
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
 import org.junit.jupiter.api.BeforeEach;

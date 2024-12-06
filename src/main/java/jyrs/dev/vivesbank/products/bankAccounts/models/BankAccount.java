@@ -5,6 +5,10 @@ import jakarta.validation.constraints.Min;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.base.models.Product;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
+<<<<<<< HEAD
+=======
+import jyrs.dev.vivesbank.products.base.models.Product;
+>>>>>>> rraul10/develop
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -80,8 +80,26 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/timeseries").hasAnyRole("USER", "ADMIN")) // Series temporales
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/latest").permitAll()) // Últimos tipos de cambio
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/currencies").permitAll())
-                .authorizeHttpRequests(request ->request.requestMatchers("/api/creditcard/**").permitAll())
-                .authorizeHttpRequests(request ->request.requestMatchers("/api/products/**").permitAll())
+
+                //Credit Card
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard/id/{id}").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard/date/{date}").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard/date/before/{date}").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST,"/vivesbank" + apiVersion +"/creditcard").hasAnyRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT,"/vivesbank" + apiVersion +"/creditcard/{id}").hasAnyRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,"/vivesbank" + apiVersion +"/creditcard/{id}").hasAnyRole("CLIENT", "ADMIN"))
+
+                //Base Product
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/products").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/products/id/{id}").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/products/type/{type}").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST,"/vivesbank" + apiVersion +"/products").hasAnyRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT,"/vivesbank" + apiVersion +"/products/{id}").hasAnyRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,"/vivesbank" + apiVersion +"/products/{id}").hasAnyRole("ADMIN"))
+
+
+
 
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;

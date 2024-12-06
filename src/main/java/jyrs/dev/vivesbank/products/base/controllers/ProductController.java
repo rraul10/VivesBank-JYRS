@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("${api.path:/api}${api.version:/v1}/products")
 @Slf4j
 public class ProductController {
     private final ProductServices productServices;

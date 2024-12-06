@@ -48,12 +48,23 @@ public class BankAccountServiceImpl implements BankAccountService {
     private final BankAccountStorage storage;
 
     @Autowired
+<<<<<<< HEAD
     public BankAccountServiceImpl(BankAccountRepository bankAccountRepository,
                                   BankAccountMapper bankAccountMapper,
                                   ObjectMapper mapper,
                                   BankAccountNotificationMapper bankAccountNotificationMapper,
                                   BankAccountStorage storage,
                                   @Qualifier("webSocketBankAccountHandler") WebSocketHandler webSocketService) {
+=======
+    public BankAccountServiceImpl(
+            BankAccountRepository bankAccountRepository,
+            BankAccountMapper bankAccountMapper,
+            @Qualifier("webSocketBankAccountHandler") WebSocketHandler webSocketHandler,
+            ObjectMapper mapper,
+            BankAccountNotificationMapper bankAccountNotificationMapper,
+            BankAccountStorage storage
+    ) {
+>>>>>>> rraul10/develop
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
         this.mapper = mapper != null ? mapper : new ObjectMapper();
