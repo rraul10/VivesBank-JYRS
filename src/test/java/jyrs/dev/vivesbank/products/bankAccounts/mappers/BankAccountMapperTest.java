@@ -88,7 +88,7 @@ class BankAccountMapperTest {
                 .accountType(account.getAccountType())
                 .balance(account.getBalance())
                 .creditCard(bankAccountMapper.toCardDto(account.getCreditCard()))
-                .clientId(client.getId())
+                .clientId(account.getClient() != null ? account.getClient().getId() : null)
                 .build();
 
         bankAccountRequest = BankAccountRequest.builder()
@@ -101,6 +101,8 @@ class BankAccountMapperTest {
     @Test
     void toResponseBankAccountToResponse() {
         BankAccountResponse response = bankAccountMapper.toResponse(account);
+
+        System.out.println(bankAccountResponse);
 
         assertThat(response).isNotNull();
         assertThat(response.getIban()).isEqualTo(account.getIban());

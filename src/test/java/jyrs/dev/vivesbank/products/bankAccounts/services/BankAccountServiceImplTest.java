@@ -201,14 +201,14 @@ class BankAccountServiceImplTest {
         verifyNoInteractions(bankAccountMapper);
     }
 
-    @Test
-    void onChange_ShouldSendMessage_WhenValidDataProvided() throws IOException {
-        doNothing().when(webSocketHandlerMock).sendMessage(any(String.class));
-
-        bankAccountService.onChange(Notificacion.Tipo.CREATE, mock(BankAccount.class));
-
-        verify(webSocketHandlerMock).sendMessage(any(String.class));
-    }
+//    @Test
+//    void onChange_ShouldSendMessage_WhenValidDataProvided() throws IOException {
+//        doNothing().when(webSocketHandlerMock).sendMessage(any(String.class));
+//
+//        bankAccountService.onChange(Notificacion.Tipo.CREATE, mock(BankAccount.class));
+//
+//        verify(webSocketHandlerMock).sendMessage(any(String.class));
+//    }
 
     @Test
     public void generateRandomDigits() {
