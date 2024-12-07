@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.services.BankAccountService;
+import jyrs.dev.vivesbank.users.models.User;
+import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import jyrs.dev.vivesbank.utils.pagination.PaginationLinksUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +16,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -56,6 +60,15 @@ public class BankAccountController {
                 .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
+    @GetMapping("/allAccounts/{id}")
+    public ResponseEntity<List<BankAccountResponse>> getAllAccountsByClientId(@RequestParam Long id) {
+        log.info("Obteniendo todas las cuentas para el cliente con ID: ", id);
+
+        List<BankAccountResponse> accounts = accountService.findAllBankAccountsByClientId(id);
+
+        return ResponseEntity.ok(accounts);
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<BankAccountResponse> getById(@PathVariable Long id){
@@ -63,10 +76,10 @@ public class BankAccountController {
         return ResponseEntity.ok(accountService.findBankAccountById(id));
     }
 
-    @PostMapping
-    public ResponseEntity<BankAccountResponse> create(@Valid @RequestBody BankAccountRequest bankAccountRequest){
+    @PostMapping("me/accounts")
+    public ResponseEntity<BankAccountResponse> create(@AuthenticationPrincipal User user,@Valid @RequestBody BankAccountRequest bankAccountRequest){
         log.info("Creando cuenta bancaria: " + bankAccountRequest);
-        var result = accountService.saveBankAccount(bankAccountRequest);
+        var result = accountService.saveBankAccount(user.getGuuid(),bankAccountRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
@@ -75,6 +88,20 @@ public class BankAccountController {
     public ResponseEntity<Void> deleteById(@PathVariable Long id){
         log.info("Borrando cuenta bancaria con id: " + id);
         accountService.deleteBankAccount(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/me")
+    public ResponseEntity<List<BankAccountResponse>> meAccounts(@AuthenticationPrincipal User user) {
+        log.info("Obteniendo todas las cuentas del cliente"+ user.getGuuid());
+        return ResponseEntity.ok(accountService.getAllMeAccounts(user.getGuuid()));
+    }
+
+    @DeleteMapping("/me/{id}")
+    public ResponseEntity<Void> deleteMeAccount(@AuthenticationPrincipal User user,@PathVariable Long id){
+        log.info("Borrando cuenta bancaria con id: " + id);
+        accountService.deleteMeBankAccount(user.getGuuid(),id);
         return ResponseEntity.noContent().build();
     }
 }
