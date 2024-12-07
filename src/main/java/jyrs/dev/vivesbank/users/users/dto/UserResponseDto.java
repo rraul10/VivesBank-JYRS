@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserResponseDto{
+public class UserResponseDto {
         private String guuid;
         @NotBlank(message = "El nombre de usuario no puede estar vacío")
         String username;

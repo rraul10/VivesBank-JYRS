@@ -42,27 +42,24 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     private BankAccountRepository bankAccountRepository;
     private BankAccountMapper bankAccountMapper;
-    private WebSocketConfig webSocketConfig;
     private ObjectMapper mapper;
     private BankAccountNotificationMapper bankAccountNotificationMapper;
     private WebSocketHandler webSocketService;
     private final BankAccountStorage storage;
 
     @Autowired
-    public BankAccountServiceImpl(
-            BankAccountRepository bankAccountRepository,
-            BankAccountMapper bankAccountMapper,
-            @Qualifier("webSocketBankAccountHandler") WebSocketHandler webSocketHandler,
-            ObjectMapper mapper,
-            BankAccountNotificationMapper bankAccountNotificationMapper,
-            BankAccountStorage storage
-    ) {
+    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository,
+                                  BankAccountMapper bankAccountMapper,
+                                  ObjectMapper mapper,
+                                  BankAccountNotificationMapper bankAccountNotificationMapper,
+                                  BankAccountStorage storage,
+                                  @Qualifier("webSocketBankAccountHandler") WebSocketHandler webSocketService) {
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
-        this.webSocketService = webSocketHandler;
         this.mapper = mapper != null ? mapper : new ObjectMapper();
         this.bankAccountNotificationMapper = bankAccountNotificationMapper;
         this.storage = storage;
+        this.webSocketService = webSocketService;  // Inyección del WebSocketHandler específico
     }
 
     @Override
@@ -210,7 +207,6 @@ public class BankAccountServiceImpl implements BankAccountService {
 
         if (webSocketService == null) {
             log.warn("No se ha podido enviar la notificación a los clientes ws, no se ha encontrado el servicio");
-            webSocketService = this.webSocketConfig.webSocketBankAccountHandler();
         }
 
         try {
@@ -235,5 +231,8 @@ public class BankAccountServiceImpl implements BankAccountService {
         } catch (JsonProcessingException e) {
             log.error("Error al convertir la notificación a JSON", e);
         }
+    }
+    public void setWebSocketService(WebSocketHandler webSocketHandlerMock) {
+        this.webSocketService = webSocketHandlerMock;
     }
 }

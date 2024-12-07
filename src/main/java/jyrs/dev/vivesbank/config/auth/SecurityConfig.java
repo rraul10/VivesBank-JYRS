@@ -51,6 +51,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+                // admins
+                .authorizeHttpRequests(request -> request.requestMatchers(apipath + apiVersion + "/admins/**").hasRole("ADMIN"))
                  // clients
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/storage/**" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/clients" ).hasRole("ADMIN"))
@@ -63,6 +65,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/dni" ).hasRole("CLIENT"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/perfil" ).hasRole("CLIENT"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/clients/me/profile" ).hasRole("CLIENT"))
+                //Bank Account
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts" ).hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts/client/{clientId}").hasAnyRole("CLIENT","ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, apipath + apiVersion + "/accounts" ).hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/accounts/{id}").hasAnyRole("CLIENT","ADMIN"))
 
                 // MOVEMENTS
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements").hasRole("ADMIN")) // GET ALL MOVEMENTS
