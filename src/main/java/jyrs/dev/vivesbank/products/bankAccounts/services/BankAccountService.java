@@ -3,6 +3,7 @@ package jyrs.dev.vivesbank.products.bankAccounts.services;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import jyrs.dev.vivesbank.users.clients.models.Client;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,7 +16,9 @@ public interface BankAccountService {
     List<BankAccountResponse> findAllBankAccountsByClientId(Long clientId);
     BankAccountResponse findBankAccountById(Long id);
     BankAccountResponse findBankAccountByIban(String iban);
-    BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest);
+    BankAccountResponse saveBankAccount(String id, BankAccountRequest bankAccountRequest);
+    List<BankAccountResponse> getAllMeAccounts(String id);
+    void deleteMeBankAccount(String idClient, Long idAccount);
     void deleteBankAccount(Long id);
     void exportJson(File file, List<BankAccount> accounts);
     void importJson(File file);

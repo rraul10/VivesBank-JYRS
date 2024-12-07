@@ -60,8 +60,8 @@ public class BankAccountController {
                 .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
-    @GetMapping("/me/accounts")
-    public ResponseEntity<List<BankAccountResponse>> getAllMyAccounts(@RequestParam Long id) {
+    @GetMapping("/allAccounts/{id}")
+    public ResponseEntity<List<BankAccountResponse>> getAllAccountsByClientId(@RequestParam Long id) {
         log.info("Obteniendo todas las cuentas para el cliente con ID: ", id);
 
         List<BankAccountResponse> accounts = accountService.findAllBankAccountsByClientId(id);
@@ -76,10 +76,10 @@ public class BankAccountController {
         return ResponseEntity.ok(accountService.findBankAccountById(id));
     }
 
-    @PostMapping
-    public ResponseEntity<BankAccountResponse> create(@Valid @RequestBody BankAccountRequest bankAccountRequest){
+    @PostMapping("me/accounts")
+    public ResponseEntity<BankAccountResponse> create(@AuthenticationPrincipal User user,@Valid @RequestBody BankAccountRequest bankAccountRequest){
         log.info("Creando cuenta bancaria: " + bankAccountRequest);
-        var result = accountService.saveBankAccount(bankAccountRequest);
+        var result = accountService.saveBankAccount(user.getGuuid(),bankAccountRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
@@ -88,6 +88,20 @@ public class BankAccountController {
     public ResponseEntity<Void> deleteById(@PathVariable Long id){
         log.info("Borrando cuenta bancaria con id: " + id);
         accountService.deleteBankAccount(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/me/accounts")
+    public ResponseEntity<List<BankAccountResponse>> meAccounts(@AuthenticationPrincipal User user) {
+        log.info("Obteniendo todas las cuentas del cliente"+ user.getGuuid());
+        return ResponseEntity.ok(accountService.getAllMeAccounts(user.getGuuid()));
+    }
+
+    @DeleteMapping("/me/accounts/{id}")
+    public ResponseEntity<Void> deleteMeAccount(@AuthenticationPrincipal User user,@PathVariable Long id){
+        log.info("Borrando cuenta bancaria con id: " + id);
+        accountService.deleteMeBankAccount(user.getGuuid(),id);
         return ResponseEntity.noContent().build();
     }
 }

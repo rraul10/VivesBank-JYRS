@@ -6,14 +6,14 @@ import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
 import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountHaveCreditCard;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountIbanException;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFound;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundByIban;
+import jyrs.dev.vivesbank.products.bankAccounts.exceptions.*;
 import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
+import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
+import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
@@ -40,26 +40,28 @@ import java.util.Random;
 @CacheConfig(cacheNames = {"bankAccounts"})
 public class BankAccountServiceImpl implements BankAccountService {
 
-    private BankAccountRepository bankAccountRepository;
-    private BankAccountMapper bankAccountMapper;
-    private ObjectMapper mapper;
-    private BankAccountNotificationMapper bankAccountNotificationMapper;
+    private final ClientsRepository clientsRepository;
+    private final BankAccountRepository bankAccountRepository;
+    private final BankAccountMapper bankAccountMapper;
+    private final ObjectMapper mapper;
+    private final BankAccountNotificationMapper bankAccountNotificationMapper;
     private WebSocketHandler webSocketService;
     private final BankAccountStorage storage;
 
     @Autowired
-    public BankAccountServiceImpl(BankAccountRepository bankAccountRepository,
+    public BankAccountServiceImpl(ClientsService clientsService, ClientsRepository clientsRepository, BankAccountRepository bankAccountRepository,
                                   BankAccountMapper bankAccountMapper,
                                   ObjectMapper mapper,
                                   BankAccountNotificationMapper bankAccountNotificationMapper,
                                   BankAccountStorage storage,
                                   @Qualifier("webSocketBankAccountHandler") WebSocketHandler webSocketService) {
+        this.clientsRepository = clientsRepository;
         this.bankAccountRepository = bankAccountRepository;
         this.bankAccountMapper = bankAccountMapper;
         this.mapper = mapper != null ? mapper : new ObjectMapper();
         this.bankAccountNotificationMapper = bankAccountNotificationMapper;
         this.storage = storage;
-        this.webSocketService = webSocketService;  // Inyección del WebSocketHandler específico
+        this.webSocketService = webSocketService;
     }
 
     @Override
@@ -88,7 +90,6 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .toList();
     }
 
-
     @Override
     @Cacheable(key = "#id")
     public BankAccountResponse findBankAccountById(Long id) {
@@ -96,6 +97,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         var bankAccount = bankAccountRepository.findById(id).orElseThrow(() -> new BankAccountNotFound(id));
         return bankAccountMapper.toResponse(bankAccount);
     }
+
 
     @Cacheable(key = "#iban")
     public BankAccountResponse findBankAccountByIban(String iban) {
@@ -106,8 +108,10 @@ public class BankAccountServiceImpl implements BankAccountService {
 
     @Override
     @CachePut(key = "#result.id")
-    public BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest) {
+    public BankAccountResponse saveBankAccount(String id, BankAccountRequest bankAccountRequest) {
         log.info("Guardando cuenta bancaria: " + bankAccountRequest);
+
+        var client = clientsRepository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
 
         String iban = generateUniqueIban();
 
@@ -115,6 +119,7 @@ public class BankAccountServiceImpl implements BankAccountService {
         bankAccount.setIban(iban);
         bankAccount.setBalance(0.0);
         bankAccount.setCreditCard(null);
+        bankAccount.setClient(client);
 
         BankAccount savedBankAccount = bankAccountRepository.save(bankAccount);
 
@@ -138,6 +143,37 @@ public class BankAccountServiceImpl implements BankAccountService {
         bankAccountRepository.deleteById(id);
         onChange(Notificacion.Tipo.DELETE, account);
         log.info("Cuenta bancaria con ID " + id + " eliminada exitosamente.");
+    }
+
+    @Override
+    public void deleteMeBankAccount(String idClient, Long idAccount) {
+        log.info("Eliminando cuenta de banco por el ID: " + idClient);
+
+        var user = clientsRepository.getByUser_Guuid(idClient).orElseThrow(() -> new ClientNotFound(idClient));
+
+
+        var account = bankAccountRepository.findById(idAccount)
+                .orElseThrow(() -> new BankAccountNotFound(idAccount));
+
+        if (!account.getClient().getId().equals(user.getId())) {
+            throw new BankAccountBadRequest("No se puede eliminar una cuenta de otro cliente.");
+        }
+
+        if (account.getCreditCard() != null) {
+            throw new BankAccountHaveCreditCard("No se puede eliminar una cuenta con una tarjeta de crédito asociada.");
+        }
+
+        bankAccountRepository.deleteById(idAccount);
+        onChange(Notificacion.Tipo.DELETE, account);
+        log.info("Cuenta bancaria con ID " + idAccount + " eliminada exitosamente.");
+    }
+
+    @Override
+    public List<BankAccountResponse> getAllMeAccounts(String id){
+        var user = clientsRepository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+        var cuentas = findAllBankAccountsByClientId(user.getId());
+
+        return cuentas;
     }
 
     @Override
