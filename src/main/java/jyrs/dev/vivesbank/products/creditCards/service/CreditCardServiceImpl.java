@@ -1,6 +1,7 @@
 package jyrs.dev.vivesbank.products.creditCards.service;
 
 
+import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardDto;
 import jyrs.dev.vivesbank.products.creditCards.dto.CreditCardUpdatedDto;
 import jyrs.dev.vivesbank.products.creditCards.exceptions.CreditCardNotFoundException;
@@ -10,13 +11,17 @@ import jyrs.dev.vivesbank.products.creditCards.generator.ExpDateGenerator;
 import jyrs.dev.vivesbank.products.creditCards.mappers.CreditCardMapper;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
 import jyrs.dev.vivesbank.products.creditCards.repository.CreditCardRepository;
+import jyrs.dev.vivesbank.products.creditCards.storage.CreditCardStorage;
 import jyrs.dev.vivesbank.products.creditCards.validator.ExpDateValidator;
+import jyrs.dev.vivesbank.users.clients.storage.config.StorageConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.util.List;
 import java.util.Random;
 import java.util.zip.DataFormatException;
 
@@ -30,15 +35,19 @@ public class CreditCardServiceImpl implements CreditCardService{
     private final CvvGenerator cvv;
     private final ExpDateGenerator expDate;
     private final ExpDateValidator expDateValidator;
+    private final CreditCardStorage creditCardStorage;
+    private final StorageConfig storageConfig;
 
     @Autowired
-    public CreditCardServiceImpl(CreditCardRepository repository, CreditCardMapper mapper, CreditCardGenerator generator, CvvGenerator cvv, ExpDateGenerator expDate, ExpDateValidator expDateValidator) {
+    public CreditCardServiceImpl(CreditCardRepository repository, CreditCardMapper mapper, CreditCardGenerator generator, CvvGenerator cvv, ExpDateGenerator expDate, ExpDateValidator expDateValidator, CreditCardStorage creditCardStorage, StorageConfig storageConfig) {
         this.repository = repository;
         this.mapper = mapper;
         this.generator = generator;
         this.cvv = cvv;
         this.expDate = expDate;
         this.expDateValidator = expDateValidator;
+        this.creditCardStorage = creditCardStorage;
+        this.storageConfig = storageConfig;
     }
 
     @Override
@@ -95,6 +104,22 @@ public class CreditCardServiceImpl implements CreditCardService{
         log.info("Buscando tarjetas de credito con fecha caducidad anterior a: " + expirationDateBefore);
         if(!expDateValidator.validator(expirationDateBefore)) throw new DataFormatException("La fecha no esta en un formato valido");
         return repository.findAllByExpirationDateIsBefore(expirationDateBefore, pageable);
+    }
+
+    @Override
+    public void exportJson(File file,List<CreditCard> cards) {
+        log.info("Exportando cuentas a JSON");
+
+        creditCardStorage.exportJson(file,cards);
+    }
+
+    @Override
+    public void importJson(File file) {
+        log.info("Importando cuentas desde JSON");
+
+        List<CreditCard> cards= creditCardStorage.importJson(file);
+
+        repository.saveAll(cards);
     }
 
 }

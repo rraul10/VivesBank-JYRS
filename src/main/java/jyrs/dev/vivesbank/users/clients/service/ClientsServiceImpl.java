@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -139,7 +140,10 @@ public class ClientsServiceImpl implements ClientsService {
         String imageUrl = storageService.store(image, tipo);
 
         cliente.setFotoDni(imageUrl);
-        user.getRoles().add(Role.CLIENT);
+
+        var roles = new HashSet<Role>(user.getRoles());
+        roles.add(Role.CLIENT);
+        user.setRoles(roles);
         cliente.setUser(user);
 
         var clienteGuardado = repository.save(cliente);
@@ -223,6 +227,11 @@ public class ClientsServiceImpl implements ClientsService {
 
         user.setIsDeleted(true);
 
+        var roles = new HashSet<Role>();
+        user.setRoles(roles);
+
+        cliente.setUser(user);
+
         cliente.setUser(user);
 
         repository.save(cliente);
@@ -236,6 +245,20 @@ public class ClientsServiceImpl implements ClientsService {
         repository.deleteById(cliente.getId());
         storageService.delete(cliente.getFotoDni());
 
+    }
+    public void deleteMeLog(String id) {
+        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
+        User user = cliente.getUser();
+
+        user.setIsDeleted(true);
+
+        var roles = new HashSet<Role>();
+        user.setRoles(roles);
+
+        cliente.setUser(user);
+
+        repository.save(cliente);
     }
 
     @Override
@@ -252,18 +275,6 @@ public class ClientsServiceImpl implements ClientsService {
         List<Client> clients= storage.importJson(file);
 
         repository.saveAll(clients);
-    }
-
-    public void deleteMeLog(String id) {
-        var cliente = repository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
-
-        User user = cliente.getUser();
-
-        user.setIsDeleted(true);
-
-        cliente.setUser(user);
-
-        repository.save(cliente);
     }
 
 

@@ -90,6 +90,13 @@ public interface MovementsService {
      */
 
     void importJson(File file);
+
+    File generateMovementPdf(String movement);
+    File generateMeMovementPdf(String idCl,String idMv);
+    File generateAllMeMovementPdf(String id);
+    File generateAllMeMovementSendPdf(String id);
+    File generateAllMeMovementRecepientPdf(String id);
+    File generateAllMovementPdf();
 }
 
 

@@ -608,7 +608,7 @@ class ClientRestControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "client", password = "client", roles = {"CLIENT"})
+    @WithMockUser(username = "client", password = "client", roles = {"USER","CLIENT"})
     void updateMe() throws Exception {
         when(service.updateMe(user.getGuuid(), clienteUpdate)).thenReturn(clientResponse);
 

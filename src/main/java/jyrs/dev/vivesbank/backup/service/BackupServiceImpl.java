@@ -1,29 +1,30 @@
-package jyrs.dev.vivesbank.backup;
+package jyrs.dev.vivesbank.backup.service;
 
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
-import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.services.BankAccountService;
 import jyrs.dev.vivesbank.products.base.repositories.ProductRepository;
 import jyrs.dev.vivesbank.products.base.services.ProductServices;
 import jyrs.dev.vivesbank.products.creditCards.repository.CreditCardRepository;
+import jyrs.dev.vivesbank.products.creditCards.service.CreditCardService;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 @Slf4j
-public class StorageServiceImpl implements StorageService {
+@Service
+public class BackupServiceImpl implements BackupService {
 
     private static final String TEMP_DIR_NAME = "StorageServiceTemp";
 
@@ -31,7 +32,7 @@ public class StorageServiceImpl implements StorageService {
     private final UsersService userService;
     private final BankAccountService bankAccountService;
     private final ProductServices productService;
-    //public final CreditCardService creditCardService;
+    public final CreditCardService creditCardService;
     private final MovementsService movementsService;
 
     private final ClientsRepository clientRepository;
@@ -43,22 +44,22 @@ public class StorageServiceImpl implements StorageService {
 
     private static final File DEFAULT_BACKUP_FILE = new File("backup.zip");
 
-    public StorageServiceImpl(ClientsService clientService,
-                              UsersService userService,
-                              BankAccountService bankAccountService,
-                              ProductServices productService, MovementsService movementsService,
-                              //CreditCardService creditCardService,
-                              ClientsRepository clientRepository,
-                              UsersRepository userRepository,
-                              BankAccountRepository bankAccountRepository,
-                              ProductRepository productRepository,
-                              CreditCardRepository creditCardRepository, MovementsRepository movementsRepository) {
+    public BackupServiceImpl(ClientsService clientService,
+                             UsersService userService,
+                             BankAccountService bankAccountService,
+                             ProductServices productService,
+                             CreditCardService creditCardService, MovementsService movementsService,
+                             ClientsRepository clientRepository,
+                             UsersRepository userRepository,
+                             BankAccountRepository bankAccountRepository,
+                             ProductRepository productRepository,
+                             CreditCardRepository creditCardRepository, MovementsRepository movementsRepository) {
         this.clientService = clientService;
         this.userService = userService;
         this.bankAccountService = bankAccountService;
         this.productService = productService;
         this.movementsService = movementsService;
-        //this.creditCardService = creditCardService;
+        this.creditCardService = creditCardService;
         this.clientRepository = clientRepository;
         this.userRepository = userRepository;
         this.bankAccountRepository = bankAccountRepository;
@@ -76,7 +77,7 @@ public class StorageServiceImpl implements StorageService {
 
             clientService.exportJson(tempDir.resolve("clients.json").toFile(), clientRepository.findAll());
             userService.exportJson(tempDir.resolve("users.json").toFile(), userRepository.findAll());
-            //creditCardService.exportToJson(tempDir.resolve("creditCards.json").toFile(), creditCardRepository.findAll();
+            creditCardService.exportJson(tempDir.resolve("creditCards.json").toFile(), creditCardRepository.findAll());
             bankAccountService.exportJson(tempDir.resolve("bankAccounts.json").toFile(), bankAccountRepository.findAll());
             productService.exportJson(tempDir.resolve("products.json").toFile(), productRepository.findAll());
             movementsService.exportJson(tempDir.resolve("movements.json").toFile(),movementsRepository.findAll());
@@ -106,7 +107,7 @@ public class StorageServiceImpl implements StorageService {
 
             clientService.importJson(tempDir.resolve("clients.json").toFile());
             userService.importJson(tempDir.resolve("users.json").toFile());
-            //creditCardService.importJson(tempDir.resolve("creditCards.json").toFile());
+            creditCardService.importJson(tempDir.resolve("creditCards.json").toFile());
             bankAccountService.importJson(tempDir.resolve("bankAccounts.json").toFile());
             productService.importJson(tempDir.resolve("products.json").toFile());
             movementsService.importJson(tempDir.resolve("movements.json").toFile());
