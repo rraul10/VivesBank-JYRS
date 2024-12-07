@@ -73,11 +73,20 @@ public class AdminController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteAdmin(@PathVariable String id) throws AdminExceptions.AdminCannotBeDeleted {
+    public ResponseEntity<Void> deleteAdmin(@PathVariable String id) {
         log.info("Borrando admin con id: " + id);
-        service.deleteAdmin(id);
-        return ResponseEntity.noContent().build();
+        try {
+            service.deleteAdmin(id);
+            return ResponseEntity.noContent().build();  // 204 No Content
+        } catch (AdminExceptions.AdminNotFound e) {
+            log.error("Admin no encontrado: " + e.getMessage());
+            return ResponseEntity.notFound().build();  // 404 Not Found
+        } catch (AdminExceptions.AdminCannotBeDeleted e) {
+            log.error("Admin no se puede eliminar: " + e.getMessage());
+            return ResponseEntity.badRequest().body(null);  // 400 Bad Request
+        }
     }
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)

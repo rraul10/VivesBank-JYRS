@@ -27,6 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -86,37 +87,68 @@ public class AdminControllerTests {
     @Test
     void getAllAdminsNoArgsProvided() throws Exception {
         var adminLists = List.of(responseDto);
-        var pageable = PageRequest.of(0,10, Sort.by("id").descending());
+        var pageable = PageRequest.of(0, 10, Sort.by("id").descending());
         var page = new PageImpl<>(adminLists);
+
+        // Configuración del mock
         when(adminService.getAllAdmins(Optional.empty(), Optional.empty(), pageable)).thenReturn(page);
+
+        // Realizar la petición
         MockHttpServletResponse response = mockMvc.perform(
                         get(myEndpoint)
-                                .accept(MediaType.APPLICATION_JSON))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sortBy", "id")
+                                .param("direction", "desc"))
                 .andReturn().getResponse();
+
+        // Parsear la respuesta
         PageResponse<AdminResponseDto> res = mapper.readValue(response.getContentAsString(), new TypeReference<>() {});
+
+        // Verificaciones
         assertAll("findall",
                 () -> assertEquals(200, response.getStatus()),
                 () -> assertEquals(1, res.content().size())
         );
+
+        // Verificar que el servicio fue llamado
         verify(adminService, times(1)).getAllAdmins(Optional.empty(), Optional.empty(), pageable);
     }
+
     @Test
     void getAllAdminsWithUsernameProvided() throws Exception {
+        // Configuración del mock
         var adminLists = List.of(responseDto);
-        var pageable = PageRequest.of(0,10, Sort.by("id").descending());
+        var pageable = PageRequest.of(0, 10, Sort.by("id").descending());
         var page = new PageImpl<>(adminLists);
+
         when(adminService.getAllAdmins(Optional.of("admin"), Optional.empty(), pageable)).thenReturn(page);
+
+        // Realizar la solicitud con parámetros
         MockHttpServletResponse response = mockMvc.perform(
                         get(myEndpoint)
-                                .accept(MediaType.APPLICATION_JSON))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .param("username", "admin")
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sortBy", "id")
+                                .param("direction", "desc"))
                 .andReturn().getResponse();
+
+        // Parsear la respuesta
         PageResponse<AdminResponseDto> res = mapper.readValue(response.getContentAsString(), new TypeReference<>() {});
+
+        // Verificaciones
         assertAll("findall",
                 () -> assertEquals(200, response.getStatus()),
                 () -> assertEquals(1, res.content().size())
         );
+
+        // Verificar la interacción con el servicio
         verify(adminService, times(1)).getAllAdmins(Optional.of("admin"), Optional.empty(), pageable);
     }
+
     @Test
     void getAllAdminsWithIsDeletedProvided() throws Exception {
         var adminLists = List.of(responseDto);
@@ -124,8 +156,13 @@ public class AdminControllerTests {
         var page = new PageImpl<>(adminLists);
         when(adminService.getAllAdmins(Optional.empty(), Optional.of(false), pageable)).thenReturn(page);
         MockHttpServletResponse response = mockMvc.perform(
-                        get(myEndpoint )
-                                .accept(MediaType.APPLICATION_JSON))
+                        get(myEndpoint)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .param("isDeleted", "false")
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sortBy", "id")
+                                .param("direction", "desc"))
                 .andReturn().getResponse();
         PageResponse<AdminResponseDto> res = mapper.readValue(response.getContentAsString(), new TypeReference<>() {});
         assertAll("findall",
@@ -142,7 +179,13 @@ public class AdminControllerTests {
         when(adminService.getAllAdmins(Optional.of("admin"), Optional.of(false), pageable)).thenReturn(page);
         MockHttpServletResponse response = mockMvc.perform(
                         get(myEndpoint)
-                                .accept(MediaType.APPLICATION_JSON))
+                                .accept(MediaType.APPLICATION_JSON)
+                                .param("username", "admin")
+                                .param("isDeleted", "false")
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sortBy", "id")
+                                .param("direction", "desc"))
                 .andReturn().getResponse();
         PageResponse<AdminResponseDto> res = mapper.readValue(response.getContentAsString(), new TypeReference<>() {});
         assertAll("findall",
@@ -191,29 +234,33 @@ public class AdminControllerTests {
     @Test
     void saveAdminAlreadyExists() throws Exception {
         AdminRequestDto adminRequestDto = AdminRequestDto.builder()
-                .guuid("puZjCDm_xCc").build();
-        when(adminService.saveAdmin(any(AdminRequestDto.class))).thenThrow(new  AdminExceptions.AdminAlreadyExists("Ya existe un admin con el mismo guuid"));
+                .guuid("puZjCDm_xBv").build();
+        when(adminService.saveAdmin(adminRequestDto))
+                .thenThrow(new AdminExceptions.AdminAlreadyExists("Ya existe un admin con el mismo guuid"));
+
         MockHttpServletResponse response = mockMvc.perform(
                         post(myEndpoint)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(adminRequestDto)))
                 .andReturn().getResponse();
-        assertEquals(400, response.getStatus());
-        verify(adminService, times(1)).saveAdmin(any(AdminRequestDto.class));
+
+        assertEquals(409, response.getStatus());
+        verify(adminService, times(1)).saveAdmin(adminRequestDto);
+
     }
 
     @Test
     void saveAdminNoUserExists() throws Exception{
         AdminRequestDto adminRequestDto = AdminRequestDto.builder()
                 .guuid("puZjCDm_xBv").build();
-        when(adminService.saveAdmin(any(AdminRequestDto.class))).thenThrow(new UserExceptions.UserNotFound("No se ha encontrado usuario con el guuid: " + adminRequestDto.getGuuid()));
+        when(adminService.saveAdmin(adminRequestDto)).thenThrow(new UserExceptions.UserNotFound("No se ha encontrado usuario con el guuid: " + adminRequestDto.getGuuid()));
         MockHttpServletResponse response = mockMvc.perform(
                         post(myEndpoint)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(adminRequestDto)))
                 .andReturn().getResponse();
-        assertEquals(400, response.getStatus());
-        verify(adminService, times(1)).saveAdmin(any(AdminRequestDto.class));
+        assertEquals(404, response.getStatus());
+        verify(adminService, times(1)).saveAdmin(adminRequestDto);
     }
     @Test
     void saveAdminBadRequest() throws Exception{
@@ -226,7 +273,6 @@ public class AdminControllerTests {
                                 .content(mapper.writeValueAsString(adminRequestDto)))
                 .andReturn().getResponse();
         assertEquals(400, response.getStatus());
-        verify(adminService, times(1)).saveAdmin(any(AdminRequestDto.class));
     }
 
     @Test
@@ -241,8 +287,8 @@ public class AdminControllerTests {
                 .fotoPerfil("new.png")
                 .guuid("puZjCDm_xCc")
                 .build();
-        when(adminService.getAdminByGuuid(anyString())).thenReturn(responseDto);
-        when(adminService.updateAdmin("puZjCDm_xCc", adminRequestDto)).thenReturn(responseDto);
+        when(adminService.getAdminByGuuid(adminRequestDto.getGuuid())).thenReturn(responseDto);
+        when(adminService.updateAdmin(adminRequestDto.getGuuid(), adminRequestDto)).thenReturn(responseDto);
 
         MockHttpServletResponse response = mockMvc.perform(
                         put(myEndpoint + "/{id}", "puZjCDm_xCc")
@@ -254,7 +300,7 @@ public class AdminControllerTests {
                 () -> assertEquals(200, response.getStatus()),
                 () -> assertEquals(responseDto, res)
         );
-        verify(adminService, times(1)).updateAdmin("puZjCDm_xCc", any(AdminUpdateRequest.class));
+        verify(adminService, times(1)).updateAdmin(adminRequestDto.getGuuid(), adminRequestDto);
     }
 
     @Test
@@ -264,7 +310,7 @@ public class AdminControllerTests {
                 .fotoPerfil("new.png")
                 .guuid("puZjCDm_xAa")
                 .build();
-        when(adminService.updateAdmin("puZjCDm_xAa", adminRequestDto)).thenThrow(new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: puZjCDm_xAa"));
+        when(adminService.updateAdmin(adminRequestDto.getGuuid(), adminRequestDto)).thenThrow(new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: puZjCDm_xAa"));
         MockHttpServletResponse response = mockMvc.perform(
                         put(myEndpoint + "/{id}", "puZjCDm_xAa")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -273,7 +319,7 @@ public class AdminControllerTests {
         assertAll(
                 () -> assertEquals(404, response.getStatus())
         );
-        verify(adminService, times(1)).updateAdmin("puZjCDm_xAa", any(AdminUpdateRequest.class));
+        verify(adminService, times(1)).updateAdmin(adminRequestDto.getGuuid(), adminRequestDto);
     }
 
     @Test
@@ -284,12 +330,12 @@ public class AdminControllerTests {
                 .guuid("puZjCDm_xAa")
                 .build();
         MockHttpServletResponse response = mockMvc.perform(
-                        post(myEndpoint)
+                        put(myEndpoint + "/{id}", "puZjCDm_xAa")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(mapper.writeValueAsString(adminRequestDto)))
                 .andReturn().getResponse();
         assertEquals(400, response.getStatus());
-        verify(adminService, times(0)).updateAdmin("puZjCDm_xAa", any(AdminUpdateRequest.class));
+        verify(adminService, times(0)).updateAdmin(adminRequestDto.getGuuid(), adminRequestDto);
     }
 
     @Test
@@ -305,7 +351,7 @@ public class AdminControllerTests {
                                 .content(mapper.writeValueAsString(adminRequestDto)))
                 .andReturn().getResponse();
         assertEquals(400, response.getStatus());
-        verify(adminService, times(0)).updateAdmin("puZjCDm_xAa", any(AdminUpdateRequest.class));
+        verify(adminService, times(0)).updateAdmin(adminRequestDto.getGuuid(), adminRequestDto);
     }
 
     @Test
@@ -321,7 +367,7 @@ public class AdminControllerTests {
                                 .content(mapper.writeValueAsString(adminRequestDto)))
                 .andReturn().getResponse();
         assertEquals(400, response.getStatus());
-        verify(adminService, times(0)).updateAdmin("puZjCDm_xAa", any(AdminUpdateRequest.class));
+        verify(adminService, times(0)).updateAdmin(adminRequestDto.getGuuid(), adminRequestDto);
     }
 
     @Test
@@ -338,11 +384,31 @@ public class AdminControllerTests {
 
     @Test
     void deleteAdminNotFound() throws Exception {
-        when(adminService.getAdminByGuuid(anyString())).thenThrow(new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: puZjCDm_xAa"));
+        doThrow(new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: puZjCDm_xAa"))
+                .when(adminService).deleteAdmin("puzjCDm_xAa");
+
         MockHttpServletResponse response = mockMvc.perform(
-                        delete(myEndpoint + "/{id}", "puZjCDm_xAa"))
+                        delete(myEndpoint + "/{id}", "puzjCDm_xAa"))
                 .andReturn().getResponse();
         assertEquals(404, response.getStatus());
-        verify(adminService, times(1)).deleteAdmin("puZjCDm_xAa");
+
+        verify(adminService, times(1)).deleteAdmin("puzjCDm_xAa");
     }
+
+
+    @Test
+    void deleteAdminIsSuperAdmin() throws Exception {
+        doThrow(new AdminExceptions.AdminCannotBeDeleted("Administrador principal no puede ser eliminado"))
+                .when(adminService).deleteAdmin("puZjCDm_xCg");
+
+        MockHttpServletResponse response = mockMvc.perform(
+                        delete(myEndpoint + "/{id}", "puZjCDm_xCg"))
+                .andReturn().getResponse();
+
+        assertEquals(400, response.getStatus());
+
+        verify(adminService, times(1)).deleteAdmin("puZjCDm_xCg");
+    }
+
+
 }

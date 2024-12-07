@@ -74,7 +74,8 @@ public class AdminServiceImpl implements AdminService {
     public AdminResponseDto saveAdmin(AdminRequestDto request) throws AdminExceptions.AdminAlreadyExists {
         log.info("Añadiendo nuevo admin al sistema" + request);
         var admin = adminMappers.fromAdminDto(request);
-        if(adminRepository.findByGuuid(admin.getGuuid()) != null){
+        var adminForSave = adminRepository.findByGuuid(admin.getGuuid());
+        if(adminForSave != null){
             throw new AdminExceptions.AdminAlreadyExists("Ya existe un admin con el mismo guuid");
         }
         var user = usersRepository.findByGuuid(request.getGuuid());
@@ -112,6 +113,7 @@ public class AdminServiceImpl implements AdminService {
         if(adminToDelete == null){
             throw new AdminExceptions.AdminNotFound("No se ha encontrado admin con guuid: " + id);
         }
+        log.info(String.valueOf(adminToDelete));
         var userToDelete =  adminToDelete.getUser();
         if(userToDelete.getGuuid().equals("puZjCDm_xCg")){
             throw new AdminExceptions.AdminCannotBeDeleted("No se puede eliminar el administrador root");
@@ -119,6 +121,8 @@ public class AdminServiceImpl implements AdminService {
         Set<Role> updatedRoles = new HashSet<>(adminToDelete.getUser().getRoles());
         updatedRoles.clear();
         userToDelete.setIsDeleted(true);
+        adminToDelete.setUser(userToDelete);
+        adminRepository.save(adminToDelete);
     }
 
     @Override

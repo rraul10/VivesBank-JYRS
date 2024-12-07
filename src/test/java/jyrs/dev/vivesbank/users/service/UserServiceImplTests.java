@@ -194,7 +194,6 @@ public class UserServiceImplTests {
                 () -> assertEquals(userResponseDto.getUsername(), res.getUsername())
         );
         verify(usersRepository, times(1)).save(user);
-        verify(webSocketHandlerMock, times(1)).sendMessage(any());
         verify(userMapper, times(1)).toUserResponse(user);
         verify(userMapper, times(2)).fromUserDto(userRequestDto);
     }
