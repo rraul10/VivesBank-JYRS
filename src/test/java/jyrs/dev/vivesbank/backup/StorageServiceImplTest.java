@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.backup;
 
+import jyrs.dev.vivesbank.backup.service.BackupServiceImpl;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
@@ -23,21 +24,17 @@ import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -138,7 +135,7 @@ class StorageServiceImplTest {
     private MovementsRepository movementsRepository;
 
     @InjectMocks
-    private StorageServiceImpl storageService;
+    private BackupServiceImpl storageService;
 
 
 
