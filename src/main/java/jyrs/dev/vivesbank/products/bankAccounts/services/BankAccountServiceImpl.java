@@ -76,6 +76,19 @@ public class BankAccountServiceImpl implements BankAccountService {
         return page.map(bankAccountMapper::toResponse);
     }
 
+
+    @Override
+    public List<BankAccountResponse> findAllBankAccountsByClientId(Long clientId) {
+        log.info("Buscando todas las cuentas bancarias para el cliente con ID: " + clientId);
+
+        List<BankAccount> bankAccounts = bankAccountRepository.findAllByClientId(clientId);
+
+        return bankAccounts.stream()
+                .map(bankAccountMapper::toResponse)
+                .toList();
+    }
+
+
     @Override
     @Cacheable(key = "#id")
     public BankAccountResponse findBankAccountById(Long id) {

@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface BankAccountService {
     Page<BankAccountResponse> findAllBankAccounts(Optional<String> accountType, Pageable pageable);
+    List<BankAccountResponse> findAllBankAccountsByClientId(Long clientId);
     BankAccountResponse findBankAccountById(Long id);
     BankAccountResponse findBankAccountByIban(String iban);
     BankAccountResponse saveBankAccount(BankAccountRequest bankAccountRequest);

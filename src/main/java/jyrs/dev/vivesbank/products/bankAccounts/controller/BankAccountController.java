@@ -5,6 +5,8 @@ import jakarta.validation.Valid;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.products.bankAccounts.services.BankAccountService;
+import jyrs.dev.vivesbank.users.models.User;
+import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import jyrs.dev.vivesbank.utils.pagination.PageResponse;
 import jyrs.dev.vivesbank.utils.pagination.PaginationLinksUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +16,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -54,6 +58,15 @@ public class BankAccountController {
         return ResponseEntity.ok()
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));
+    }
+
+    @GetMapping("/me/accounts")
+    public ResponseEntity<List<BankAccountResponse>> getAllMyAccounts(@RequestParam Long id) {
+        log.info("Obteniendo todas las cuentas para el cliente con ID: ", id);
+
+        List<BankAccountResponse> accounts = accountService.findAllBankAccountsByClientId(id);
+
+        return ResponseEntity.ok(accounts);
     }
 
 

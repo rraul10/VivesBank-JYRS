@@ -136,6 +136,44 @@ class BankAccountServiceImplTest {
         verify(bankAccountMapper, times(1)).toResponse(account);
     }
 
+    @Test
+    void findAllBankAccountsByClientIdOk() {
+        Long clientId = 123L;
+
+        List<BankAccount> bankAccounts = List.of(account); // Usamos la cuenta existente de setUp
+        List<BankAccountResponse> expectedResponses = List.of(bankAccountResponse); // Usamos la respuesta existente de setUp
+
+        when(bankAccountRepository.findAllByClientId(clientId)).thenReturn(bankAccounts);
+        when(bankAccountMapper.toResponse(account)).thenReturn(bankAccountResponse);
+
+        List<BankAccountResponse> actualResponses = bankAccountService.findAllBankAccountsByClientId(clientId);
+
+        assertAll(
+                () -> assertNotNull(actualResponses),
+                () -> assertEquals(1, actualResponses.size()),
+                () -> assertEquals(bankAccountResponse, actualResponses.getFirst())
+        );
+
+        verify(bankAccountRepository, times(1)).findAllByClientId(clientId);
+        verify(bankAccountMapper, times(1)).toResponse(account);
+    }
+
+    @Test
+    void findAllBankAccountsByClientIdListaVacía() {
+        Long clientId = 123L;
+
+        when(bankAccountRepository.findAllByClientId(clientId)).thenReturn(List.of());
+
+        List<BankAccountResponse> actualResponses = bankAccountService.findAllBankAccountsByClientId(clientId);
+
+        assertAll(
+                () -> assertNotNull(actualResponses),
+                () -> assertTrue(actualResponses.isEmpty())
+        );
+
+        verify(bankAccountRepository, times(1)).findAllByClientId(clientId);
+        verifyNoInteractions(bankAccountMapper);
+    }
 
     @Test
     void testFindBankAccountByIdOk() {
