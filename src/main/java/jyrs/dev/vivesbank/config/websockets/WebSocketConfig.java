@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.config.websockets;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Bean
     public WebSocketHandler webSocketUserHandler() {
         return new WebSocketHandler("users");
+    }
+
+    @Bean
+    public WebSocketHandler webSocketMovementsHandler() {
+        return new WebSocketHandler("movements");
     }
 
 }

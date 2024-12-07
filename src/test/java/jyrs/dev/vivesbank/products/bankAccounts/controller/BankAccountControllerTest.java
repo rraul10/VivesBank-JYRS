@@ -44,7 +44,7 @@ import java.util.Optional;
 @WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "USER"})
 @ExtendWith(MockitoExtension.class)
 class BankAccountControllerTest {
-    private final String myEndpoint = "${api.path:/api}/${api.version:/v1}/accounts";
+    private final String myEndpoint = "/vivesbank/v1/accounts";
 
     private final ObjectMapper mapper = new ObjectMapper();
     @Autowired

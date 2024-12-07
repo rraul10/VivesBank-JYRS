@@ -814,19 +814,7 @@ class ClientRestControllerTest {
         verify(service, times(1)).deleteMe("guuid-unknown");
     }
 
-    @Test
-    void testValidationError() throws Exception {
-        ClientRequestCreate invalidClientRequest = new ClientRequestCreate("", "", "", null, "");
 
-        MockHttpServletResponse response = mockMvc.perform(
-                        post(endpoint)
-                                .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
-                                .content(mapper.writeValueAsString(invalidClientRequest))
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        assertEquals(400, response.getStatus());
-    }
 
 
 

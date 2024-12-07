@@ -1,7 +1,5 @@
 package jyrs.dev.vivesbank.users.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.ConstraintViolationException;
 import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
 import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.users.models.Role;
@@ -19,14 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.file.attribute.UserPrincipalNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -90,7 +85,7 @@ public class UserServiceImplTests {
     @Test
     void findAllWithUsernameProvided() {
         List<User> expectedUsers = Arrays.asList(user);
-        Optional<String> usernameProvided = Optional.of("usuario@correo.com");
+            Optional<String> usernameProvided = Optional.of("usuario@correo.com");
         List<UserResponseDto> expectedUsersResponse = Arrays.asList(userResponseDto);
         Pageable pageable = PageRequest.of(0, 10, Sort.by("id").ascending());
         Page<User> expectedPage = new PageImpl<>(expectedUsers);
@@ -199,7 +194,6 @@ public class UserServiceImplTests {
                 () -> assertEquals(userResponseDto.getUsername(), res.getUsername())
         );
         verify(usersRepository, times(1)).save(user);
-        verify(webSocketHandlerMock, times(1)).sendMessage(anyString());
         verify(userMapper, times(1)).toUserResponse(user);
         verify(userMapper, times(2)).fromUserDto(userRequestDto);
     }

@@ -5,8 +5,6 @@ import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
 import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
-import jyrs.dev.vivesbank.products.base.models.Product;
-import jyrs.dev.vivesbank.products.storage.ProductStorage;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import org.junit.jupiter.api.Test;
@@ -14,15 +12,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +35,12 @@ public class MovementsServiceImplTest {
 
     @Mock
     private ClientsRepository clientsRepository;
+
+    @Mock
+    private RedisTemplate<String, Movement> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Movement> valueOperations;
 
     @Mock
     private MovementValidator movementValidator;
@@ -69,9 +77,13 @@ public class MovementsServiceImplTest {
         when(clientsRepository.findById(2L)).thenReturn(Optional.of(recipientClient));
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
 
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doNothing().when(valueOperations).set(anyString(), any(Movement.class));
+
         movementsService.createMovement(senderClientId, recipientClientId, origin, destination, typeMovement, amount);
 
         verify(movementsRepository).save(any(Movement.class));
+        verify(redisTemplate.opsForValue(), times(1)).set(anyString(), any(Movement.class));
     }
 
     @Test
@@ -112,29 +124,25 @@ public class MovementsServiceImplTest {
     void reverseMovement() {
         String movementId = "1";
 
-        // Configuración inicial del movimiento
         Movement movement = new Movement();
-        movement.setIsReversible(true); // Asegúrate de que sea reversible
-        movement.setDate(LocalDateTime.now().minusHours(12)); // Fecha dentro del rango permitido
+        movement.setIsReversible(true);
+        movement.setDate(LocalDateTime.now().minusHours(12));
 
-        // Configuración de mocks
         when(movementsRepository.findById(movementId)).thenReturn(Optional.of(movement));
         when(movementsRepository.save(any(Movement.class))).thenReturn(movement);
 
-        // Llama al método que quieres probar
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
         movementsService.reverseMovement(movementId);
 
-        // Verifica que se llamó al validador
         verify(movementValidator).validateReversible(movement);
 
-        // Verifica que el movimiento se guardó
         verify(movementsRepository).save(movement);
 
-        // Verifica que el movimiento se marcó como no reversible
         assertFalse(movement.getIsReversible());
+
+        verify(valueOperations).set("MOVEMENT:" + movementId, movement);
     }
-
-
 
 
     @Test
@@ -146,6 +154,8 @@ public class MovementsServiceImplTest {
         assertThrows(IllegalArgumentException.class, () -> {
             movementsService.reverseMovement(movementId);
         });
+
+        verify(redisTemplate, never()).opsForValue();
     }
 
     @Test
@@ -162,48 +172,77 @@ public class MovementsServiceImplTest {
         assertThrows(IllegalArgumentException.class, () -> {
             movementsService.reverseMovement(movementId);
         });
+
+        verify(redisTemplate, never()).opsForValue();
     }
 
     @Test
     void getMovementsByClientId() {
         String clientId = "1";
         Movement sentMovement = new Movement();
+        sentMovement.setId("sent1");
         Movement receivedMovement = new Movement();
+        receivedMovement.setId("received1");
 
-        when(movementsRepository.findBySenderClient_Id(clientId)).thenReturn(List.of(sentMovement));
-        when(movementsRepository.findByRecipientClient_Id(clientId)).thenReturn(List.of(receivedMovement));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        when(valueOperations.get("MOVEMENTS:CLIENT:" + clientId)).thenReturn(null);
+
+        when(movementsRepository.findBySenderClient_Id(clientId)).thenReturn(Collections.singletonList(sentMovement));
+        when(movementsRepository.findByRecipientClient_Id(clientId)).thenReturn(Collections.singletonList(receivedMovement));
 
         List<Movement> movements = movementsService.getMovementsByClientId(clientId);
 
-        assertEquals(2, movements.size());
+        assertNotNull(movements, "The list of movements should not be null.");
+        assertEquals(2, movements.size(), "The list should contain 2 movements.");
+
+        verify(redisTemplate.opsForValue(), times(1)).get("MOVEMENTS:CLIENT:" + clientId);
+
+        verify(movementsRepository, times(1)).findBySenderClient_Id(clientId);
+        verify(movementsRepository, times(1)).findByRecipientClient_Id(clientId);
+
+        verify(redisTemplate.opsForValue(), times(2)).set(anyString(), any(Movement.class));
     }
+
 
     @Test
     void getMovementsByClientIdNotFound() {
         String clientId = "1";
 
+        ValueOperations<String, Movement> valueOperationsMock = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperationsMock);
+
+        when(valueOperationsMock.get("MOVEMENTS:CLIENT:" + clientId)).thenReturn(null);
+
         when(movementsRepository.findBySenderClient_Id(clientId)).thenReturn(new ArrayList<>());
         when(movementsRepository.findByRecipientClient_Id(clientId)).thenReturn(new ArrayList<>());
 
-        List<Movement> movements = movementsService.getMovementsByClientId(clientId);
+        List<Movement> result = movementsService.getMovementsByClientId(clientId);
 
-        assertTrue(movements.isEmpty());
+        verify(redisTemplate).opsForValue();
+
+        assertTrue(result.isEmpty(), "The result should be an empty list.");
     }
-
-
     @Test
     void getAllMovements() {
-        Movement movement1 = new Movement();
-        Movement movement2 = new Movement();
-        List<Movement> movements = List.of(movement1, movement2);
+        List<Movement> expectedMovements = new ArrayList<>();
+        expectedMovements.add(new Movement("sent1"));
+        expectedMovements.add(new Movement("received1"));
 
-        when(movementsRepository.findAll()).thenReturn(movements);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doReturn(expectedMovements).when(valueOperations).get("MOVEMENTS:ALL");
 
-        List<Movement> result = movementsService.getAllMovements();
+        List<Movement> movements = movementsService.getAllMovements();
 
-        assertEquals(2, result.size());
+        assertNotNull(movements);
+
+        assertEquals(2, movements.size());
+
+        assertTrue(movements.contains(expectedMovements.get(0)));
+        assertTrue(movements.contains(expectedMovements.get(1)));
+
+        verify(redisTemplate.opsForValue(), times(1)).get("MOVEMENTS:ALL");
     }
-
 
     @Test
     void getMovementsByType() {
@@ -211,17 +250,27 @@ public class MovementsServiceImplTest {
         Movement movement = new Movement();
         List<Movement> movements = List.of(movement);
 
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        when(valueOperations.get("MOVEMENTS:TYPE:" + typeMovement + ":0")).thenReturn(null);
+
         when(movementsRepository.findByTypeMovement(typeMovement)).thenReturn(movements);
 
         List<Movement> result = movementsService.getMovementsByType(typeMovement);
 
         assertEquals(1, result.size());
+        verify(redisTemplate.opsForValue(), times(1)).get("MOVEMENTS:TYPE:" + typeMovement + ":0");
+        verify(movementsRepository, times(1)).findByTypeMovement(typeMovement);
     }
 
     @Test
     void getMovementsByTypeNotFound() {
         String typeMovement = "TRANSFER";
         List<Movement> movements = new ArrayList<>();
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        when(valueOperations.get("MOVEMENTS:TYPE:" + typeMovement + ":0")).thenReturn(null);
 
         when(movementsRepository.findByTypeMovement(typeMovement)).thenReturn(movements);
 

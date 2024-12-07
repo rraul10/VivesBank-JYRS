@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
 class StorageControllerTest {
 
     private final String apiVersion = "/storage";
@@ -31,7 +32,7 @@ class StorageControllerTest {
     private StorageService storageService;
 
     @Test
-    @WithMockUser(username = "admin",password = "admin",roles = {"ADMIN"})
+
     void serveFile() throws Exception {
         String filename = "testfile.png";
         Resource file = mock(Resource.class);

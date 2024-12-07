@@ -11,11 +11,9 @@ import jyrs.dev.vivesbank.users.users.exceptions.UserExceptions;
 import jyrs.dev.vivesbank.users.users.mappers.UserMapper;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.storage.UserStorage;
-import jyrs.dev.vivesbank.users.users.storage.UserStorageImpl;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.UserNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.UserNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
@@ -69,6 +67,7 @@ public class UsersServiceImpl implements UsersService {
     }
 
     @Override
+
     @Cacheable
     public UserResponseDto getUserById(String id) {
         log.info("Obteniendo user por id: " + id);

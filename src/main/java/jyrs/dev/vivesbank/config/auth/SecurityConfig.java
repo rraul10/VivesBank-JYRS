@@ -51,6 +51,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
+                // admins
+                .authorizeHttpRequests(request -> request.requestMatchers(apipath + apiVersion + "/admins/**").hasRole("ADMIN"))
                  // clients
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/storage/**" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/clients" ).hasRole("ADMIN"))
@@ -63,6 +65,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/dni" ).hasRole("CLIENT"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PATCH,apipath + apiVersion + "/clients/me/profile/perfil" ).hasRole("CLIENT"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/clients/me/profile" ).hasRole("CLIENT"))
+                //Bank Account
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts" ).hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts/client/{clientId}").hasAnyRole("CLIENT","ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, apipath + apiVersion + "/accounts" ).hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/accounts/{id}").hasAnyRole("CLIENT","ADMIN"))
 
                 // MOVEMENTS
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements").hasRole("ADMIN")) // GET ALL MOVEMENTS
@@ -80,8 +88,26 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/timeseries").hasAnyRole("USER", "ADMIN")) // Series temporales
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/latest").permitAll()) // Últimos tipos de cambio
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency/currencies").permitAll())
-                .authorizeHttpRequests(request ->request.requestMatchers("/api/creditcard/**").permitAll())
-                .authorizeHttpRequests(request ->request.requestMatchers("/api/products/**").permitAll())
+
+                //Credit Card
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard/id/{id}").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard/date/{date}").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/creditcard/date/before/{date}").hasAnyRole( "ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST,"/vivesbank" + apiVersion +"/creditcard").hasAnyRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT,"/vivesbank" + apiVersion +"/creditcard/{id}").hasAnyRole("CLIENT"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,"/vivesbank" + apiVersion +"/creditcard/{id}").hasAnyRole("CLIENT", "ADMIN"))
+
+                //Base Product
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/products").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/products/id/{id}").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,"/vivesbank" + apiVersion +"/products/type/{type}").permitAll())
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.POST,"/vivesbank" + apiVersion +"/products").hasAnyRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.PUT,"/vivesbank" + apiVersion +"/products/{id}").hasAnyRole("ADMIN"))
+                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE,"/vivesbank" + apiVersion +"/products/{id}").hasAnyRole("ADMIN"))
+
+
+
 
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         authenticationFilter, UsernamePasswordAuthenticationFilter.class);;

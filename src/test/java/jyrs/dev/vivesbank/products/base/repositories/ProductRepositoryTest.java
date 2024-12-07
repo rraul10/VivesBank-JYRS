@@ -1,4 +1,4 @@
-package jyrs.dev.vivesbank.products.repositories;
+package jyrs.dev.vivesbank.products.base.repositories;
 
 import jyrs.dev.vivesbank.products.base.models.Product;
 import jyrs.dev.vivesbank.products.base.models.type.ProductType;

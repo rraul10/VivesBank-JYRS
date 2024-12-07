@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.zip.DataFormatException;
 
 @RestController
-@RequestMapping("/api/creditcard")
+@RequestMapping("${api.path:/api}${api.version:/v1}/creditcard")
 @Slf4j
 public class CreditCardController {
         private final CreditCardService service;
@@ -92,13 +92,13 @@ public class CreditCardController {
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<CreditCard> updateCreditCard(@PathVariable Long id, @RequestBody CreditCardUpdatedDto updatedDto){
             log.info("Actualizando tarjeta de credito con id: " + id);
             return ResponseEntity.ok(service.update(id, updatedDto));
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCreditCard(@PathVariable Long id){
             log.info("Borrando tarjeta de credito con id: " + id);
             service.delete(id);

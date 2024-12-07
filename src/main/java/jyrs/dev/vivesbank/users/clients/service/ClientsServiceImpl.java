@@ -36,10 +36,10 @@ public class ClientsServiceImpl implements ClientsService {
     private final StorageService storageService;
     private final ClientMapper mapper;
     private final ClientStorage storage;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Client> redisTemplate;
     @Autowired
 
-    public ClientsServiceImpl(ClientsRepository repository,RedisTemplate<String, Object> redisTemplate, StorageService storageService, ClientMapper mapper, ClientStorage storage) {
+    public ClientsServiceImpl(ClientsRepository repository,RedisTemplate<String, Client> redisTemplate, StorageService storageService, ClientMapper mapper, ClientStorage storage) {
         this.repository = repository;
         this.storageService = storageService;
         this.mapper = mapper;
@@ -79,20 +79,19 @@ public class ClientsServiceImpl implements ClientsService {
     @Override
     public ClientResponse getById(Long id) {
         String redisKey = "client:id:" + id;
-        ClientResponse cachedClient = (ClientResponse) redisTemplate.opsForValue().get(redisKey);
+        Client cachedClient = redisTemplate.opsForValue().get(redisKey);
 
         if (cachedClient != null) {
             log.info("Cliente obtenido desde caché de Redis");
-            return cachedClient;
+            return mapper.toResponse(cachedClient);
         }
 
         var cliente = repository.findById(id).orElseThrow(() -> new ClientNotFound(id.toString()));
 
-        cachedClient = mapper.toResponse(cliente);
-        redisTemplate.opsForValue().set(redisKey, cachedClient, 10, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(redisKey, cliente, 10, TimeUnit.MINUTES);
 
         log.info("Cliente obtenido desde la base de datos y almacenado en caché Redis");
-        return cachedClient;
+        return mapper.toResponse(cliente);
     }
 
     @Override
@@ -103,20 +102,20 @@ public class ClientsServiceImpl implements ClientsService {
     @Override
     public ClientResponse getByDni(String dni) {
         String redisKey = "client:dni:" + dni;
-        ClientResponse cachedClient = (ClientResponse) redisTemplate.opsForValue().get(redisKey);
+        Client cachedClient = redisTemplate.opsForValue().get(redisKey);
 
         if (cachedClient != null) {
             log.info("Cliente con DNI {} obtenido desde caché de Redis", dni);
-            return cachedClient;
+            return mapper.toResponse(cachedClient);
         }
 
         var cliente = repository.getByDni(dni).orElseThrow(() -> new ClientNotFound(dni));
 
-        cachedClient = mapper.toResponse(cliente);
-        redisTemplate.opsForValue().set(redisKey, cachedClient, 10, TimeUnit.MINUTES);
+
+        redisTemplate.opsForValue().set(redisKey, cliente, 10, TimeUnit.MINUTES);
 
         log.info("Cliente con DNI {} obtenido desde la base de datos y almacenado en caché Redis", dni);
-        return cachedClient;
+        return mapper.toResponse(cliente);
     }
 
 

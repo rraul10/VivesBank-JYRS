@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.users.repository;
 
+import jyrs.dev.vivesbank.users.models.Admin;
 import jyrs.dev.vivesbank.users.models.Role;
 import jyrs.dev.vivesbank.users.models.User;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
@@ -11,6 +12,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.util.Set;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
@@ -44,6 +48,20 @@ public class UsersRepositoryTests {
     @Test
     void findByUsernameNotFound(){
         User result = usersRepository.findByUsername("user@notfound.com");
+        assertNull(result);
+    }
+
+    @Test
+    void findByGuuid() {
+        User result = usersRepository.findByGuuid(user.getGuuid());
+        assertAll(
+                () -> assertNotNull(result),
+                () -> assertEquals(user.getGuuid(), result.getGuuid())
+        );
+    }
+    @Test
+    void findByGuuidNotFound(){
+        User result = usersRepository.findByGuuid("puZjCDm_xCa");
         assertNull(result);
     }
 }
