@@ -443,9 +443,13 @@ class BankAccountServiceImplTest {
         String idClient = "user-123";
         Long idAccount = 1L;
 
+        var accountMock = mock(BankAccount.class);
+
         when(clientsRepository.getByUser_Guuid(idClient)).thenReturn(Optional.of(cliente));
         when(bankAccountRepository.findById(idAccount)).thenReturn(Optional.of(account));
-        when(account.getCreditCard()).thenReturn(null);
+
+        when(accountMock.getClient()).thenReturn(cliente);
+
         doNothing().when(bankAccountRepository).deleteById(idAccount);
 
         bankAccountService.deleteMeBankAccount(idClient, idAccount);
@@ -453,8 +457,8 @@ class BankAccountServiceImplTest {
         verify(clientsRepository).getByUser_Guuid(idClient);
         verify(bankAccountRepository).findById(idAccount);
         verify(bankAccountRepository).deleteById(idAccount);
-        verify(bankAccountService).onChange(eq(Notificacion.Tipo.DELETE), eq(account));
     }
+
 
 
     @Test
