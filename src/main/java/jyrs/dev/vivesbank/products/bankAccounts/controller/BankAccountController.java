@@ -92,13 +92,13 @@ public class BankAccountController {
     }
 
 
-    @GetMapping("/me/accounts")
+    @GetMapping("/me")
     public ResponseEntity<List<BankAccountResponse>> meAccounts(@AuthenticationPrincipal User user) {
         log.info("Obteniendo todas las cuentas del cliente"+ user.getGuuid());
         return ResponseEntity.ok(accountService.getAllMeAccounts(user.getGuuid()));
     }
 
-    @DeleteMapping("/me/accounts/{id}")
+    @DeleteMapping("/me/{id}")
     public ResponseEntity<Void> deleteMeAccount(@AuthenticationPrincipal User user,@PathVariable Long id){
         log.info("Borrando cuenta bancaria con id: " + id);
         accountService.deleteMeBankAccount(user.getGuuid(),id);

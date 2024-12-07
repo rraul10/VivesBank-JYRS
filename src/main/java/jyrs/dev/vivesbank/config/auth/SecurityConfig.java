@@ -72,11 +72,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, apipath + apiVersion + "/accounts/allAccounts/{id}").hasAnyRole("ADMIN"))
-                .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/me/accounts" ).hasRole("CLIENT"))
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, apipath + apiVersion + "/me/accounts").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/me/accounts" ).hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, apipath + apiVersion + "/me").hasRole("CLIENT"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/accounts/{id}").hasAnyRole("ADMIN"))
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/me/accounts/{id}").hasAnyRole("CLIENT"))
-
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/me/{id}").hasAnyRole("CLIENT"))
 
 
                 // MOVEMENTS
