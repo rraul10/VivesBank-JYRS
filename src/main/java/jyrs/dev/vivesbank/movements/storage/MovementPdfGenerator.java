@@ -6,15 +6,21 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import jyrs.dev.vivesbank.movements.models.Movement;
+import jyrs.dev.vivesbank.users.clients.models.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
+@Service
 public class MovementPdfGenerator {
 
     private static final Logger logger = LoggerFactory.getLogger(MovementPdfGenerator.class);
@@ -23,46 +29,74 @@ public class MovementPdfGenerator {
 
     /**
      * Genera un archivo PDF con los detalles de un movimiento bancario.
-     * @param filePath La ruta del archivo donde se guardará el PDF.
      * @param movement El objeto movimiento con los detalles a incluir en el PDF.
      */
 
-    public static void generateMovementPdf(String filePath, Movement movement) {
+    public File generateMovementPdf(Movement movement) {
+        File pdfFile = null;
         try {
-            ensureDirectoryExists(filePath);
+            File directory = new File("./movements");
 
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String fileName = "movement_" + movement.getSenderClient().getId() + "_" + System.currentTimeMillis() + ".pdf";
+            String filePath = directory.getAbsolutePath() + File.separator + fileName;
+
+            pdfFile = new File(filePath);
             PdfWriter writer = new PdfWriter(filePath);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
             document.add(new Paragraph("Detalles del Movimiento").setFontSize(14));
-
             addMovementDetailsToDocument(document, movement);
 
             document.close();
+
             logger.info("PDF generado exitosamente: {}", filePath);
         } catch (IOException e) {
             logger.error("Error al generar el PDF: {}", e.getMessage(), e);
         }
+
+        return pdfFile;
     }
+
 
     /**
      * Genera un archivo PDF con una lista de movimientos bancarios.
-     * @param filePath La ruta del archivo donde se guardará el PDF.
+     * @param client por si es la lista de un cliente.
      * @param movements La lista de movimientos a incluir en el PDF.
      */
 
-    public static void generateMovementsPdf(String filePath, List<Movement> movements) {
+    public File generateMovementsPdf(List<Movement> movements, Optional<Client> client) {
+        File pdfFile = null;
+
         try {
-            ensureDirectoryExists(filePath);
+            File directory = new File("./movements");
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            String fileName = "movements_list_" + System.currentTimeMillis() + ".pdf";
+            if (client.isPresent()) {
+                fileName = "movements_list_" + client.get().getId() + "_" + System.currentTimeMillis() + ".pdf";
+            }
+
+            String filePath = directory.getAbsolutePath() + File.separator + fileName;
+            pdfFile = new File(filePath);
 
             PdfWriter writer = new PdfWriter(filePath);
             PdfDocument pdf = new PdfDocument(writer);
             Document document = new Document(pdf);
 
-            document.add(new Paragraph("Lista de Movimientos").setFontSize(14));
+            if (client.isPresent()) {
+                document.add(new Paragraph("Lista de Mis Movimientos").setFontSize(14));
+            } else {
+                document.add(new Paragraph("Lista de Movimientos").setFontSize(14));
+            }
 
-            Table table = new Table(6); // Número de columnas
+            Table table = new Table(6);
             table.addCell("ID");
             table.addCell("Tipo");
             table.addCell("Fecha");
@@ -80,11 +114,15 @@ public class MovementPdfGenerator {
             }
 
             document.add(table);
+
             document.close();
+
             logger.info("PDF generado exitosamente: {}", filePath);
         } catch (IOException e) {
             logger.error("Error al generar el PDF: {}", e.getMessage(), e);
         }
+
+        return pdfFile;
     }
 
     private static void addMovementDetailsToDocument(Document document, Movement movement) {
@@ -113,17 +151,4 @@ public class MovementPdfGenerator {
         return dateTime.format(formatter);
     }
 
-    /**
-     * Verifica si el directorio donde se guardará el archivo PDF existe, y lo crea si no es así.
-     * @param filePath La ruta del archivo PDF.
-     * @throws IOException Si ocurre un error al crear el directorio.
-     */
-
-    private static void ensureDirectoryExists(String filePath) throws IOException {
-        Path directory = Path.of(filePath).getParent();
-        if (directory != null && !Files.exists(directory)) {
-            Files.createDirectories(directory);
-            logger.info("Directorio creado: {}", directory);
-        }
-    }
 }
