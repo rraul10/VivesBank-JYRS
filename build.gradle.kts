@@ -29,7 +29,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 
-    // iText Core Library
+    // iText para PDF
     implementation("com.itextpdf:itext7-core:9.0.0")
 
     // Base de Datos
@@ -48,6 +48,11 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.jakewharton.retrofit:retrofit2-reactor-adapter:2.1.0")
+
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage")
@@ -55,17 +60,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:1.19.0")
     testImplementation("org.testcontainers:mongodb:1.19.0")
     testImplementation("org.springframework.security:spring-security-test")
-
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
-
+    testImplementation("org.mockito:mockito-core:5.5.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    // RETROFIT
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.jakewharton.retrofit:retrofit2-reactor-adapter:2.1.0")
-
 }
 
 tasks.withType<Test> {
@@ -80,4 +76,3 @@ tasks.jacocoTestReport {
         html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
     }
 }
-

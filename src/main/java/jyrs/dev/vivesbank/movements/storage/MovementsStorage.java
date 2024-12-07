@@ -1,7 +1,7 @@
 package jyrs.dev.vivesbank.movements.storage;
 
+
 import jyrs.dev.vivesbank.movements.models.Movement;
-import jyrs.dev.vivesbank.users.clients.models.Client;
 
 import java.io.File;
 import java.util.List;

@@ -31,4 +31,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
         return new WebSocketHandler("users");
     }
 
+    @Bean
+    public WebSocketHandler webSocketMovementsHandler() {
+        return new WebSocketHandler("movements");
+    }
+
 }

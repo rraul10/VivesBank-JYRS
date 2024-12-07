@@ -1,6 +1,5 @@
 package jyrs.dev.vivesbank.currency.services;
 
-
 import jyrs.dev.vivesbank.currency.exceptions.ApiCommunicationException;
 import jyrs.dev.vivesbank.currency.exceptions.CurrencyNotFoundException;
 import jyrs.dev.vivesbank.currency.rest.CurrencyApiRest;
@@ -15,17 +14,35 @@ import retrofit2.Response;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Implementación del servicio de divisas que interactúa con la API de divisas a través de Retrofit.
+ * Esta clase ofrece métodos para obtener tasas de cambio, convertir divisas, y obtener información histórica
+ * y actual sobre las divisas soportadas, utilizando el cliente API de Frankfurter.
+ * @author Raul Fernandez, Yahya El Hadri, Javier Ruiz, Javier Hernandez, Samuel Cortes
+ * @since 1.0
+ */
+
 @Service
 public class CurrencyServiceImpl implements CurrencyService {
 
     private final CurrencyApiRest currencyApiRest;
+
+    /**
+     * Constructor que inyecta la instancia de la interfaz `CurrencyApiRest`.
+     * @param currencyApiRest La interfaz para interactuar con la API de divisas.
+     */
 
     @Autowired
     public CurrencyServiceImpl(CurrencyApiRest currencyApiRest) {
         this.currencyApiRest = currencyApiRest;
     }
 
-    // Obtener todas las monedas
+    /**
+     * Obtiene todas las monedas disponibles desde la API.
+     * @return Un mapa con la lista de monedas y sus detalles.
+     * @throws ApiCommunicationException Si ocurre un error de comunicación con la API.
+     */
+
     @Override
     public Map<String, Object> getAllCurrencies() {
         try {
@@ -41,7 +58,14 @@ public class CurrencyServiceImpl implements CurrencyService {
         }
     }
 
-    // Obtener detalles de la moneda por símbolo
+    /**
+     * Obtiene los detalles de una moneda específica por su símbolo.
+     * @param symbol El símbolo de la moneda.
+     * @return Un objeto `getCurrencyById` con los detalles de la moneda.
+     * @throws ApiCommunicationException Si hay problemas al comunicarse con la API.
+     * @throws CurrencyNotFoundException Si el símbolo no existe en la respuesta.
+     */
+
     @Override
     public getCurrencyById getCurrencyDetails(String symbol) {
         try {
@@ -67,7 +91,15 @@ public class CurrencyServiceImpl implements CurrencyService {
         }
     }
 
-    // Obtener detalles históricos de la moneda por fecha y símbolo
+    /**
+     * Obtiene los detalles históricos de la moneda por una fecha específica y su símbolo.
+     * @param date La fecha de la tasa histórica.
+     * @param symbol El símbolo de la moneda.
+     * @return Un objeto `getCurrencyById` con los detalles históricos de la moneda.
+     * @throws ApiCommunicationException Si hay problemas al comunicarse con la API.
+     * @throws CurrencyNotFoundException Si el símbolo no existe para la fecha solicitada.
+     */
+
     @Override
     public getCurrencyById getHistoricalCurrencyDetails(String date, String symbol) {
         try {
@@ -98,7 +130,15 @@ public class CurrencyServiceImpl implements CurrencyService {
         }
     }
 
-    // Convertir moneda
+    /**
+     * Convierte una cantidad de una moneda base a otra divisa especificada.
+     * @param base La moneda base.
+     * @param symbols Las monedas a convertir.
+     * @param amount La cantidad a convertir.
+     * @return Un mapa con las tasas de conversión y sus valores correspondientes.
+     * @throws ApiCommunicationException Si hay problemas al comunicarse con la API.
+     */
+
     @Override
     public Map<String, Double> convertCurrency(String base, String symbols, double amount) {
         try {
@@ -133,7 +173,16 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     }
 
-    // Obtener tasas de series temporales
+    /**
+     * Obtiene las tasas de cambio de un rango de fechas específico.
+     * @param startDate La fecha de inicio del rango.
+     * @param endDate La fecha final del rango.
+     * @param base La moneda base.
+     * @param symbols Las monedas a obtener tasas.
+     * @return Un objeto `TimeSeriesResponse` con las tasas de cambio en el rango de fechas.
+     * @throws ApiCommunicationException Si hay problemas al comunicarse con la API.
+     */
+
     @Override
     public TimeSeriesResponse getTimeSeriesRates(String startDate, String endDate, String base, String symbols) {
         try {
@@ -150,7 +199,14 @@ public class CurrencyServiceImpl implements CurrencyService {
         }
     }
 
-    // Obtener las tasas más recientes
+    /**
+     * Obtiene las tasas de cambio más recientes para una moneda base.
+     * @param base La moneda base.
+     * @param symbols Las monedas a obtener tasas.
+     * @return Un objeto `CurrencyResponse` con las tasas de cambio más recientes.
+     * @throws ApiCommunicationException Si hay problemas al comunicarse con la API.
+     */
+
     @Override
     public CurrencyResponse getLatestRates(String base, String symbols) {
         try {
@@ -167,7 +223,12 @@ public class CurrencyServiceImpl implements CurrencyService {
         }
     }
 
-    // Obtener monedas disponibles
+    /**
+     * Obtiene la lista de las monedas disponibles desde la API.
+     * @return Un mapa con los códigos de las monedas y sus nombres.
+     * @throws ApiCommunicationException Si hay problemas al comunicarse con la API.
+     */
+
     @Override
     public Map<String, String> getAvailableCurrencies() {
         try {
@@ -184,7 +245,3 @@ public class CurrencyServiceImpl implements CurrencyService {
         }
     }
 }
-
-
-
-
