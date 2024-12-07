@@ -16,16 +16,19 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.List;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 
-@SpringBootTest(classes = VivesBankApplication.class)
+@SpringBootTest
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
 @WithMockUser(username = "admin", password = "admin", roles = {"ADMIN", "CLIENT"})
@@ -41,7 +44,6 @@ class MovementsControllerTest {
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
         mockMvc = MockMvcBuilders.standaloneSetup(movementsController).build();
     }
 
@@ -62,7 +64,7 @@ class MovementsControllerTest {
             "typeMovement": "TRANSFER",
             "amount": 1000.0
         }
-    """;
+        """;
 
         mockMvc.perform(post("/api/v1/movements")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -72,8 +74,6 @@ class MovementsControllerTest {
 
     @Test
     public void testReverseMovement() throws Exception {
-        doNothing().when(movementsService).reverseMovement("movementId");
-
         mockMvc.perform(post("/api/v1/movements/movementId/reverse"))
                 .andExpect(status().isOk());
     }
@@ -81,14 +81,34 @@ class MovementsControllerTest {
 
     @Test
     public void testGetMovementsByClientId() throws Exception {
-        List<Movement> movements = List.of(new Movement(), new Movement());
+        Movement movement1 = Movement.builder()
+                .id("1")
+                .typeMovement("TRANSFER")
+                .amount(100.0)
+                .build();
+        Movement movement2 = Movement.builder()
+                .id("2")
+                .typeMovement("PAYMENT")
+                .amount(200.0)
+                .build();
+        List<Movement> movements = List.of(movement1, movement2);
+
         when(movementsService.getMovementsByClientId("123")).thenReturn(movements);
 
         mockMvc.perform(get("/api/v1/movements/client/123")
                         .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+            [
+                {"id":"1","typeMovement":"TRANSFER","amount":100.0},
+                {"id":"2","typeMovement":"PAYMENT","amount":200.0}
+            ]
+            """, true)); // Validación estricta de JSON
     }
+
+
 
 
     @Test
@@ -99,9 +119,9 @@ class MovementsControllerTest {
         mockMvc.perform(get("/api/v1/movements")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("[{}, {}]"));
     }
-
 
     @Test
     public void testGetMovementsByType() throws Exception {
@@ -111,9 +131,9 @@ class MovementsControllerTest {
         mockMvc.perform(get("/api/v1/movements/type/transfer")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("[{}, {}]"));
     }
-
 
     @Test
     public void testDeleteMovement() throws Exception {
@@ -122,5 +142,4 @@ class MovementsControllerTest {
         mockMvc.perform(delete("/api/v1/movements/123"))
                 .andExpect(status().isNoContent());
     }
-
 }

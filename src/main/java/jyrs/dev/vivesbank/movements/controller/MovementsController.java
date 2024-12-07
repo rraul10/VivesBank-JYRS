@@ -67,10 +67,12 @@ public class MovementsController {
     @GetMapping("/client/{clientId}")
     public ResponseEntity<List<Movement>> getMovementsByClientId(@PathVariable String clientId) {
         var movements = movementsService.getMovementsByClientId(clientId);
+        System.out.println("Movements fetched: " + movements); // Depuración
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
     }
+
 
     /**
      * Obtener todos los movimientos registrados.
