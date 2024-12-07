@@ -17,13 +17,12 @@ public class BankAccountMapper {
         if (account == null) {
             return null;
         }
-
         return BankAccountResponse.builder()
                 .iban(account.getIban())
                 .accountType(account.getAccountType())
                 .balance(account.getBalance())
                 .creditCard(toCardDto(account.getCreditCard()))
-                .clientId(account.getClient().getId())
+                .clientId(account.getClient() != null ? account.getClient().getId() : null)
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package jyrs.dev.vivesbank.users.clients.service;
 
+import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;

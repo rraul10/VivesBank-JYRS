@@ -1,6 +1,10 @@
 package jyrs.dev.vivesbank.users.clients.service;
 
 
+import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
+import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
+import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import jyrs.dev.vivesbank.products.bankAccounts.services.BankAccountService;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
@@ -36,15 +40,17 @@ public class ClientsServiceImpl implements ClientsService {
     private final StorageService storageService;
     private final ClientMapper mapper;
     private final ClientStorage storage;
+    private final BankAccountService bankAccountService;
     private final RedisTemplate<String, Client> redisTemplate;
     @Autowired
 
-    public ClientsServiceImpl(ClientsRepository repository,RedisTemplate<String, Client> redisTemplate, StorageService storageService, ClientMapper mapper, ClientStorage storage) {
+    public ClientsServiceImpl(ClientsRepository repository, RedisTemplate<String, Client> redisTemplate, StorageService storageService, ClientMapper mapper, ClientStorage storage, BankAccountService bankAccountService) {
         this.repository = repository;
         this.storageService = storageService;
         this.mapper = mapper;
         this.storage = storage;
         this.redisTemplate = redisTemplate;
+        this.bankAccountService = bankAccountService;
     }
 
     @Override

@@ -2,6 +2,7 @@ package jyrs.dev.vivesbank.users.clients.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestCreate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientRequestUpdate;
 import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
@@ -27,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -150,6 +152,8 @@ public class ClientRestController {
         service.deleteMe(user.getGuuid());
         return ResponseEntity.noContent().build();
     }
+
+
 
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
