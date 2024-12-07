@@ -191,7 +191,7 @@ public class UserServiceImplTests {
         when(userMapper.fromUserDto(userRequestDto)).thenReturn(user);
         when(usersRepository.save(user)).thenReturn(user);
         when(userMapper.toUserResponse(user)).thenReturn(userResponseDto);
-        doNothing().when(webSocketHandlerMock).sendMessage(any());
+        doNothing().when(webSocketHandlerMock).sendMessage(anyString());
         UserResponseDto res = usersService.saveUser(userRequestDto);
         assertAll(
                 () -> assertNotNull(res),
@@ -199,7 +199,7 @@ public class UserServiceImplTests {
                 () -> assertEquals(userResponseDto.getUsername(), res.getUsername())
         );
         verify(usersRepository, times(1)).save(user);
-        verify(webSocketHandlerMock, times(1)).sendMessage(any());
+        verify(webSocketHandlerMock, times(1)).sendMessage(anyString());
         verify(userMapper, times(1)).toUserResponse(user);
         verify(userMapper, times(2)).fromUserDto(userRequestDto);
     }

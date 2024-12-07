@@ -27,5 +27,4 @@ public interface ClientsService {
     void exportJson(File file, List<Client> clients);
     void importJson(File file);
 
-
 }
