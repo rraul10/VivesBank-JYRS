@@ -1,9 +1,11 @@
 package jyrs.dev.vivesbank.movements.services;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
+import jyrs.dev.vivesbank.movements.storage.MovementPdfGenerator;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
 import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class MovementsServiceImpl implements MovementsService {
     private final MovementsRepository movementsRepository;
     private final ClientsRepository clientsRepository;
     private final MovementValidator movementValidator;
+    private final MovementPdfGenerator pdfGenerator;
     private final MovementsStorage storage;
     private final RedisTemplate<String, Movement> redisTemplate;
 
@@ -181,6 +185,65 @@ public class MovementsServiceImpl implements MovementsService {
         List<Movement> movements = storage.importJson(file);
 
         movementsRepository.saveAll(movements);
+    }
+
+    @Override
+    public File generateMovementPdf(String id) {
+
+        var movement = movementsRepository.findById(id).orElseThrow();//TODO Excepcion
+
+        return pdfGenerator.generateMovementPdf(movement);
+    }
+
+    @Override
+    public File generateMeMovementPdf(String idCl,String idMv) {
+        var cliente = clientsRepository.getByUser_Guuid(idCl).orElseThrow(() -> new ClientNotFound(idCl));
+
+        var movement = movementsRepository.findById(idMv).orElseThrow();//TODO Excepcion
+
+        if (movement.getSenderClient().getId() != cliente.getId() || movement.getRecipientClient().getId() != cliente.getId()){
+            //TODO Excepcion de qeu el movimiendto no le pertenece o no tiene ese movimiento
+        }
+
+        return pdfGenerator.generateMovementPdf(movement);
+    }
+
+    @Override
+    public File generateAllMeMovementPdf(String id) {
+
+        var cliente = clientsRepository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
+        var lista = getMovementsByClientId(cliente.getUser().getGuuid());
+
+        return pdfGenerator.generateMovementsPdf(lista, Optional.of(cliente));
+    }
+
+    @Override
+    public File generateAllMeMovementSendPdf(String id) {
+
+        var cliente = clientsRepository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
+        var lista = movementsRepository.findBySenderClient_Id(cliente.getUser().getGuuid());
+
+        return pdfGenerator.generateMovementsPdf(lista, Optional.of(cliente));
+    }
+
+    @Override
+    public File generateAllMeMovementRecepientPdf(String id) {
+
+        var cliente = clientsRepository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
+
+        var lista = movementsRepository.findByRecipientClient_Id(cliente.getUser().getGuuid());
+
+        return pdfGenerator.generateMovementsPdf(lista, Optional.of(cliente));
+    }
+
+    @Override
+    public File generateAllMovementPdf() {
+
+        var lista = getAllMovements();
+
+        return pdfGenerator.generateMovementsPdf(lista, Optional.empty());
     }
 
 }

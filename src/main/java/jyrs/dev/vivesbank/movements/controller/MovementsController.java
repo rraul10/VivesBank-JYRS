@@ -3,11 +3,18 @@ package jyrs.dev.vivesbank.movements.controller;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.models.MovementRequest;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
+import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
+import jyrs.dev.vivesbank.users.models.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -112,5 +119,63 @@ public class MovementsController {
     public ResponseEntity<Void> deleteMovement(@PathVariable String id) {
         movementsService.deleteMovement(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/pdf")
+    public ResponseEntity<Resource> downloadAllMovementPdf() {
+        File pdfFile = movementsService.generateAllMovementPdf();
+
+        return buildPdfResponse(pdfFile);
+    }
+
+    @GetMapping("/pdf/{id}")
+    public ResponseEntity<Resource> downloadMovementPdf(@PathVariable String id) {
+        File pdfFile = movementsService.generateMovementPdf(id);
+
+        return buildPdfResponse(pdfFile);
+    }
+
+    @GetMapping("/me/pdf/{id}")
+    public ResponseEntity<Resource> downloadMeMovementPdf(@AuthenticationPrincipal User user,@PathVariable String id) {
+        File pdfFile = movementsService.generateMeMovementPdf(user.getGuuid(),id);
+
+        return buildPdfResponse(pdfFile);
+    }
+
+    @GetMapping("/me/pdf")
+    public ResponseEntity<Resource> downloadAllMeMovementPdf(@AuthenticationPrincipal User user) {
+        File pdfFile = movementsService.generateAllMeMovementPdf(user.getGuuid());
+
+        return buildPdfResponse(pdfFile);
+    }
+
+    @GetMapping("/me/pdf/sended")
+    public ResponseEntity<Resource> downloadAllMeMovementSendedPdf(@AuthenticationPrincipal User user) {
+        File pdfFile = movementsService.generateAllMeMovementSendPdf(user.getGuuid());
+
+        return buildPdfResponse(pdfFile);
+    }
+
+    @GetMapping("/me/pdf/recibied")
+    public ResponseEntity<Resource> downloadAllMeMovementRecibiedPdf(@AuthenticationPrincipal User user) {
+        File pdfFile = movementsService.generateAllMeMovementRecepientPdf(user.getGuuid());
+
+        return buildPdfResponse(pdfFile);
+    }
+
+    private ResponseEntity<Resource> buildPdfResponse(File pdfFile) {
+        if (pdfFile == null || !pdfFile.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new FileSystemResource(pdfFile);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + pdfFile.getName());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(pdfFile.length())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(resource);
     }
 }
