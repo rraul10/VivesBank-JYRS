@@ -8,5 +8,5 @@ VALUES (1, 'USER'),
        (1, 'ADMIN');
 
 -- Inserción en la tabla Admin asociada al usuario creado
-INSERT INTO admin (id_admin, guuid, user_id)
+INSERT INTO Admins (id_admin, guuid, user_id)
 VALUES (1, 'puZjCDm_xCg', 1);
