@@ -76,7 +76,7 @@ public class BankAccountController {
         return ResponseEntity.ok(accountService.findBankAccountById(id));
     }
 
-    @PostMapping("me/accounts")
+    @PostMapping("accounts")
     public ResponseEntity<BankAccountResponse> create(@AuthenticationPrincipal User user,@Valid @RequestBody BankAccountRequest bankAccountRequest){
         log.info("Creando cuenta bancaria: " + bankAccountRequest);
         var result = accountService.saveBankAccount(user.getGuuid(),bankAccountRequest);
