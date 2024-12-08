@@ -49,7 +49,7 @@ public class BankAccountServiceImpl implements BankAccountService {
     private final BankAccountStorage storage;
 
     @Autowired
-    public BankAccountServiceImpl(ClientsService clientsService, ClientsRepository clientsRepository, BankAccountRepository bankAccountRepository,
+    public BankAccountServiceImpl(ClientsRepository clientsRepository, BankAccountRepository bankAccountRepository,
                                   BankAccountMapper bankAccountMapper,
                                   ObjectMapper mapper,
                                   BankAccountNotificationMapper bankAccountNotificationMapper,

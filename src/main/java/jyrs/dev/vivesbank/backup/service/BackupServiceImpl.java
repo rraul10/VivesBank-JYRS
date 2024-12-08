@@ -13,6 +13,7 @@ import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import jyrs.dev.vivesbank.users.users.services.UsersService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
