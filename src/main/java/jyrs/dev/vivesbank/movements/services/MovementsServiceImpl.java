@@ -1,4 +1,8 @@
 package jyrs.dev.vivesbank.movements.services;
+import jyrs.dev.vivesbank.movements.exceptions.MovementNotFoundException;
+import jyrs.dev.vivesbank.movements.exceptions.MovementNotReversible;
+import jyrs.dev.vivesbank.movements.exceptions.MovementRecipientNotFound;
+import jyrs.dev.vivesbank.movements.exceptions.MovementSenderNotFound;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
@@ -32,11 +36,11 @@ public class MovementsServiceImpl implements MovementsService {
                                Double amount) {
 
         var senderClient = clientsRepository.findById(Long.parseLong(senderClientId))
-                .orElseThrow(() -> new IllegalArgumentException("Sender Client not found"));
+                .orElseThrow(() -> new MovementSenderNotFound("Cliente remitente no encontrado."));
 
         var recipientClient = recipientClientId != null
                 ? clientsRepository.findById(Long.parseLong(recipientClientId))
-                .orElseThrow(() -> new IllegalArgumentException("Recipient Client not found"))
+                .orElseThrow(() -> new MovementRecipientNotFound("Cliente receptor no encontrado."))
                 : null;
 
         var movement = Movement.builder()
@@ -52,28 +56,25 @@ public class MovementsServiceImpl implements MovementsService {
                 .transferDeadlineDate(LocalDateTime.now().plusDays(7))
                 .build();
 
-        // Guardar el movimiento en Redis
         redisTemplate.opsForValue().set("MOVEMENT:" + movement.getId(), movement);
 
-        // Guardar el movimiento en la base de datos
         movementsRepository.save(movement);
     }
 
     @Override
     public void reverseMovement(String movementId) {
         var movement = movementsRepository.findById(movementId)
-                .orElseThrow(() -> new IllegalArgumentException("Movement not found"));
+                .orElseThrow(() -> new MovementNotFoundException("Movimiento no encontrado."));
 
         movementValidator.validateReversible(movement);
 
         if (!movement.getIsReversible()) {
-            throw new IllegalStateException("Movement cannot be reversed");
+            throw new MovementNotReversible("No se puede revertir este movimiento.");
         }
 
         movement.setIsReversible(false);
         movementsRepository.save(movement);
 
-        // Actualizar el movimiento en Redis
         redisTemplate.opsForValue().set("MOVEMENT:" + movementId, movement);
     }
 
@@ -82,21 +83,18 @@ public class MovementsServiceImpl implements MovementsService {
     public List<Movement> getMovementsByClientId(String clientId) {
         List<Movement> movements = new ArrayList<>();
 
-        // Buscar movimientos en Redis para el cliente
         String redisKey = "MOVEMENTS:CLIENT:" + clientId;
         Movement movement = redisTemplate.opsForValue().get(redisKey);
 
         if (movement == null) {
-            // Si no hay en Redis, buscar en la base de datos
             var sentMovements = movementsRepository.findBySenderClient_Id(clientId);
             var receivedMovements = movementsRepository.findByRecipientClient_Id(clientId);
 
             movements.addAll(sentMovements);
             movements.addAll(receivedMovements);
 
-            // Guardar los movimientos individualmente en Redis
             for (Movement mov : movements) {
-                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);  // Guardar cada movimiento individualmente
+                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
             }
         }
 
@@ -107,17 +105,14 @@ public class MovementsServiceImpl implements MovementsService {
     public List<Movement> getAllMovements() {
         List<Movement> movements = new ArrayList<>();
 
-        // Buscar todos los movimientos en Redis
         String redisKey = "MOVEMENTS:ALL";
         movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
 
         if (movements == null || movements.isEmpty()) {
-            // Si no están en Redis, buscar en la base de datos
             movements = movementsRepository.findAll();
 
-            // Guardar los movimientos individualmente en Redis
             for (Movement mov : movements) {
-                redisTemplate.opsForValue().set("MOVEMENTS:ALL:" + mov.getId(), mov);  // Guardar cada movimiento individualmente
+                redisTemplate.opsForValue().set("MOVEMENTS:ALL:" + mov.getId(), mov);
             }
         }
 
@@ -129,25 +124,21 @@ public class MovementsServiceImpl implements MovementsService {
     public List<Movement> getMovementsByType(String typeMovement) {
         List<Movement> movements = new ArrayList<>();
 
-        // Buscar movimientos por tipo en Redis
         String redisKey = "MOVEMENTS:TYPE:" + typeMovement;
 
-        // Intentamos obtener cada movimiento individualmente de Redis
-        for (int i = 0; i < 100; i++) {  // Limitar la búsqueda a 100 elementos (ajustable)
-            Movement movement = redisTemplate.opsForValue().get(redisKey + ":" + i);  // Suponiendo que los movimientos están numerados
+        for (int i = 0; i < 100; i++) {
+            Movement movement = redisTemplate.opsForValue().get(redisKey + ":" + i);
             if (movement == null) {
-                break;  // Si no encontramos más movimientos, paramos
+                break;
             }
             movements.add(movement);
         }
 
         if (movements.isEmpty()) {
-            // Si no están en Redis, buscar en la base de datos
             movements = movementsRepository.findByTypeMovement(typeMovement);
 
-            // Guardar los movimientos por tipo en Redis
             for (int i = 0; i < movements.size(); i++) {
-                redisTemplate.opsForValue().set(redisKey + ":" + i, movements.get(i));  // Guardar cada movimiento individualmente en Redis
+                redisTemplate.opsForValue().set(redisKey + ":" + i, movements.get(i));
             }
         }
 
@@ -159,11 +150,10 @@ public class MovementsServiceImpl implements MovementsService {
     @Override
     public void deleteMovement(String movementId) {
         var movement = movementsRepository.findById(movementId)
-                .orElseThrow(() -> new IllegalArgumentException("Movement not found"));
+                .orElseThrow(() -> new MovementNotFoundException("Movements no encontrado."));
 
         movementsRepository.delete(movement);
 
-        // Eliminar el movimiento de Redis
         redisTemplate.delete("MOVEMENT:" + movementId);
     }
 

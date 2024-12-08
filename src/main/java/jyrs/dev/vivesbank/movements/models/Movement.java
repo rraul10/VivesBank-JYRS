@@ -19,7 +19,6 @@ import lombok.*;
 @Document(collection = "movements")
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
 public class Movement {
 

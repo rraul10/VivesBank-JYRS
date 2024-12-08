@@ -105,7 +105,7 @@ class MovementsControllerTest {
                 {"id":"1","typeMovement":"TRANSFER","amount":100.0},
                 {"id":"2","typeMovement":"PAYMENT","amount":200.0}
             ]
-            """, true)); // Validación estricta de JSON
+            """, true));
     }
 
 
