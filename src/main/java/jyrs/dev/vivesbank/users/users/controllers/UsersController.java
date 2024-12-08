@@ -32,6 +32,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Clase controlador del endpoint de usuarios. Contiene las funciones necesarias para la gestión de usuarios
+ */
 @RestController
 @Slf4j
 @RequestMapping("${api.path:/api}${api.version:/v1}/users")
@@ -46,18 +49,18 @@ public class UsersController {
 
     /**
      * Devuelve todos los usuarios del sistema, paginados, pudiendo buscar por nombre de usuario y si estan borrados.
-     * @param username
-     * @param isDeleted
-     * @param page
-     * @param size
-     * @param sortBy
-     * @param direction
-     * @param request
-     * @return
+     * @param username nombre de usuario
+     * @param isDeleted parámetro del usuario que indica si esta eliminado.
+     * @param page número de página
+     * @param size tamaño de usuarios mostrados en la página.
+     * @param sortBy parámetro de ordenación
+     * @param direction dirección de ordenación
+     * @param request solicitud http
+     * @return ResponseEntity<PageResponse<UserResponseDto>>,  Páginas de userResponse con los resultados de la busqueda.
      */
     @Operation(
             summary = "Obtiene una lista paginada de usuarios",
-            description = "Permite obtener una lista de usuarios con filtros opcionales como nombre de usuario y estado de eliminación. También soporta paginación y ordenamiento."
+            description = "Permite obtener una lista de usuarios con filtros opcionales como nombre de usuario y estado de eliminación. También soporta paginación y ordenamiento. Solo lo podrá ejecutar un administrador"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida exitosamente",
@@ -92,9 +95,15 @@ public class UsersController {
                 .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
                 .body(PageResponse.of(pageResult, sortBy, direction));
     }
+
+    /**
+     * Busqueda de usuario por su id(guuid). Es necesario ser administrador para ejecutar esta acción.
+     * @param id guuid del usuario.
+     * @return userResponse del usuario que se busca o 404 not found en caso de que no exista ningún usuario con ese id.
+     */
     @Operation(
             summary = "Obtiene un usuario por ID",
-            description = "Devuelve los detalles del usuario correspondiente al ID proporcionado."
+            description = "Devuelve los detalles del usuario correspondiente al ID proporcionado. Es necesario ser administrador para ejecutar esta acción"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario encontrado exitosamente",
@@ -113,6 +122,12 @@ public class UsersController {
         log.info("Obteniendo user por id: " + id);
         return ResponseEntity.ok(usersService.getUserById(id));
     }
+
+    /**
+     * Obtiene todos los datos del usuario logeado en el sistema.
+     * @param user token de autenticación del usuario logeado.
+     * @return los datos del usuario logeado en el sistema.
+     */
     @Operation(
             summary = "Obtiene el perfil del usuario autenticado",
             description = "Devuelve los detalles del usuario que realiza la solicitud. Se requiere autenticación para acceder a este endpoint."
@@ -134,6 +149,15 @@ public class UsersController {
         log.info("Obteniendo usuario");
         return ResponseEntity.ok(usersService.getUserById(user.getGuuid()));
     }
+
+    /**
+     * Actualiza los parametros del usuario logeado en el sistema.
+     * @param user el token de autenticación del usuario logeado.
+     * @param userRequest la petición con los nuevos datos del usuario.
+     * @return el usuario actualizado en caso de que la solicitud sea exitosa.
+     * En otro caso puede ser 400 si la request no es válida, 404 si no se encuentra user,
+     * 401/403 en caso de no tener permisos o no estar autenticado.
+     */
     @Operation(
             summary = "Actualiza el perfil del usuario autenticado",
             description = "Permite al usuario autenticado actualizar los datos de su perfil. Requiere autenticación y un token JWT válido."
@@ -160,9 +184,15 @@ public class UsersController {
         log.info("updateMe: user: {}, userRequest: {}", user, userRequest);
         return ResponseEntity.ok(usersService.updateUser(user.getGuuid(), userRequest));
     }
+
+    /**
+     * Busqueda por el nombre de usuario. Acción que solo la podrá ejecutar el admin.
+     * @param name nombre de usuario
+     * @return el usuario o 404 en caso de no encontrarse.
+     */
     @Operation(
             summary = "Obtiene un usuario por nombre",
-            description = "Busca un usuario en el sistema utilizando su nombre. Requiere autenticación y privilegios adecuados."
+            description = "Busca un usuario en el sistema utilizando su nombre. Requiere autenticación y privilegios adecuados. Solo un administrador podrá realizar esta acción."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario encontrado",
@@ -183,9 +213,16 @@ public class UsersController {
         log.info("Obteniendo user por name: " + name);
         return ResponseEntity.ok(usersService.getUserByName(name));
     }
+
+    /**
+     * Guarda a un nuevo usuario en el sistema. Acción que solo podrá realizar el administrador.
+     * @param userDto la request con los campos del nuevo usuario.
+     * @return 201 el usuario ha sido creado, 400 en caso de que los datos no sean válidos,
+     * 409 en caso de querer crear un nuevo user con un nombre ya existente y 401/403 en caso de no contar con los permisos necesarios.
+     */
     @Operation(
             summary = "Crea un nuevo usuario",
-            description = "Permite guardar un nuevo usuario en el sistema. Los datos deben cumplir las validaciones establecidas."
+            description = "Permite guardar un nuevo usuario en el sistema. Los datos deben cumplir las validaciones establecidas. Solo un administrador podrá crear un nuevo usuario."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Usuario creado exitosamente",
@@ -207,9 +244,17 @@ public class UsersController {
         var result = usersService.saveUser(userDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
+
+    /**
+     * Permite actualizar un usuario dado su id. Solo lo podrá usar el administrador
+     * @param id guuid del usuario a actualizar.
+     * @param userRequestDto request con los nuevos datos para actualizar al usuario.
+     * @return El usuario actualizado, 404 en caso de no encontrarlo, 400 en caso de que la request no sea válido,
+     * 401/403 en caso de no contar con los permisos necesarios.
+     */
     @Operation(
             summary = "Actualiza un usuario existente",
-            description = "Permite actualizar los datos de un usuario identificado por su ID. Los datos proporcionados deben cumplir las validaciones establecidas."
+            description = "Permite actualizar los datos de un usuario identificado por su ID. Los datos proporcionados deben cumplir las validaciones establecidas y solo se podrá realizar si eres administrador."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuario actualizado exitosamente",
@@ -232,9 +277,17 @@ public class UsersController {
         var result = usersService.updateUser(id,userRequestDto);
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * Permite borrar un usuario dado su id. Acción que solo podrá realizar el admin
+     * @param id guuid del usuario
+     * @return 204 si el usuario se ha borrado, 404 en caso de que no se haya encontrado y
+     * 401/403 en caso de no contar con los permisos requeridos.
+     */
     @Operation(
             summary = "Elimina un usuario de forma lógica por ID",
-            description = "Elimina un usuario específico de manera lógica en base a su ID único."
+            description = "Elimina un usuario específico de manera lógica en base a su ID único. Solo se podrá realizar " +
+                    "en caso de ser un administrador."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Usuario eliminado exitosamente, sin contenido en la respuesta."),
@@ -249,6 +302,12 @@ public class UsersController {
         usersService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Permite darse de baja del sistema como usuario logeado.
+     * @param user token de autenticación del usuario logeado.
+     * @return usuario eliminado.
+     */
     @Operation(
             summary = "Elimina el perfil del usuario autenticado",
             description = "Permite al usuario autenticado eliminar su propio perfil. El usuario debe estar autenticado y tener el rol 'USER'."

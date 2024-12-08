@@ -13,15 +13,27 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+/**
+ * Storage de administradores
+ */
 @Component
 @Slf4j
 public class AdminStorageImpl implements AdminStorage {
+    /**
+     * Mapper de jackson
+     */
     private final ObjectMapper objectMapper;
     @Autowired
     public AdminStorageImpl(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Exporta un fichero json dado una lista de admins
+     * @param file fichero a exportar
+     * @param admins lista de admins a exportar
+     */
     @Override
     public void exportJson(File file, List<Admin> admins) {
         log.debug("Guardando admins en fichero json");
@@ -39,6 +51,11 @@ public class AdminStorageImpl implements AdminStorage {
         }
     }
 
+    /**
+     * Importa un fichero json de admins a una lista de admins
+     * @param file fichero json
+     * @return lista de admins extraidas del fichero.
+     */
     @Override
     public List<Admin> importJson(File file) {
         log.debug("Importando admins desde fichero json: " + file);

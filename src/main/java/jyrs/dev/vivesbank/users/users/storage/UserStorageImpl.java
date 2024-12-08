@@ -14,15 +14,26 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Storage de los usuarios par json. Tanto importaro como exportar
+ */
 @Slf4j
 @Component
 public class UserStorageImpl implements UserStorage{
+    /**
+     * Mapper de jackson.
+     */
     private final ObjectMapper objectMapper;
     @Autowired
     public UserStorageImpl(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Exporta los usuarios del sistema a json.
+     * @param file fichero para exportar
+     * @param users lista de usuarios a exportar
+     */
     @Override
     public void exportJson(File file, List<User> users) {
 
@@ -32,8 +43,6 @@ public class UserStorageImpl implements UserStorage{
 
             objectMapper.registerModule(new JavaTimeModule());
             objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-
             objectMapper.writeValue(file, users);
 
         } catch (IOException e) {
@@ -42,6 +51,11 @@ public class UserStorageImpl implements UserStorage{
 
     }
 
+    /**
+     * Importa un fichero json para obtener usuarios.
+     * @param file fichero json con usuarios.
+     * @return una lista de usuarios
+     */
     @Override
     public List<User> importJson(File file) {
         log.debug("Cargando users desde fichero json");

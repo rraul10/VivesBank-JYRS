@@ -8,6 +8,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+/**
+ * Modelo de administrador del sistema que se relaciona a un usuario.
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,11 +19,20 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Table(name = "Admins")
 @EntityListeners(AuditingEntityListener.class)
 public class Admin {
+    /**
+     * Id autonumérico para el manejo de la base de datos.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id_Admin;
+    /**
+     * Id único generado por nosotros.
+     */
     @Column(name = "guuid", nullable = false, unique = true, updatable = false)
     private String guuid;
+    /**
+     * Relación con el usuario asociado al administrador.
+     */
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;

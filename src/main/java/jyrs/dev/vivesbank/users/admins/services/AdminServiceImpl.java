@@ -26,12 +26,27 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Servicio encargado de la gestión de administradores.
+ */
 @Service
 @Slf4j
 public class AdminServiceImpl implements AdminService {
+    /**
+     * Repositorio de administradores
+     */
     private final AdminRepository adminRepository;
+    /**
+     * Storage para json de administradores
+     */
     private final AdminStorage adminStorage;
+    /**
+     * Mappers de administradores
+     */
     private final AdminMappers adminMappers;
+    /**
+     * Repositorio de usuarios
+     */
     private final UsersRepository usersRepository;
     @Autowired
 
@@ -41,6 +56,14 @@ public class AdminServiceImpl implements AdminService {
         this.adminMappers = adminMappers;
         this.usersRepository = usersRepository;
     }
+
+    /**
+     * Devuelve los administradores paginados en base a los parametros de username y isDeleted.
+     * @param username filtro por el nombre de usuario
+     * @param isDeleted filtro por isDelted del usuario
+     * @param pageable página
+     * @return los admins encontrados paginados
+     */
 
     @Override
     public Page<AdminResponseDto> getAllAdmins(Optional<String> username, Optional<Boolean> isDeleted, Pageable pageable) {
@@ -59,7 +82,11 @@ public class AdminServiceImpl implements AdminService {
         return adminRepository.findAll(criterio, pageable).map(adminMappers::fromAdminToResponse);
     }
 
-
+    /**
+     * Obtiene el admin por su guuid
+     * @param id guuid
+     * @return admin o excepcion de adminNotFound en caso de que no se encuentra.
+     */
     @Override
     public AdminResponseDto getAdminByGuuid(String id) {
         log.info("Buscando admin con guuid: " + id);
@@ -70,6 +97,12 @@ public class AdminServiceImpl implements AdminService {
         return res;
     }
 
+    /**
+     * Crea un administrador y lo guarda en la base de datos a partir de un usuario existente.
+     * @param request la request con los datos para guardar al nuevo administrador.
+     * @return el adminResponse con el admin guardado
+     * @throws AdminExceptions.AdminAlreadyExists en caso de que el administrador que quieres guardar ya exista.
+     */
     @Override
     public AdminResponseDto saveAdmin(AdminRequestDto request) throws AdminExceptions.AdminAlreadyExists {
         log.info("Añadiendo nuevo admin al sistema" + request);
@@ -91,6 +124,12 @@ public class AdminServiceImpl implements AdminService {
         return adminMappers.fromAdminToResponse(adminGuardado);
     }
 
+    /**
+     * Actualiza un administrador del sistema en base a su id.
+     * @param id guuid del usuario
+     * @param user request con los datos para actualizar
+     * @return el admin actualizado o adminNotFound en caso de que no exista admin por ese guuid.
+     */
     @Override
     public AdminResponseDto updateAdmin(String id, AdminUpdateRequest user) {
         log.info("Buscando administrador en el sistema: " + user);
@@ -106,6 +145,11 @@ public class AdminServiceImpl implements AdminService {
         return adminMappers.fromAdminToResponse(adminToUpdate);
     }
 
+    /**
+     * Borra un administrador por su id
+     * @param id guuid
+     * @throws AdminExceptions.AdminCannotBeDeleted en caso de que se quiera borrar el admin principal.
+     */
     @Override
     public void deleteAdmin(String id) throws AdminExceptions.AdminCannotBeDeleted {
         log.info("Eliminando admin con guuid: " + id);
@@ -125,12 +169,21 @@ public class AdminServiceImpl implements AdminService {
         adminRepository.save(adminToDelete);
     }
 
+    /**
+     * Exporta los admins del sistema en un fichero json dado una lista de admins.
+     * @param file el archivo json
+     * @param users la lista de admins
+     */
     @Override
     public void exportJson(File file, List<Admin> users) {
         log.info("Exportando admins a json");
         adminStorage.exportJson(file, users);
     }
 
+    /**
+     * Importa un fichero con admins para guardarlos en la base de datos.
+     * @param file fichero json que se importa
+     */
     @Override
     public void importJson(File file) {
         log.info("Importando admins desde json");

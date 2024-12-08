@@ -5,8 +5,17 @@ import jyrs.dev.vivesbank.users.users.dto.UserRequestDto;
 import jyrs.dev.vivesbank.users.users.dto.UserResponseDto;
 import org.springframework.stereotype.Component;
 
+/**
+ * Mapper de usuario a sus respectivos dtos para las responses y requests.
+ */
+
 @Component
 public class UserMapper {
+    /**
+     * Mapea un UserRequest a un user
+     * @param userRequestDto
+     * @return User
+     */
      public User fromUserDto(UserRequestDto userRequestDto) {
          var user = new User();
          user.setUsername(userRequestDto.getUsername());
@@ -15,6 +24,12 @@ public class UserMapper {
          user.setIsDeleted(userRequestDto.getIsDeleted());
          return user;
      }
+
+    /**
+     * Mapea un user a un UserResponse
+     * @param user
+     * @return UserResponseDto
+     */
      public UserResponseDto toUserResponse(User user){
          return new UserResponseDto(
                  user.getGuuid(),
@@ -24,6 +39,12 @@ public class UserMapper {
          );
      }
 
+    /**
+     * Mapea un userRequest a un usuario
+     * @param userRequest
+     * @param user
+     * @return user
+     */
      public User toUser(UserRequestDto userRequest, User user){
          return User.builder()
                  .id(user.getId())
