@@ -1,7 +1,7 @@
 package jyrs.dev.vivesbank.movements.controller;
 
+import jyrs.dev.vivesbank.movements.dto.MovementRequest;
 import jyrs.dev.vivesbank.movements.models.Movement;
-import jyrs.dev.vivesbank.movements.models.MovementRequest;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -34,10 +34,10 @@ public class MovementsController {
     @PostMapping
     public ResponseEntity<Void> createMovement(@RequestBody MovementRequest movementRequest) {
         movementsService.createMovement(
-                movementRequest.getSenderClientId(),
-                movementRequest.getRecipientClientId(),
-                movementRequest.getOrigin(),
-                movementRequest.getDestination(),
+                movementRequest.getClientRecipientId(),
+                movementRequest.getBankAccountOrigin(),
+                movementRequest.getTypeMovement(),
+                movementRequest.getAmount(),
                 movementRequest.getTypeMovement(),
                 movementRequest.getAmount()
         );

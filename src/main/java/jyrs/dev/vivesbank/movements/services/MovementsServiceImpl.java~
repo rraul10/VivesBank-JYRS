@@ -11,7 +11,6 @@ import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +29,6 @@ public class MovementsServiceImpl implements MovementsService {
     private final MovementsStorage storage;
     private final RedisTemplate<String, Movement> redisTemplate;
 
-    @Autowired
     public MovementsServiceImpl(MovementsRepository movementsRepository, ClientsRepository clientsRepository, MovementValidator movementValidator, MovementsStorage storage, RedisTemplate<String, Movement> redisTemplate) {
         this.movementsRepository = movementsRepository;
         this.clientsRepository = clientsRepository;
