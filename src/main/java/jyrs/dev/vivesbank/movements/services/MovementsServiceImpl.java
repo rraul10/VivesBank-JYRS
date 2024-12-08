@@ -8,6 +8,7 @@ import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
 import jyrs.dev.vivesbank.movements.validation.MovementValidator;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -78,6 +80,97 @@ public class MovementsServiceImpl implements MovementsService {
         redisTemplate.opsForValue().set("MOVEMENT:" + movementId, movement);
     }
 
+    @Override
+    public List<Movement> getAllMovements(Long clientId) {
+        if (!clientsRepository.existsById(clientId)) {
+            throw new ClientNotFound("El cliente con ID " + clientId + " no existe.");
+        }
+
+        String redisKey = "MOVEMENTS:ALL:" + clientId;
+
+        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
+
+        if (movements == null || movements.isEmpty()) {
+            List<Movement> sentMovements = movementsRepository.findBySenderClient_Id(String.valueOf(clientId));
+            List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id(String.valueOf(clientId));
+
+            movements = new ArrayList<>();
+            movements.addAll(sentMovements);
+            movements.addAll(receivedMovements);
+
+            for (Movement mov : movements) {
+                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
+            }
+        }
+
+        return movements;
+    }
+
+    @Override
+    public List<Movement> getAllMyMovements(Long clientId) {
+
+        if (!clientsRepository.existsById(Long.valueOf(clientId))) {
+            throw new ClientNotFound("El cliente autenticado no existe.");
+        }
+
+        String redisKey = "MOVEMENTS:ALL:MY:" + clientId;
+
+        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
+
+        if (movements == null || movements.isEmpty()) {
+            List<Movement> sentMovements = movementsRepository.findBySenderClient_Id(String.valueOf(clientId));
+            List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id(String.valueOf(clientId));
+
+            movements = new ArrayList<>();
+            movements.addAll(sentMovements);
+            movements.addAll(receivedMovements);
+
+            for (Movement mov : movements) {
+                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
+            }
+        }
+
+        return movements;
+    }
+
+
+    @Override
+    public List<Movement> getAllSentMovements(String clientId) {
+        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(()-> new ClientNotFound(clientId));
+
+        String redisKey = "MOVEMENTS:SENT:" + clientId;
+
+        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
+
+        if (movements == null || movements.isEmpty()) {
+            movements = movementsRepository.findBySenderClient_Id((clientId));
+
+            if (!movements.isEmpty()) {
+                redisTemplate.opsForValue().set(redisKey, (Movement) movements);
+            }
+        }
+        return movements;
+    }
+
+    @Override
+    public List<Movement> getAllReceivedMovements(String clientId) {
+        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(()-> new ClientNotFound(clientId));
+
+        String redisKey = "MOVEMENTS:RECEIVED:" + clientId;
+
+        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
+
+        if (movements == null || movements.isEmpty()) {
+            movements = movementsRepository.findByRecipientClient_Id(String.valueOf(clientId));
+
+            if (!movements.isEmpty()) {
+                redisTemplate.opsForValue().set(redisKey, (Movement) movements);
+            }
+        }
+
+        return movements;
+    }
+
 
     @Override
     public List<Movement> getMovementsByClientId(String clientId) {
@@ -95,24 +188,6 @@ public class MovementsServiceImpl implements MovementsService {
 
             for (Movement mov : movements) {
                 redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
-            }
-        }
-
-        return movements;
-    }
-
-    @Override
-    public List<Movement> getAllMovements() {
-        List<Movement> movements = new ArrayList<>();
-
-        String redisKey = "MOVEMENTS:ALL";
-        movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
-
-        if (movements == null || movements.isEmpty()) {
-            movements = movementsRepository.findAll();
-
-            for (Movement mov : movements) {
-                redisTemplate.opsForValue().set("MOVEMENTS:ALL:" + mov.getId(), mov);
             }
         }
 
