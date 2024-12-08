@@ -149,11 +149,15 @@ public class BankAccountServiceImpl implements BankAccountService {
     public void deleteMeBankAccount(String idClient, Long idAccount) {
         log.info("Eliminando cuenta de banco por el ID: " + idClient);
 
-        var user = clientsRepository.getByUser_Guuid(idClient).orElseThrow(() -> new ClientNotFound(idClient));
-
+        var user = clientsRepository.getByUser_Guuid(idClient)
+                .orElseThrow(() -> new ClientNotFound(idClient));
 
         var account = bankAccountRepository.findById(idAccount)
                 .orElseThrow(() -> new BankAccountNotFound(idAccount));
+
+        if (account.getClient() == null) {
+            throw new BankAccountBadRequest("La cuenta bancaria no tiene un cliente asociado.");
+        }
 
         if (!account.getClient().getId().equals(user.getId())) {
             throw new BankAccountBadRequest("No se puede eliminar una cuenta de otro cliente.");
@@ -164,9 +168,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
 
         bankAccountRepository.deleteById(idAccount);
+
         onChange(Notificacion.Tipo.DELETE, account);
+
         log.info("Cuenta bancaria con ID " + idAccount + " eliminada exitosamente.");
     }
+
 
     @Override
     public List<BankAccountResponse> getAllMeAccounts(String id){

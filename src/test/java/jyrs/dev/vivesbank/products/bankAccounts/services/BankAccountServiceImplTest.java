@@ -4,16 +4,14 @@ import jyrs.dev.vivesbank.config.websockets.WebSocketConfig;
 import jyrs.dev.vivesbank.config.websockets.WebSocketHandler;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountRequest;
 import jyrs.dev.vivesbank.products.bankAccounts.dto.BankAccountResponse;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountHaveCreditCard;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountIbanException;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFound;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundByIban;
+import jyrs.dev.vivesbank.products.bankAccounts.exceptions.*;
 import jyrs.dev.vivesbank.products.bankAccounts.mappers.BankAccountMapper;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.models.Type.AccountType;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
 import jyrs.dev.vivesbank.products.creditCards.models.CreditCard;
+import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.models.Address;
 import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
@@ -439,16 +437,15 @@ class BankAccountServiceImplTest {
     }
 
     @Test
-    public void testDeleteMeBankAccount() {
+    void testDeleteMeBankAccount() {
         String idClient = "user-123";
         Long idAccount = 1L;
 
-        var accountMock = mock(BankAccount.class);
-
         when(clientsRepository.getByUser_Guuid(idClient)).thenReturn(Optional.of(cliente));
+        account.setClient(cliente);
         when(bankAccountRepository.findById(idAccount)).thenReturn(Optional.of(account));
 
-        when(accountMock.getClient()).thenReturn(cliente);
+        account.setCreditCard(null);
 
         doNothing().when(bankAccountRepository).deleteById(idAccount);
 
@@ -459,6 +456,67 @@ class BankAccountServiceImplTest {
         verify(bankAccountRepository).deleteById(idAccount);
     }
 
+    @Test
+    void testDeleteMeBankAccountClientNotFound() {
+        String idClient = "user-123";
+        Long idAccount = 1L;
+
+        when(clientsRepository.getByUser_Guuid(idClient)).thenReturn(Optional.empty());
+
+        assertThrows(ClientNotFound.class,
+                () -> bankAccountService.deleteMeBankAccount(idClient, idAccount));
+
+        verify(clientsRepository).getByUser_Guuid(idClient);
+        verifyNoInteractions(bankAccountRepository);
+    }
+
+    @Test
+    void testDeleteMeBankAccountBankAccountNotFound() {
+        String idClient = "user-123";
+        Long idAccount = 1L;
+
+        when(clientsRepository.getByUser_Guuid(idClient)).thenReturn(Optional.of(cliente));
+        when(bankAccountRepository.findById(idAccount)).thenReturn(Optional.empty());
+
+        assertThrows(BankAccountNotFound.class,
+                () -> bankAccountService.deleteMeBankAccount(idClient, idAccount));
+
+        verify(clientsRepository).getByUser_Guuid(idClient);
+        verify(bankAccountRepository).findById(idAccount);
+    }
+
+    @Test
+    void testDeleteMeBankAccountBankAccountWithoutClient() {
+        String idClient = "user-123";
+        Long idAccount = 1L;
+
+        when(clientsRepository.getByUser_Guuid(idClient)).thenReturn(Optional.of(cliente));
+        account.setClient(null);
+        when(bankAccountRepository.findById(idAccount)).thenReturn(Optional.of(account));
+
+        assertThrows(BankAccountBadRequest.class,
+                () -> bankAccountService.deleteMeBankAccount(idClient, idAccount));
+
+        verify(clientsRepository).getByUser_Guuid(idClient);
+        verify(bankAccountRepository).findById(idAccount);
+    }
+
+    @Test
+    void testDeleteMeBankAccountBankAccountWithCreditCard() {
+        String idClient = "user-123";
+        Long idAccount = 1L;
+
+        when(clientsRepository.getByUser_Guuid(idClient)).thenReturn(Optional.of(cliente));
+        account.setClient(cliente);
+        account.setCreditCard(new CreditCard());
+        when(bankAccountRepository.findById(idAccount)).thenReturn(Optional.of(account));
+
+        assertThrows(BankAccountHaveCreditCard.class,
+                () -> bankAccountService.deleteMeBankAccount(idClient, idAccount));
+
+        verify(clientsRepository).getByUser_Guuid(idClient);
+        verify(bankAccountRepository).findById(idAccount);
+    }
 
 
     @Test
