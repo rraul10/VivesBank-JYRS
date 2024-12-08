@@ -1,3 +1,5 @@
+import org.gradle.internal.impldep.bsh.commands.dir
+
 plugins {
     java
     id("org.springframework.boot") version "3.3.5"
@@ -34,6 +36,8 @@ dependencies {
 
     // Base de Datos
     implementation("com.h2database:h2")
+    // Postgres
+    implementation("org.postgresql:postgresql:42.7.3")
 
     // Redis
     implementation("redis.clients:jedis:4.4.3")

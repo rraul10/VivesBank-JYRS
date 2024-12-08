@@ -55,6 +55,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(manager ->manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request ->request.requestMatchers("/error/**").permitAll())
+                .authorizeHttpRequests(request -> request.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll())
                 .authorizeHttpRequests(request -> request.requestMatchers(apipath + apiVersion + "/auth/**").permitAll())
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/users" ).hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
@@ -65,7 +66,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.PUT,apipath + apiVersion + "/users/me/profile").hasAnyRole("USER", "ADMIN"))
                 .authorizeHttpRequests(request ->request.requestMatchers(HttpMethod.DELETE, apipath + apiVersion + "/users/{id}").hasRole("ADMIN"))
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE,apipath + apiVersion + "/auth/**").hasAnyRole("USER", "ADMIN"))
-
                 // admins
                 .authorizeHttpRequests(request -> request.requestMatchers(apipath + apiVersion + "/admins/**").hasRole("ADMIN"))
                  // clients
