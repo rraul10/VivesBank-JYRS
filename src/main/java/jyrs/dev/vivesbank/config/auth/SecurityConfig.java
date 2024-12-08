@@ -21,6 +21,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import static jyrs.dev.vivesbank.users.models.Role.CLIENT;
 
+/**
+ * Configuración de seguridad para los endpoints del servicio del banco
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -32,12 +35,21 @@ public class SecurityConfig {
     @Value("${api.path}")
     private String apipath;
 
-
+    /**
+     * @param userService servicio de UserDetails
+     * @param authenticationFilter filtro de autenticación con jwt
+     */
     public SecurityConfig(UserDetailsService userService, JwtAuthenticationFilter authenticationFilter) {
         this.userService = userService;
         this.authenticationFilter = authenticationFilter;
     }
 
+    /**
+     * Configuración de los endpoints del sistema con su tipo de solicitud y roles necesarios para poder usarlos.
+     * @param http request http
+     * @return SecurityFilterChain, si el filtro se pasa puedes realizar la acción ya que estas autenticado.
+     * @throws Exception
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
