@@ -38,7 +38,35 @@ public interface MovementsService {
      * @since 1.0
      */
 
+
     void reverseMovement(String movementId);
+
+    /**
+     * Obtiene todos los movimientos bancarios.
+     * @return Lista de todos los movimientos.
+     * @since 1.0
+     */
+
+    List<Movement> getAllMovements(Long clientId);
+
+    /**
+     *
+     */
+    List<Movement> getAllMyMovements(Long clientId);
+
+
+    /**
+     *
+     */
+
+    List<Movement> getAllSentMovements(String clientId);
+
+    /*
+     *
+     *
+     */
+
+    List<Movement> getAllReceivedMovements(String clientId);
 
     /**
      * Obtiene una lista de los movimientos realizados por un cliente específico.
@@ -49,13 +77,6 @@ public interface MovementsService {
 
     List<Movement> getMovementsByClientId(String clientId);
 
-    /**
-     * Obtiene todos los movimientos bancarios.
-     * @return Lista de todos los movimientos.
-     * @since 1.0
-     */
-
-    List<Movement> getAllMovements();
 
     /**
      * Obtiene los movimientos según el tipo de movimiento (por ejemplo: transferencia, pago, etc.).
