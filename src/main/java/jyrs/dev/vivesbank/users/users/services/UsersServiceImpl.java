@@ -179,6 +179,11 @@ public class UsersServiceImpl implements UsersService {
         onChange(Notificacion.Tipo.DELETE, result);
     }
 
+    /**
+     * Función que exporta un fichero json dado una lista de usuarios.
+     * @param file el archivo a exportar.
+     * @param users las lista de usuarios a exportar.
+     */
     @Override
     public void exportJson(File file, List<User> users) {
         log.info("Exportando Users a JSON");
@@ -186,6 +191,10 @@ public class UsersServiceImpl implements UsersService {
         storage.exportJson(file,users);
     }
 
+    /**
+     * Función que importa un fichero json con usuarios y los guarda en el sistema.
+     * @param file fichero json con usuarios.
+     */
     @Override
     public void importJson(File file) {
         log.info("Importando Users desde JSON");
@@ -195,6 +204,11 @@ public class UsersServiceImpl implements UsersService {
         usersRepository.saveAll(users);
     }
 
+    /**
+     * Función que envía un mensaje de cambio en caso de que se realice algún cambio de algún usuario.
+     * @param tipo tipo de notificación.
+     * @param data el usuario modificado.
+     */
     void onChange(Notificacion.Tipo tipo, User data){
         log.info("Servicio de funkos onChange con tipo: " +  tipo + " y datos: " + data);
         if(webSocketService == null){
