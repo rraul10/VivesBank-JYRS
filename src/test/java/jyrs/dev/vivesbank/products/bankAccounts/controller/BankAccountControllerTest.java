@@ -153,32 +153,6 @@ class BankAccountControllerTest {
         verify(accountService, times(1)).findBankAccountById(invalidId);
     }
 
-//    @Test
-//    void create() throws Exception {
-//
-//
-//
-//        MockHttpServletResponse response = mockMvc.perform(
-//                        post("/me/accounts")
-//                                .contentType(MediaType.APPLICATION_JSON)
-//                                .content(mapper.writeValueAsString(bankAccountRequest))
-//                                .accept(MediaType.APPLICATION_JSON))
-//                .andReturn().getResponse();
-//
-//        // Verificaciones
-//        assertAll(
-//                () -> assertEquals(201, response.getStatus()),
-//                () -> {
-//                    BankAccountResponse res = mapper.readValue(response.getContentAsString(), BankAccountResponse.class);
-//                    assertEquals(bankAccountResponse.getIban(), res.getIban());
-//                    assertEquals(bankAccountResponse.getAccountType(), res.getAccountType());
-//                    assertEquals(bankAccountResponse.getBalance(), res.getBalance());
-//                    assertEquals(bankAccountResponse.getCreditCard(), res.getCreditCard());
-//                }
-//        );
-//
-//        verify(accountService, times(1)).saveBankAccount(eq(userId), eq(bankAccountRequest));
-//    }
 
 
     @Test

@@ -13,7 +13,6 @@ import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountReposito
 import jyrs.dev.vivesbank.products.bankAccounts.storage.BankAccountStorage;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
-import jyrs.dev.vivesbank.users.clients.service.ClientsService;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.dto.BankAccountNotificationResponse;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.mapper.BankAccountNotificationMapper;
 import jyrs.dev.vivesbank.websockets.bankAccount.notifications.models.Notificacion;
@@ -35,6 +34,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
+
+/**
+ * Implementación de la interfaz {@link BankAccountService}.
+ * Esta clase maneja la lógica de negocio relacionada con las cuentas bancarias, incluyendo la creación, eliminación,
+ * y obtención de cuentas, así como la exportación e importación de datos. También maneja la notificación a través de WebSocket
+ * cuando ocurre un cambio en las cuentas bancarias.
+ */
 @Service
 @Slf4j
 @CacheConfig(cacheNames = {"bankAccounts"})
@@ -48,6 +54,17 @@ public class BankAccountServiceImpl implements BankAccountService {
     private WebSocketHandler webSocketService;
     private final BankAccountStorage storage;
 
+    /**
+     * Constructor de la clase, con inyección de dependencias.
+     *
+     * @param clientsRepository Repositorio para manejar clientes
+     * @param bankAccountRepository Repositorio para manejar cuentas bancarias
+     * @param bankAccountMapper Mapea objetos de solicitud a respuesta de cuentas bancarias
+     * @param mapper Para convertir objetos a JSON
+     * @param bankAccountNotificationMapper Mapea notificaciones de cuentas bancarias
+     * @param storage Almacenamiento de cuentas bancarias
+     * @param webSocketService Servicio WebSocket para enviar notificaciones
+     */
     @Autowired
     public BankAccountServiceImpl(ClientsRepository clientsRepository, BankAccountRepository bankAccountRepository,
                                   BankAccountMapper bankAccountMapper,
@@ -64,6 +81,13 @@ public class BankAccountServiceImpl implements BankAccountService {
         this.webSocketService = webSocketService;
     }
 
+    /**
+     * Encuentra todas las cuentas bancarias, con opción de filtrar por tipo de cuenta.
+     *
+     * @param accountType Tipo de cuenta (opcional)
+     * @param pageable Información de paginación
+     * @return Una página de respuestas con las cuentas bancarias
+     */
     @Override
     public Page<BankAccountResponse> findAllBankAccounts(Optional<String> accountType, Pageable pageable) {
         log.info("Finding all bank accounts");
@@ -78,7 +102,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         return page.map(bankAccountMapper::toResponse);
     }
 
-
+    /**
+     * Encuentra todas las cuentas bancarias asociadas a un cliente específico por su ID.
+     *
+     * @param clientId ID del cliente
+     * @return Lista de respuestas con las cuentas bancarias del cliente
+     */
     @Override
     public List<BankAccountResponse> findAllBankAccountsByClientId(Long clientId) {
         log.info("Buscando todas las cuentas bancarias para el cliente con ID: " + clientId);
@@ -90,6 +119,13 @@ public class BankAccountServiceImpl implements BankAccountService {
                 .toList();
     }
 
+    /**
+     * Encuentra una cuenta bancaria por su ID.
+     *
+     * @param id ID de la cuenta bancaria
+     * @return Respuesta con la cuenta bancaria encontrada
+     * @throws BankAccountNotFound Si no se encuentra la cuenta bancaria
+     */
     @Override
     @Cacheable(key = "#id")
     public BankAccountResponse findBankAccountById(Long id) {
@@ -99,6 +135,13 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
 
+    /**
+     * Encuentra una cuenta bancaria por su IBAN.
+     *
+     * @param iban IBAN de la cuenta bancaria
+     * @return Respuesta con la cuenta bancaria encontrada
+     * @throws BankAccountNotFoundByIban Si no se encuentra la cuenta bancaria por su IBAN
+     */
     @Cacheable(key = "#iban")
     public BankAccountResponse findBankAccountByIban(String iban) {
         log.info("Buscando cuenta de banco por iban: " + iban);
@@ -106,6 +149,14 @@ public class BankAccountServiceImpl implements BankAccountService {
         return bankAccountMapper.toResponse(bankAccount);
     }
 
+    /**
+     * Guarda una nueva cuenta bancaria.
+     *
+     * @param id El ID del cliente que está creando la cuenta
+     * @param bankAccountRequest Datos de la cuenta bancaria a crear
+     * @return Respuesta con la cuenta bancaria recién creada
+     * @throws ClientNotFound Si no se encuentra el cliente
+     */
     @Override
     @CachePut(key = "#result.id")
     public BankAccountResponse saveBankAccount(String id, BankAccountRequest bankAccountRequest) {
@@ -128,6 +179,13 @@ public class BankAccountServiceImpl implements BankAccountService {
         return bankAccountMapper.toResponse(savedBankAccount);
     }
 
+    /**
+     * Elimina una cuenta bancaria por su ID.
+     *
+     * @param id ID de la cuenta bancaria a eliminar
+     * @throws BankAccountNotFound Si no se encuentra la cuenta bancaria
+     * @throws BankAccountHaveCreditCard Si la cuenta tiene una tarjeta de crédito asociada
+     */
     @Override
     @CachePut(key = "#id")
     public void deleteBankAccount(Long id) {
@@ -145,15 +203,28 @@ public class BankAccountServiceImpl implements BankAccountService {
         log.info("Cuenta bancaria con ID " + id + " eliminada exitosamente.");
     }
 
+    /**
+     * Elimina la cuenta bancaria de un cliente en particular.
+     *
+     * @param idClient ID del cliente que solicita la eliminación
+     * @param idAccount ID de la cuenta bancaria a eliminar
+     * @throws ClientNotFound Si no se encuentra el cliente
+     * @throws BankAccountNotFound Si no se encuentra la cuenta bancaria
+     * @throws BankAccountBadRequest Si la cuenta no está asociada al cliente o no puede ser eliminada
+     */
     @Override
     public void deleteMeBankAccount(String idClient, Long idAccount) {
         log.info("Eliminando cuenta de banco por el ID: " + idClient);
 
-        var user = clientsRepository.getByUser_Guuid(idClient).orElseThrow(() -> new ClientNotFound(idClient));
-
+        var user = clientsRepository.getByUser_Guuid(idClient)
+                .orElseThrow(() -> new ClientNotFound(idClient));
 
         var account = bankAccountRepository.findById(idAccount)
                 .orElseThrow(() -> new BankAccountNotFound(idAccount));
+
+        if (account.getClient() == null) {
+            throw new BankAccountBadRequest("La cuenta bancaria no tiene un cliente asociado.");
+        }
 
         if (!account.getClient().getId().equals(user.getId())) {
             throw new BankAccountBadRequest("No se puede eliminar una cuenta de otro cliente.");
@@ -164,10 +235,18 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
 
         bankAccountRepository.deleteById(idAccount);
+
         onChange(Notificacion.Tipo.DELETE, account);
+
         log.info("Cuenta bancaria con ID " + idAccount + " eliminada exitosamente.");
     }
 
+    /**
+     * Encuentra todas las cuentas bancarias asociadas a un cliente específico por su ID.
+     *
+     * @param id ID del cliente
+     * @return Lista de respuestas con las cuentas bancarias del cliente
+     */
     @Override
     public List<BankAccountResponse> getAllMeAccounts(String id){
         var user = clientsRepository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
@@ -176,6 +255,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         return cuentas;
     }
 
+    /**
+     * Exporta una lista de cuentas bancarias a un archivo JSON.
+     *
+     * @param file El archivo donde se exportarán las cuentas
+     * @param accounts Lista de cuentas bancarias a exportar
+     */
     @Override
     public void exportJson(File file, List<BankAccount> accounts) {
         log.info("Exportando cuentas a JSON");
@@ -183,6 +268,11 @@ public class BankAccountServiceImpl implements BankAccountService {
         storage.exportJson(file,accounts);
     }
 
+    /**
+     * Importa cuentas bancarias desde un archivo JSON.
+     *
+     * @param file El archivo JSON con las cuentas a importar
+     */
     @Override
     public void importJson(File file) {
         log.info("Importando cuentas desde JSON");
@@ -192,6 +282,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         bankAccountRepository.saveAll(accounts);
     }
 
+    /**
+     * Genera un IBAN único, garantizando que no se repita.
+     *
+     * @return Un IBAN único
+     * @throws BankAccountIbanException Si no se puede generar un IBAN único después de 1000 intentos
+     */
     public String generateUniqueIban() {
         String iban;
         int attempts = 0;
@@ -205,10 +301,21 @@ public class BankAccountServiceImpl implements BankAccountService {
         return iban;
     }
 
+    /**
+     * Verifica si un IBAN ya existe en la base de datos.
+     *
+     * @param iban El IBAN a verificar
+     * @return true si el IBAN ya existe, false en caso contrario
+     */
     public boolean ibanExists(String iban) {
         return bankAccountRepository.findByIban(iban).isPresent();
     }
 
+    /**
+     * Genera un nuevo IBAN en formato estándar, con un código de país, entidad, sucursal, y dígitos de control.
+     *
+     * @return El IBAN generado
+     */
     public String generateIban() {
         String countryCode = "ES";
         String entityCode = "0128";
@@ -222,6 +329,12 @@ public class BankAccountServiceImpl implements BankAccountService {
     }
 
 
+    /**
+     * Calcula los dígitos de control de un IBAN, usando el algoritmo estándar.
+     *
+     * @param ibanBase La base del IBAN sin los dígitos de control
+     * @return Los dígitos de control calculados
+     */
     public int calculateControlDigits(String ibanBase) {
         StringBuilder numericIban = new StringBuilder();
 
@@ -242,6 +355,12 @@ public class BankAccountServiceImpl implements BankAccountService {
         return checkDigits.intValue();
     }
 
+    /**
+     * Genera una cadena de dígitos aleatorios de una longitud específica.
+     *
+     * @param length Longitud de la cadena de dígitos
+     * @return La cadena de dígitos aleatorios
+     */
     public String generateRandomDigits(int length) {
         Random random = new Random();
         StringBuilder digits = new StringBuilder();
@@ -251,6 +370,11 @@ public class BankAccountServiceImpl implements BankAccountService {
         return digits.toString();
     }
 
+    /**
+     * Metodo para enviar notificaciones a traves de websocket cada vez que se realiza un cambio en cuenta bancaria
+     * @param tipo El tipo de cambio realizado (por ejemplo, CREATE, DELETE)
+     * @param data Los datos de la cuenta bancaria afectada
+     */
     void onChange(Notificacion.Tipo tipo, BankAccount data) {
         log.debug("Servicio de cuentas de banco onChange con tipo: " + tipo + " y datos: " + data);
 

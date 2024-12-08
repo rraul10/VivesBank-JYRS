@@ -12,15 +12,32 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Implementacion de la interfaz BankAccountStorage.
+ * Esta clase se encarga de la carga y guardado de las cuentas bancarias
+ * en archivos JSON utilizando el objeto ObjectMapper.
+ */
 @Slf4j
 @Component
-public class BankAccountStorageImpl implements BankAccountStorage{
+public class BankAccountStorageImpl implements BankAccountStorage {
+
     private final ObjectMapper objectMapper;
 
+    /**
+     * Constructor que recibe el ObjectMapper necesario para manipular JSON.
+     *
+     * @param objectMapper El objeto ObjectMapper utilizado para la serialización y deserialización de objetos.
+     */
     public BankAccountStorageImpl(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * Exporta una lista de cuentas bancarias a un archivo JSON.
+     *
+     * @param file El archivo en el que se van a guardar las cuentas bancarias en formato JSON.
+     * @param bankAccounts La lista de cuentas bancarias que se desea exportar al archivo.
+     */
     @Override
     public void exportJson(File file, List<BankAccount> bankAccounts) {
         log.debug("Guardando cuentas bancarias en fichero json");
@@ -35,6 +52,13 @@ public class BankAccountStorageImpl implements BankAccountStorage{
         }
     }
 
+    /**
+     * Importa una lista de cuentas bancarias desde un archivo JSON.
+     *
+     * @param file El archivo desde el que se van a cargar las cuentas bancarias en formato JSON.
+     * @return Una lista de objetos BankAccount obtenida desde el archivo JSON.
+     * Si ocurre un error al leer el archivo, se retorna una lista vacía.
+     */
     @Override
     public List<BankAccount> importJson(File file) {
         log.debug("Cargando cuentas bancarias desde fichero json");

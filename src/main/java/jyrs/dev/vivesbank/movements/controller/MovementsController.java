@@ -38,18 +38,18 @@ public class MovementsController {
      * @since 1.0
      */
 
-    @PostMapping
-    public ResponseEntity<Void> createMovement(@RequestBody MovementRequest movementRequest) {
-        movementsService.createMovement(
-                movementRequest.getClientRecipientId(),
-                movementRequest.getBankAccountOrigin(),
-                movementRequest.getTypeMovement(),
-                movementRequest.getAmount(),
-                movementRequest.getTypeMovement(),
-                movementRequest.getAmount()
-        );
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping
+//    public ResponseEntity<Void> createMovement(@RequestBody MovementRequest movementRequest) {
+//        movementsService.createMovement(
+//                movementRequest.getClientRecipientId(),
+//                movementRequest.getBankAccountOrigin(),
+//                movementRequest.getTypeMovement(),
+//                movementRequest.getAmount(),
+//                movementRequest.getTypeMovement(),
+//                movementRequest.getAmount()
+//        );
+//        return ResponseEntity.ok().build();
+//    }
 
     /**
      * Revertir un movimiento identificado por su id.
@@ -87,13 +87,13 @@ public class MovementsController {
      * @since 1.0
      */
 
-    @GetMapping
-    public ResponseEntity<List<Movement>> getAllMovements() {
-        var movements = movementsService.getAllMovements();
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(movements);
-    }
+//    @GetMapping
+//    public ResponseEntity<List<Movement>> getAllMovements() {
+//        var movements = movementsService.getAllMovements();
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .body(movements);
+//    }
 
     /**
      * Obtener los movimientos filtrados por tipo.
