@@ -3,6 +3,10 @@ package jyrs.dev.vivesbank.users.users.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+/**
+ * Dto para las responses de las requests de usuarios.
+ */
+
 @Data
 @Builder
 @NoArgsConstructor

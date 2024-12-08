@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Dto para las request de create y update de usuarios.
+ */
 @Builder
 @Data
 @NoArgsConstructor
