@@ -29,16 +29,42 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+/**
+ * Servicio encargado de la gestión de usuarios.
+ *
+ */
 @Service
 @Slf4j
 @CacheConfig(cacheNames = {"Users"})
 public class UsersServiceImpl implements UsersService {
+    /**
+     * Mapper de usuarios tanto para UserRequest como pra UserResponse
+     */
     private final UserMapper userMapper;
+    /**
+     * Configuración de los websockets de usuario
+     */
     private final WebSocketConfig webSocketConfig;
+    /**
+     * Mapper de objetos de jackson
+     */
     private final ObjectMapper objectMapper;
+    /**
+     * Repositorio de usuarios
+     */
     private final UsersRepository usersRepository;
+    /**
+     * Manejador de websockets para usuarios
+     */
     private WebSocketHandler webSocketService;
+    /**
+     * Storage de usuarios encargado de guardar usuarios en json
+     */
     private final UserStorage storage;
+    /**
+     * Mapper de notificaciones de usuario.
+     */
     private final UserNotificationMapper userNotificationMapper;
     @Autowired
     public UsersServiceImpl(UserMapper userMapper, WebSocketConfig webSocketConfig, UsersRepository usersRepository, UserStorage storage, UserNotificationMapper userNotificationMapper) {
@@ -51,6 +77,13 @@ public class UsersServiceImpl implements UsersService {
         this.userNotificationMapper = userNotificationMapper;
     }
 
+    /**
+     * Obtiene todos los usuarios del sistema de forma paginada.
+     * @param username nombre de usuario por el cual se puede filtrar la busqueda.
+     * @param isDeleted parámetro del usuario por el cual se puede filtrar la busqueda e indica que esta borrado.
+     * @param pageable configuración para la página.
+     * @return devuelve una página con los usuarios encontrados en forma de UserResponseDto.
+     */
     @Override
     public Page<UserResponseDto> getAllUsers(Optional<String> username, Optional<Boolean> isDeleted, Pageable pageable) {
         log.info("Getting all users");
@@ -66,8 +99,12 @@ public class UsersServiceImpl implements UsersService {
         return usersRepository.findAll(criterio, pageable).map(userMapper::toUserResponse);
     }
 
+    /**
+     * Obtiene un usuario por su id(guuid)
+     * @param id guuid del usuario
+     * @return el usuario encontrado en forma de userResponseDto o lanza la excepcion UserNotFound en caso de no econtrarse.
+     */
     @Override
-
     @Cacheable
     public UserResponseDto getUserById(String id) {
         log.info("Obteniendo user por id: " + id);
@@ -78,6 +115,11 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    /**
+     * Obtiene un usuario por su nombre de usuario
+     * @param name el nombre de ususario.
+     * @return el usuario encontrado en forma de userResponseDto o lanza la excepcion UserNotFound en caso de no econtrarse.
+     */
     @Override
     public UserResponseDto getUserByName(String name) {
         log.info("Obteniendo user por name: " + name);
@@ -88,7 +130,11 @@ public class UsersServiceImpl implements UsersService {
         return userMapper.toUserResponse(result);
     }
 
-
+    /**
+     * Guarda un usuario en la base de datos del sistema.
+     * @param user parametros del usuario a guardar en forma de UserRequestDto
+     * @return el nuevo usuario
+     */
     @Override
     @CachePut(key = "#result.id")
     public UserResponseDto saveUser(UserRequestDto user) {
@@ -98,7 +144,12 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
-
+    /**
+     * Actualiza un usuario dado su id.
+     * @param id el guuid del usuario a actualizar.
+     * @param user los datos del usuario a actualizar en forma de UserRequestDto
+     * @return el usuario actualizado o UserNotFound en caso de que no se encuentre el usuario.
+     */
     @Override
     public UserResponseDto updateUser(String id, UserRequestDto user) {
         log.info("actualizando usuario con id: " + id + " user: " + user);
@@ -111,6 +162,10 @@ public class UsersServiceImpl implements UsersService {
         return res;
     }
 
+    /**
+     * Borra un usuario dado su id de forma lógica.
+     * @param id guuid del usuario
+     */
     @Override
     @CacheEvict(value = "usersCache", key = "#id")
     public void deleteUser(String id) {

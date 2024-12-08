@@ -32,6 +32,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Clase controlador del endpoint de usuarios. Contiene las funciones necesarias para la gestión de usuarios
+ */
 @RestController
 @Slf4j
 @RequestMapping("${api.path:/api}${api.version:/v1}/users")
