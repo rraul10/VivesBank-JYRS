@@ -1,6 +1,7 @@
 package jyrs.dev.vivesbank.movements.validation;
 
 import jyrs.dev.vivesbank.movements.models.Movement;
+import jyrs.dev.vivesbank.movements.validator.MovementValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
