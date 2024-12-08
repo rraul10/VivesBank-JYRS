@@ -47,7 +47,8 @@ dependencies {
     // Lombok
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
-
+    // Swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
