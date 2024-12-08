@@ -1,14 +1,16 @@
 package jyrs.dev.vivesbank.movements.services;
-import jyrs.dev.vivesbank.movements.exceptions.MovementNotFoundException;
-import jyrs.dev.vivesbank.movements.exceptions.MovementNotReversible;
-import jyrs.dev.vivesbank.movements.exceptions.MovementRecipientNotFound;
-import jyrs.dev.vivesbank.movements.exceptions.MovementSenderNotFound;
+import jyrs.dev.vivesbank.movements.dto.MovementRequest;
+import jyrs.dev.vivesbank.movements.dto.MovementResponse;
+import jyrs.dev.vivesbank.movements.exceptions.*;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementPdfGenerator;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
 import jyrs.dev.vivesbank.movements.validator.MovementValidator;
+import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFound;
+import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundByIban;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
+import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -32,45 +34,41 @@ public class MovementsServiceImpl implements MovementsService {
     private final MovementPdfGenerator pdfGenerator;
     private final MovementsStorage storage;
     private final RedisTemplate<String, Movement> redisTemplate;
+    private final BankAccountRepository bankAccountRepository;
 
     @Autowired
-    public MovementsServiceImpl(MovementsRepository movementsRepository, ClientsRepository clientsRepository, MovementValidator movementValidator, MovementsStorage storage, RedisTemplate<String, Movement> redisTemplate) {
+    public MovementsServiceImpl(MovementsRepository movementsRepository, ClientsRepository clientsRepository, MovementValidator movementValidator, MovementPdfGenerator pdfGenerator, MovementsStorage storage, RedisTemplate<String, Movement> redisTemplate, BankAccountRepository bankAccountRepository) {
         this.movementsRepository = movementsRepository;
         this.clientsRepository = clientsRepository;
         this.movementValidator = movementValidator;
+        this.pdfGenerator = pdfGenerator;
         this.storage = storage;
         this.redisTemplate = redisTemplate;
+        this.bankAccountRepository = bankAccountRepository;
     }
 
     @Override
-    public void createMovement(String senderClientId, String recipientClientId,
-                               BankAccount origin, BankAccount destination, String typeMovement,
-                               Double amount) {
+    public MovementResponse createMovement(String senderClientId, MovementRequest movementRequest) {
+        var client = clientsRepository.getByUser_Guuid(senderClientId).orElseThrow(()-> new ClientNotFound(senderClientId));
+        var accountsSender = client.getCuentas();
+        var accountOrigin = bankAccountRepository.findByIban(movementRequest.getBankAccountOrigin().trim()).orElseThrow(()-> new BankAccountNotFoundByIban(movementRequest.getBankAccountOrigin()));
+        
+        if (!accountsSender.contains(accountOrigin)) {
+            throw new MovementNotAccountClient("Esta cuenta: " + accountOrigin  +  " no pertenece a este cliente. " + client);
+        }
+        
+        var accountsRecipient = bankAccountRepository.findByIban(movementRequest.getBankAccountDestination().trim()).orElseThrow(()-> new BankAccountNotFoundByIban(movementRequest.getBankAccountDestination()));
+        var clientRecipient = accountsRecipient.getClient();
+        
+        if (!clientRecipient.getCuentas().contains(accountsRecipient)) {
+            throw new MovementNotAccountClient("Esta cuenta: " + accountsRecipient + " no pertenece a este cliente. " + clientRecipient);
+        }
+        
+        if (movementRequest.getAmount() > accountOrigin.getBalance()) {
+            throw n
+        }
 
-        var senderClient = clientsRepository.findById(Long.parseLong(senderClientId))
-                .orElseThrow(() -> new MovementSenderNotFound("Cliente remitente no encontrado."));
 
-        var recipientClient = recipientClientId != null
-                ? clientsRepository.findById(Long.parseLong(recipientClientId))
-                .orElseThrow(() -> new MovementRecipientNotFound("Cliente receptor no encontrado."))
-                : null;
-
-        var movement = Movement.builder()
-                .senderClient(senderClient)
-                .recipientClient(recipientClient)
-                .origin(origin)
-                .destination(destination)
-                .typeMovement(typeMovement)
-                .date(LocalDateTime.now())
-                .amount(amount)
-                .balance(senderClient.getCuentas() != null ? senderClient.getCuentas().stream().mapToDouble(cuenta -> cuenta != null ? Double.parseDouble(String.valueOf(cuenta)) : 0.0).sum() - amount : 0.0)
-                .isReversible(true)
-                .transferDeadlineDate(LocalDateTime.now().plusDays(7))
-                .build();
-
-        redisTemplate.opsForValue().set("MOVEMENT:" + movement.getId(), movement);
-
-        movementsRepository.save(movement);
     }
 
     @Override
@@ -184,21 +182,39 @@ public class MovementsServiceImpl implements MovementsService {
 
     @Override
     public List<Movement> getMovementsByClientId(String clientId) {
+        // Verificar si el cliente existe
+        if (!clientsRepository.existsById(clientId)) {
+            throw new ClientNotFound("El cliente con ID " + clientId + " no existe.");
+        }
+
+        // Crear una lista para almacenar los movimientos
         List<Movement> movements = new ArrayList<>();
 
+        // Clave de Redis basada en el cliente
         String redisKey = "MOVEMENTS:CLIENT:" + clientId;
-        Movement movement = redisTemplate.opsForValue().get(redisKey);
 
-        if (movement == null) {
+        // Obtener datos de Redis
+        Movement cachedMovement = redisTemplate.opsForValue().get(redisKey);
+
+        // Si el cliente no existe en Redis
+        if (cachedMovement == null) {
+            // Buscar movimientos enviados por el cliente
             var sentMovements = movementsRepository.findBySenderClient_Id(clientId);
+
+            // Buscar movimientos recibidos por el cliente
             var receivedMovements = movementsRepository.findByRecipientClient_Id(clientId);
 
+            // Agregar todos los movimientos encontrados a la lista
             movements.addAll(sentMovements);
             movements.addAll(receivedMovements);
 
+            // Guardar cada movimiento en Redis con una clave única por cliente y movimiento
             for (Movement mov : movements) {
                 redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
             }
+        } else {
+            // Si existe en Redis, devolver los movimientos encontrados
+            movements.add(cachedMovement);
         }
 
         return movements;
@@ -261,7 +277,7 @@ public class MovementsServiceImpl implements MovementsService {
     @Override
     public File generateMovementPdf(String id) {
 
-        var movement = movementsRepository.findById(id).orElseThrow();//TODO Excepcion
+        var movement = movementsRepository.findById(id).orElseThrow();
 
         return pdfGenerator.generateMovementPdf(movement);
     }

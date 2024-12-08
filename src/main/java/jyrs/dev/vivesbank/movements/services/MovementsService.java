@@ -1,5 +1,7 @@
 package jyrs.dev.vivesbank.movements.services;
 
+import jyrs.dev.vivesbank.movements.dto.MovementRequest;
+import jyrs.dev.vivesbank.movements.dto.MovementResponse;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import java.io.File;
@@ -20,17 +22,10 @@ public interface MovementsService {
     /**
      * Crea un nuevo movimiento bancario.
      * @param senderClientId El ID del cliente remitente.
-     * @param recipientClientId El ID del cliente receptor.
-     * @param origin La cuenta bancaria de origen.
-     * @param destination La cuenta bancaria de destino.
-     * @param typeMovement El tipo de movimiento (ejemplo: transferencia, pago, etc.).
-     * @param amount El monto del movimiento.
      * @since 1.0
      */
 
-    void createMovement(String senderClientId, String recipientClientId,
-                        BankAccount origin, BankAccount destination, String typeMovement,
-                        Double amount);
+    MovementResponse createMovement(String senderClientId, MovementRequest movementRequest);
 
     /**
      * Revierte un movimiento bancario previamente realizado.
@@ -39,7 +34,7 @@ public interface MovementsService {
      */
 
 
-    void reverseMovement(String movementId);
+    MovementResponse reverseMovement(String movementId);
 
     /**
      * Obtiene todos los movimientos bancarios.
@@ -47,26 +42,26 @@ public interface MovementsService {
      * @since 1.0
      */
 
-    List<Movement> getAllMovements(Long clientId);
+    List<MovementResponse>  getAllMovements(Long clientId);
 
     /**
      *
      */
-    List<Movement> getAllMyMovements(Long clientId);
+    List<MovementResponse> getAllMyMovements(Long clientId);
 
 
     /**
      *
      */
 
-    List<Movement> getAllSentMovements(String clientId);
+    List<MovementResponse> getAllSentMovements(String clientId);
 
     /*
      *
      *
      */
 
-    List<Movement> getAllReceivedMovements(String clientId);
+    List<MovementResponse> getAllReceivedMovements(String clientId);
 
     /**
      * Obtiene una lista de los movimientos realizados por un cliente específico.
@@ -75,7 +70,7 @@ public interface MovementsService {
      * @since 1.0
      */
 
-    List<Movement> getMovementsByClientId(String clientId);
+    List<MovementResponse> getMovementsByClientId(String clientId);
 
 
     /**
@@ -85,7 +80,7 @@ public interface MovementsService {
      * @since 1.0
      */
 
-    List<Movement> getMovementsByType(String typeMovement);
+    List<MovementResponse> getMovementsByType(String typeMovement);
 
     /**
      * Elimina un movimiento bancario por su ID.

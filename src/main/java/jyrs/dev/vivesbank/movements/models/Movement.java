@@ -54,14 +54,14 @@ public class Movement {
      * @since 1.0
      */
 
-    private String ClientSenderClient;
+    private String SenderClient;
 
     /**
      * Cliente que recibe el dinero.
      * @since 1.0
      */
 
-    private String ClientRecipientClient;
+    private String RecipientClient;
 
     /**
      * Fecha y hora en que se realizó el movimiento.

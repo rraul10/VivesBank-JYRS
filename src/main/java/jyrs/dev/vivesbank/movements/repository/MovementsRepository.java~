@@ -42,10 +42,5 @@ public interface MovementsRepository extends MongoRepository<Movement, String> {
      */
 
     List<Movement> findByTypeMovement(String typeMovement);
-
-    List<Movement> findByBankAccountOrigin (String bankAccountOrigin);
-
-    List<Movement> findByBankAccountDestination (String bankAccountDestination);
-
 }
 

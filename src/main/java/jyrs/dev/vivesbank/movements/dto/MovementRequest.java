@@ -17,13 +17,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class MovementRequest {
 
-    private String bankAccountOrigin;
+    String bankAccountOrigin;
 
-    private String clientRecipientId;
+    String bankAccountDestination;
 
-    private String bankAccountDestination;
+    Double amount;
 
-    private Double amount;
-
-    private String typeMovement;
+    String typeMovement;
 }

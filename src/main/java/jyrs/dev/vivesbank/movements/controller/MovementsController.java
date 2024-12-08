@@ -1,11 +1,12 @@
 package jyrs.dev.vivesbank.movements.controller;
 
 import jyrs.dev.vivesbank.movements.dto.MovementRequest;
+import jyrs.dev.vivesbank.movements.dto.MovementResponse;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
-import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
+import jyrs.dev.vivesbank.users.clients.models.Client;
 import jyrs.dev.vivesbank.users.models.User;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -26,10 +27,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/movements")
-@RequiredArgsConstructor
+@Slf4j
 public class MovementsController {
 
     private final MovementsService movementsService;
+
+    public MovementsController(MovementsService movementsService) {
+        this.movementsService = movementsService;
+    }
 
     /**
      * Crea un movimiento a partir de los datos proporcionados en el cuerpo de la solicitud.
@@ -38,18 +43,18 @@ public class MovementsController {
      * @since 1.0
      */
 
-//    @PostMapping
-//    public ResponseEntity<Void> createMovement(@RequestBody MovementRequest movementRequest) {
-//        movementsService.createMovement(
-//                movementRequest.getClientRecipientId(),
-//                movementRequest.getBankAccountOrigin(),
-//                movementRequest.getTypeMovement(),
-//                movementRequest.getAmount(),
-//                movementRequest.getTypeMovement(),
-//                movementRequest.getAmount()
-//        );
-//        return ResponseEntity.ok().build();
-//    }
+  @PostMapping
+    public ResponseEntity<Void> createMovement(@RequestBody MovementRequest movementRequest) {
+        movementsService.createMovement(
+        movementRequest.getClientRecipientId(),
+        movementRequest.getBankAccountOrigin(),
+        movementRequest.getTypeMovement(),
+        movementRequest.getAmount(),
+        movementRequest.getTypeMovement(),
+        movementRequest.getAmount()
+         );
+        return ResponseEntity.ok().build();
+    }
 
     /**
      * Revertir un movimiento identificado por su id.
@@ -87,13 +92,13 @@ public class MovementsController {
      * @since 1.0
      */
 
-//    @GetMapping
-//    public ResponseEntity<List<Movement>> getAllMovements() {
-//        var movements = movementsService.getAllMovements();
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .body(movements);
-//    }
+    @GetMapping
+    public ResponseEntity<List<Movement>> getAllMovements() {
+        var movements = movementsService.getAllMovements();
+        return ResponseEntity.ok()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(movements);
+    }
 
     /**
      * Obtener los movimientos filtrados por tipo.
@@ -118,10 +123,26 @@ public class MovementsController {
      */
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMovement(@PathVariable String id) {
+    public ResponseEntity<MovementResponse> deleteMovement(@PathVariable String id) {
         movementsService.deleteMovement(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/me/profile")
+    public ResponseEntity<MovementResponse> getAllMeMovements(@AuthenticationPrincipal Client client) {
+        log.info("");
+    }
+
+    @GetMapping("/meSender/profile")
+    public ResponseEntity<MovementResponse> getAllMeMovementsSender (@AuthenticationPrincipal Client client) {
+
+    }
+
+    @GetMapping("/meRecipient/profile")
+    public ResponseEntity<MovementResponse> getAllMeMovementsRecipient (@AuthenticationPrincipal Client client) {
+
+    }
+
 
     @GetMapping("/pdf")
     public ResponseEntity<Resource> downloadAllMovementPdf() {
