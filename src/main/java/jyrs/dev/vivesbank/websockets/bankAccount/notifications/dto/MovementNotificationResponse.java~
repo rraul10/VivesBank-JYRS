@@ -9,7 +9,9 @@ public record MovementNotificationResponse(
         String recipientClientId,
         Double amount,
         String typeMovement,
-        LocalDateTime date
+        LocalDateTime date,
+        Boolean isReversible,
+        LocalDateTime transferDeadlineDate
 
 ) {
 }

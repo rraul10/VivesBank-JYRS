@@ -41,7 +41,7 @@ public class MovementPdfGenerator {
                 directory.mkdirs();
             }
 
-            String fileName = "movement_" + movement.getSenderClient() + "_" + System.currentTimeMillis() + ".pdf";
+            String fileName = "movement_" + movement.getSenderClient().getId() + "_" + System.currentTimeMillis() + ".pdf";
             String filePath = directory.getAbsolutePath() + File.separator + fileName;
 
             pdfFile = new File(filePath);
@@ -126,10 +126,10 @@ public class MovementPdfGenerator {
         document.add(new Paragraph("Tipo de Movimiento: " + movement.getTypeMovement()));
         document.add(new Paragraph("Fecha: " + formatDateTime(movement.getDate())));
         document.add(new Paragraph("Cantidad: " + movement.getAmount()));
-        document.add(new Paragraph("Cuenta Origen: " + (movement.getBankAccountOrigin() != null ? movement.getBankAccountOrigin() : NA)));
-        document.add(new Paragraph("Cuenta Destino: " + (movement.getBankAccountDestination() != null ? movement.getBankAccountDestination() : NA)));
-        document.add(new Paragraph("Cliente Remitente: " + (movement.getSenderClient() != null ? movement.getSenderClient() : NA)));
-        document.add(new Paragraph("Cliente Destinatario: " + (movement.getRecipientClient() != null ? movement.getRecipientClient() : NA)));
+        document.add(new Paragraph("Cuenta Origen: " + (movement.getBankAccountOrigin() != null ? movement.getBankAccountOrigin().getId() : NA)));
+        document.add(new Paragraph("Cuenta Destino: " + (movement.getBankAccountDestination() != null ? movement.getBankAccountDestination().getId() : NA)));
+        document.add(new Paragraph("Cliente Remitente: " + (movement.getSenderClient() != null ? movement.getSenderClient().getId() : NA)));
+        document.add(new Paragraph("Cliente Destinatario: " + (movement.getRecipientClient() != null ? movement.getRecipientClient().getId() : NA)));
     }
 
     /**

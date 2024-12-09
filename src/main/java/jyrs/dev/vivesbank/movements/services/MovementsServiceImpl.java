@@ -11,14 +11,22 @@ import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundBy
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
+import jyrs.dev.vivesbank.users.models.User;
+import jyrs.dev.vivesbank.users.users.repositories.UsersRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.DeleteMapping;
+
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -30,15 +38,19 @@ public class MovementsServiceImpl implements MovementsService {
     private final MovementsStorage storage;
     private final BankAccountRepository bankAccountRepository;
     private final MovementMapper movementMapper;
+    private final UsersRepository usersRepository;
+    private final MovementsService movementsService;
 
     @Autowired
-    public MovementsServiceImpl(MovementsRepository movementsRepository, ClientsRepository clientsRepository, MovementPdfGenerator pdfGenerator, MovementsStorage storage, RedisTemplate<String, Movement> redisTemplate, BankAccountRepository bankAccountRepository, MovementMapper movementMapper) {
+    public MovementsServiceImpl(MovementsRepository movementsRepository, ClientsRepository clientsRepository, MovementPdfGenerator pdfGenerator, MovementsStorage storage, RedisTemplate<String, Movement> redisTemplate, BankAccountRepository bankAccountRepository, MovementMapper movementMapper, UsersRepository usersRepository, @Qualifier("movementsService") MovementsService movementsService) {
         this.movementsRepository = movementsRepository;
         this.clientsRepository = clientsRepository;
         this.pdfGenerator = pdfGenerator;
         this.storage = storage;
         this.bankAccountRepository = bankAccountRepository;
         this.movementMapper = movementMapper;
+        this.usersRepository = usersRepository;
+        this.movementsService = movementsService;
     }
 
     @Override
@@ -155,11 +167,18 @@ public class MovementsServiceImpl implements MovementsService {
 
 
     @Override
-    public List<MovementResponse> getMovementsByType(String typeMovement) {
-        List<Movement> movements = movementsRepository.findByTypeMovement(typeMovement);
-        List<MovementResponse> movementResponses = movements.stream().map(movementMapper::toResponseMovement).toList();
+    public List<MovementResponse> getMovementsByType(String typeMovement, String clientId) {
+        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(() -> new ClientNotFound(clientId));
 
-        return movementResponses;
+        List<Movement> allClientMovements = movementsRepository.findBySenderClient_IdOrRecipientClient_Id(clientId, clientId);
+
+        List<Movement> filteredMovements = allClientMovements.stream()
+                .filter(mov -> mov.getTypeMovement().equalsIgnoreCase(typeMovement))
+                .toList();
+
+        return filteredMovements.stream()
+                .map(movementMapper::toResponseMovement)
+                .toList();
     }
 
     @Override
@@ -190,6 +209,28 @@ public class MovementsServiceImpl implements MovementsService {
         List<Movement> movements = storage.importJson(file);
 
         movementsRepository.saveAll(movements);
+    }@DeleteMapping("/admin/{id}")
+    public ResponseEntity<MovementResponse> deleteMovement(@AuthenticationPrincipal User user, String id) {
+        log.info("Eliminando movimiento con id{}", id);
+        movementsService.deleteMovement(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public void deleteMe(String clientId, String movementId) {
+        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(() -> new ClientNotFound(clientId));
+        var movement = movementsRepository.findById(movementId).orElseThrow(() -> new MovementNotFoundException(movementId));
+        var timeNow = LocalDateTime.now();
+
+        if (movement.getSenderClient() != client.getUser().getGuuid()){
+            throw new MovementNotHaveMovement("El movimiento no pertenece al cliente");
+        }
+
+        if (timeNow.isAfter(movement.getDate().plusDays(1))) {
+            throw new MovementExpired("El movimiento ya expiro.");
+        }
+
+        movementsRepository.delete(movement);
     }
 
     @Override

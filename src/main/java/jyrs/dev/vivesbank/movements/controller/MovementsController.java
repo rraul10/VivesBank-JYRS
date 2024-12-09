@@ -43,8 +43,8 @@ public class MovementsController {
      */
 
     @PostMapping
-    public ResponseEntity<MovementResponse> createMovement(@RequestParam String senderClientId, @RequestBody MovementRequest movementRequest) {
-        var movementResponse = movementsService.createMovement(senderClientId, movementRequest);
+    public ResponseEntity<MovementResponse> createMovement(@AuthenticationPrincipal User user, @RequestBody MovementRequest movementRequest) {
+        var movementResponse = movementsService.createMovement(user.getGuuid(), movementRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movementResponse);
@@ -57,7 +57,7 @@ public class MovementsController {
      * @since 1.0
      */
 
-    @GetMapping("/client/{clientId}")
+    @GetMapping("/admin/client/{clientId}")
     public ResponseEntity<List<MovementResponse>> getAllMovementsById(@PathVariable String clientId) {
         var movements = movementsService.getAllMovementsById(clientId);
         System.out.println("Movimientos encontrados por su id: " + movements);
@@ -66,16 +66,58 @@ public class MovementsController {
                 .body(movements);
     }
 
+    @GetMapping("/client/{clientId}")
+    public ResponseEntity<List<MovementResponse>> getAllMovementsById(@AuthenticationPrincipal User user) {
+        var movements = movementsService.getAllMovementsById(user.getGuuid());
+        System.out.println("Movimientos encontrados por su id: " + movements);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
 
     /**
-     * Obtener todos los movimientos registrados.
+     * Obtener todos los movimientos registrados independientemente de su cliente.
      * @return ResponseEntity con la lista de todos los movimientos
      * @since 1.0
      */
 
-    @GetMapping
+
+    @GetMapping("/admin/movements")
     public ResponseEntity<List<MovementResponse>> getAllMovements() {
         var movements = movementsService.getAllMovements();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/movements/admin/RecipientMovements")
+    public ResponseEntity<List<MovementResponse>> getAllRecipientMovements(String clientId) {
+        var movements = movementsService.getAllRecipientMovements(clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/movements/RecipientMovements")
+    public ResponseEntity<List<MovementResponse>> getMeAllRecipientMovements(@AuthenticationPrincipal User user) {
+        var movements = movementsService.getAllRecipientMovements(user.getGuuid());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/movements/admin/SentMovements")
+    public ResponseEntity<List<MovementResponse>> getAllSentMovements(String clientId) {
+        var movements = movementsService.getAllSentMovements(clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("movements/SentMovements")
+    public ResponseEntity<List<MovementResponse>> getMeAllSentMovements(@AuthenticationPrincipal User user) {
+        var movements = movementsService.getAllSentMovements(user.getGuuid());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
@@ -88,9 +130,17 @@ public class MovementsController {
      * @since 1.0
      */
 
+    @GetMapping("/type/admin/{typeMovement}")
+    public ResponseEntity<List<MovementResponse>> getMovementsByType(@PathVariable String typeMovement, String clientId) {
+        var movements = movementsService.getMovementsByType(typeMovement, clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
     @GetMapping("/type/{typeMovement}")
-    public ResponseEntity<List<MovementResponse>> getMovementsByType(@PathVariable String typeMovement) {
-        var movements = movementsService.getMovementsByType(typeMovement);
+    public ResponseEntity<List<MovementResponse>> getMeMovementsByType(@AuthenticationPrincipal User user, @PathVariable String typeMovement) {
+        var movements = movementsService.getMovementsByType(typeMovement, user.getGuuid());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
@@ -105,26 +155,18 @@ public class MovementsController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<MovementResponse> deleteMovement(@PathVariable String id) {
+        log.info("Eliminando movimiento con id{}", id);
         movementsService.deleteMovement(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/me/profile")
-    public ResponseEntity<List<MovementResponse>> getAllMeMovements(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(movementsService.getAllMovementsById(user.getGuuid()));
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<MovementResponse> deleteMeMovement(@AuthenticationPrincipal User user) {
+        log.info("Eliminando movimiento con id{}", user.getGuuid());
+        movementsService.deleteMovement(user.getGuuid());
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/meSender/profile")
-    public ResponseEntity<List<MovementResponse>> getAllMeMovementsSender (@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(movementsService.getAllSentMovements(user.getGuuid()));
-
-    }
-
-    @GetMapping("/meRecipient/profile")
-    public ResponseEntity<List<MovementResponse>> getAllMeMovementsRecipient (@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(movementsService.getAllRecipientMovements(user.getGuuid()));
-
-    }
 
     @GetMapping("/pdf")
     public ResponseEntity<Resource> downloadAllMovementPdf() {

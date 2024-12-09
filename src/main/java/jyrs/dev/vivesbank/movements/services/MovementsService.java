@@ -62,7 +62,7 @@ public interface MovementsService {
      * @since 1.0
      */
 
-    List<MovementResponse> getMovementsByType(String typeMovement);
+    List<MovementResponse> getMovementsByType(String typeMovement, String clientId);
 
     /**
      * Elimina un movimiento bancario por su ID.
@@ -88,6 +88,8 @@ public interface MovementsService {
      */
 
     void importJson(File file);
+    void deleteMe(String user, String movementId);
+
 
     File generateMovementPdf(String movement);
     File generateMeMovementPdf(String idCl,String idMv);

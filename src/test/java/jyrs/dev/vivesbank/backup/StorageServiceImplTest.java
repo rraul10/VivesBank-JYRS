@@ -99,8 +99,8 @@ class StorageServiceImplTest {
     Client senderClient = new Client(1L, "Sender", new ArrayList<>());
     Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
     Movement movement = Movement.builder()
-            .senderClient(senderClient)
-            .recipientClient(recipientClient)
+            .SenderClient(senderClient.getUser().getGuuid())
+            .RecipientClient(recipientClient.getUser().getGuuid())
             .origin(origin)
             .destination(destination)
             .typeMovement(typeMovement)
