@@ -2,14 +2,12 @@ package jyrs.dev.vivesbank.movements.services;
 import jyrs.dev.vivesbank.movements.dto.MovementRequest;
 import jyrs.dev.vivesbank.movements.dto.MovementResponse;
 import jyrs.dev.vivesbank.movements.exceptions.*;
+import jyrs.dev.vivesbank.movements.mappers.MovementMapper;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.repository.MovementsRepository;
 import jyrs.dev.vivesbank.movements.storage.MovementPdfGenerator;
 import jyrs.dev.vivesbank.movements.storage.MovementsStorage;
-import jyrs.dev.vivesbank.movements.validator.MovementValidator;
-import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFound;
 import jyrs.dev.vivesbank.products.bankAccounts.exceptions.BankAccountNotFoundByIban;
-import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import jyrs.dev.vivesbank.products.bankAccounts.repositories.BankAccountRepository;
 import jyrs.dev.vivesbank.users.clients.exceptions.ClientNotFound;
 import jyrs.dev.vivesbank.users.clients.repository.ClientsRepository;
@@ -17,10 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,21 +26,19 @@ public class MovementsServiceImpl implements MovementsService {
 
     private final MovementsRepository movementsRepository;
     private final ClientsRepository clientsRepository;
-    private final MovementValidator movementValidator;
     private final MovementPdfGenerator pdfGenerator;
     private final MovementsStorage storage;
-    private final RedisTemplate<String, Movement> redisTemplate;
     private final BankAccountRepository bankAccountRepository;
+    private final MovementMapper movementMapper;
 
     @Autowired
-    public MovementsServiceImpl(MovementsRepository movementsRepository, ClientsRepository clientsRepository, MovementValidator movementValidator, MovementPdfGenerator pdfGenerator, MovementsStorage storage, RedisTemplate<String, Movement> redisTemplate, BankAccountRepository bankAccountRepository) {
+    public MovementsServiceImpl(MovementsRepository movementsRepository, ClientsRepository clientsRepository, MovementPdfGenerator pdfGenerator, MovementsStorage storage, RedisTemplate<String, Movement> redisTemplate, BankAccountRepository bankAccountRepository, MovementMapper movementMapper) {
         this.movementsRepository = movementsRepository;
         this.clientsRepository = clientsRepository;
-        this.movementValidator = movementValidator;
         this.pdfGenerator = pdfGenerator;
         this.storage = storage;
-        this.redisTemplate = redisTemplate;
         this.bankAccountRepository = bankAccountRepository;
+        this.movementMapper = movementMapper;
     }
 
     @Override
@@ -57,205 +51,129 @@ public class MovementsServiceImpl implements MovementsService {
             throw new MovementNotAccountClient("Esta cuenta: " + accountOrigin  +  " no pertenece a este cliente. " + client);
         }
         
-        var accountsRecipient = bankAccountRepository.findByIban(movementRequest.getBankAccountDestination().trim()).orElseThrow(()-> new BankAccountNotFoundByIban(movementRequest.getBankAccountDestination()));
-        var clientRecipient = accountsRecipient.getClient();
+        var accountRecipient = bankAccountRepository.findByIban(movementRequest.getBankAccountDestination().trim()).orElseThrow(()-> new BankAccountNotFoundByIban(movementRequest.getBankAccountDestination()));
+        var clientRecipient = accountRecipient.getClient();
         
-        if (!clientRecipient.getCuentas().contains(accountsRecipient)) {
-            throw new MovementNotAccountClient("Esta cuenta: " + accountsRecipient + " no pertenece a este cliente. " + clientRecipient);
+        if (!clientRecipient.getCuentas().contains(accountRecipient)) {
+            throw new MovementNotAccountClient("Esta cuenta: " + accountRecipient + " no pertenece a este cliente. " + clientRecipient);
         }
         
         if (movementRequest.getAmount() > accountOrigin.getBalance()) {
-            throw n
+            throw new MovementNotMoney("No tienes suficiente dinero en la " + accountOrigin + "  para poder hacer la transferencia.");
         }
 
+        var saldoOrigin = accountOrigin.getBalance() - movementRequest.getAmount();
 
-    }
+        accountOrigin.setBalance(saldoOrigin);
+        bankAccountRepository.save(accountOrigin);
 
-    @Override
-    public void reverseMovement(String movementId) {
-        var movement = movementsRepository.findById(movementId)
-                .orElseThrow(() -> new MovementNotFoundException("Movimiento no encontrado."));
+        var saldoRecipient = accountRecipient.getBalance() + movementRequest.getAmount();
 
-        movementValidator.validateReversible(movement);
+        accountRecipient.setBalance(saldoRecipient);
+        bankAccountRepository.save(accountRecipient);
 
-        if (!movement.getIsReversible()) {
-            throw new MovementNotReversible("No se puede revertir este movimiento.");
-        }
+        var movement = Movement.builder()
+                .typeMovement(movementRequest.getTypeMovement())
+                .date(LocalDateTime.now())
+                .amount(movementRequest.getAmount())
+                .BankAccountOrigin(movementRequest.getBankAccountOrigin())
+                .BankAccountDestination(movementRequest.getBankAccountDestination())
+                .SenderClient(senderClientId)
+                .RecipientClient(clientRecipient.getUser().getGuuid())
+                .build();
 
-        movement.setIsReversible(false);
         movementsRepository.save(movement);
 
-        redisTemplate.opsForValue().set("MOVEMENT:" + movementId, movement);
+        return movementMapper.toResponseMovement(movement);
     }
 
     @Override
-    public List<Movement> getAllMovements(Long clientId) {
-        if (!clientsRepository.existsById(clientId)) {
-            throw new ClientNotFound("El cliente con ID " + clientId + " no existe.");
-        }
+    public List<MovementResponse> getAllMovements() {
+        List<Movement> movements = movementsRepository.findAll();
+        List<MovementResponse> movementResponses = movements.stream().map(movementMapper::toResponseMovement).toList();
 
-        String redisKey = "MOVEMENTS:ALL:" + clientId;
-
-        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
-
-        if (movements == null || movements.isEmpty()) {
-            List<Movement> sentMovements = movementsRepository.findBySenderClient_Id(String.valueOf(clientId));
-            List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id(String.valueOf(clientId));
-
-            movements = new ArrayList<>();
-            movements.addAll(sentMovements);
-            movements.addAll(receivedMovements);
-
-            for (Movement mov : movements) {
-                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
-            }
-        }
-
-        return movements;
-    }
-
-    @Override
-    public List<Movement> getAllMyMovements(Long clientId) {
-
-        if (!clientsRepository.existsById(Long.valueOf(clientId))) {
-            throw new ClientNotFound("El cliente autenticado no existe.");
-        }
-
-        String redisKey = "MOVEMENTS:ALL:MY:" + clientId;
-
-        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
-
-        if (movements == null || movements.isEmpty()) {
-            List<Movement> sentMovements = movementsRepository.findBySenderClient_Id(String.valueOf(clientId));
-            List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id(String.valueOf(clientId));
-
-            movements = new ArrayList<>();
-            movements.addAll(sentMovements);
-            movements.addAll(receivedMovements);
-
-            for (Movement mov : movements) {
-                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
-            }
-        }
-
-        return movements;
+        return movementResponses;
     }
 
 
     @Override
-    public List<Movement> getAllSentMovements(String clientId) {
+    public List<MovementResponse> getAllMovementsById(String clientId) {
         var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(()-> new ClientNotFound(clientId));
 
-        String redisKey = "MOVEMENTS:SENT:" + clientId;
+        List<Movement> movements = List.of();
+        List<MovementResponse> movementResponses = List.of();
 
-        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
+        List<Movement> sentMovements = movementsRepository.findBySenderClient_Id((clientId));
+        List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id((clientId));
 
-        if (movements == null || movements.isEmpty()) {
-            movements = movementsRepository.findBySenderClient_Id((clientId));
+        movements.addAll(sentMovements);
+        movements.addAll(receivedMovements);
 
-            if (!movements.isEmpty()) {
-                redisTemplate.opsForValue().set(redisKey, (Movement) movements);
-            }
+        for (Movement mov : movements) {
+            movementResponses.add(movementMapper.toResponseMovement(mov));
         }
-        return movements;
+
+        return movementResponses;
     }
 
+
     @Override
-    public List<Movement> getAllReceivedMovements(String clientId) {
+    public List<MovementResponse> getAllSentMovements(String clientId) {
         var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(()-> new ClientNotFound(clientId));
 
-        String redisKey = "MOVEMENTS:RECEIVED:" + clientId;
+        List<Movement> movements = List.of();
+        List<MovementResponse> movementResponses = List.of();
 
-        List<Movement> movements = (List<Movement>) redisTemplate.opsForValue().get(redisKey);
+        List<Movement> sentMovements = movementsRepository.findBySenderClient_Id((clientId));
 
-        if (movements == null || movements.isEmpty()) {
-            movements = movementsRepository.findByRecipientClient_Id(String.valueOf(clientId));
+        movements.addAll(sentMovements);
 
-            if (!movements.isEmpty()) {
-                redisTemplate.opsForValue().set(redisKey, (Movement) movements);
-            }
+        for (Movement mov : movements) {
+            movementResponses.add(movementMapper.toResponseMovement(mov));
         }
 
-        return movements;
+        return movementResponses;
+    }
+
+    @Override
+    public List<MovementResponse> getAllRecipientMovements(String clientId) {
+        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(()-> new ClientNotFound(clientId));
+
+        List<Movement> movements = List.of();
+        List<MovementResponse> movementResponses = List.of();
+
+        List<Movement> recipientMovements = movementsRepository.findByRecipientClient_Id((clientId));
+
+        movements.addAll(recipientMovements);
+
+        for (Movement mov : movements) {
+            movementResponses.add(movementMapper.toResponseMovement(mov));
+        }
+
+        return movementResponses;
     }
 
 
     @Override
-    public List<Movement> getMovementsByClientId(String clientId) {
-        // Verificar si el cliente existe
-        if (!clientsRepository.existsById(clientId)) {
-            throw new ClientNotFound("El cliente con ID " + clientId + " no existe.");
-        }
+    public List<MovementResponse> getMovementsByType(String typeMovement) {
+        List<Movement> movements = movementsRepository.findByTypeMovement(typeMovement);
+        List<MovementResponse> movementResponses = movements.stream().map(movementMapper::toResponseMovement).toList();
 
-        // Crear una lista para almacenar los movimientos
-        List<Movement> movements = new ArrayList<>();
-
-        // Clave de Redis basada en el cliente
-        String redisKey = "MOVEMENTS:CLIENT:" + clientId;
-
-        // Obtener datos de Redis
-        Movement cachedMovement = redisTemplate.opsForValue().get(redisKey);
-
-        // Si el cliente no existe en Redis
-        if (cachedMovement == null) {
-            // Buscar movimientos enviados por el cliente
-            var sentMovements = movementsRepository.findBySenderClient_Id(clientId);
-
-            // Buscar movimientos recibidos por el cliente
-            var receivedMovements = movementsRepository.findByRecipientClient_Id(clientId);
-
-            // Agregar todos los movimientos encontrados a la lista
-            movements.addAll(sentMovements);
-            movements.addAll(receivedMovements);
-
-            // Guardar cada movimiento en Redis con una clave única por cliente y movimiento
-            for (Movement mov : movements) {
-                redisTemplate.opsForValue().set(redisKey + ":" + mov.getId(), mov);
-            }
-        } else {
-            // Si existe en Redis, devolver los movimientos encontrados
-            movements.add(cachedMovement);
-        }
-
-        return movements;
+        return movementResponses;
     }
-
-
-    @Override
-    public List<Movement> getMovementsByType(String typeMovement) {
-        List<Movement> movements = new ArrayList<>();
-
-        String redisKey = "MOVEMENTS:TYPE:" + typeMovement;
-
-        for (int i = 0; i < 100; i++) {
-            Movement movement = redisTemplate.opsForValue().get(redisKey + ":" + i);
-            if (movement == null) {
-                break;
-            }
-            movements.add(movement);
-        }
-
-        if (movements.isEmpty()) {
-            movements = movementsRepository.findByTypeMovement(typeMovement);
-
-            for (int i = 0; i < movements.size(); i++) {
-                redisTemplate.opsForValue().set(redisKey + ":" + i, movements.get(i));
-            }
-        }
-
-        return movements;
-    }
-
-
 
     @Override
     public void deleteMovement(String movementId) {
+        var timeNow = LocalDateTime.now();
+
         var movement = movementsRepository.findById(movementId)
-                .orElseThrow(() -> new MovementNotFoundException("Movements no encontrado."));
+                .orElseThrow(() -> new MovementNotFoundException("Movimiento no encontrado."));
+
+        if (timeNow.isAfter(movement.getDate().plusDays(1))) {
+            throw new MovementExpired("El movimiento ya expiro.");
+        }
 
         movementsRepository.delete(movement);
-
-        redisTemplate.delete("MOVEMENT:" + movementId);
     }
 
     @Override
@@ -286,10 +204,10 @@ public class MovementsServiceImpl implements MovementsService {
     public File generateMeMovementPdf(String idCl,String idMv) {
         var cliente = clientsRepository.getByUser_Guuid(idCl).orElseThrow(() -> new ClientNotFound(idCl));
 
-        var movement = movementsRepository.findById(idMv).orElseThrow();//TODO Excepcion
+        var movement = movementsRepository.findById(idMv).orElseThrow();
 
-        if (movement.getSenderClient().getId() != cliente.getId() || movement.getRecipientClient().getId() != cliente.getId()){
-            //TODO Excepcion de qeu el movimiendto no le pertenece o no tiene ese movimiento
+        if (movement.getSenderClient() != cliente.getUser().getGuuid() || movement.getRecipientClient() != cliente.getUser().getGuuid()){
+            throw new MovementNotHaveMovement("El movimiento no pertenece al cliente");
         }
 
         return pdfGenerator.generateMovementPdf(movement);
@@ -300,7 +218,13 @@ public class MovementsServiceImpl implements MovementsService {
 
         var cliente = clientsRepository.getByUser_Guuid(id).orElseThrow(() -> new ClientNotFound(id));
 
-        var lista = getMovementsByClientId(cliente.getUser().getGuuid());
+        List<Movement> lista = List.of();
+
+        List<Movement> sentMovements = movementsRepository.findBySenderClient_Id((id));
+        List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id((id));
+
+        lista.addAll(sentMovements);
+        lista.addAll(receivedMovements);
 
         return pdfGenerator.generateMovementsPdf(lista, Optional.of(cliente));
     }
@@ -328,7 +252,7 @@ public class MovementsServiceImpl implements MovementsService {
     @Override
     public File generateAllMovementPdf() {
 
-        var lista = getAllMovements();
+        List<Movement> lista = movementsRepository.findAll();
 
         return pdfGenerator.generateMovementsPdf(lista, Optional.empty());
     }

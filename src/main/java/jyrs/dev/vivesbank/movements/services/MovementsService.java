@@ -3,7 +3,6 @@ package jyrs.dev.vivesbank.movements.services;
 import jyrs.dev.vivesbank.movements.dto.MovementRequest;
 import jyrs.dev.vivesbank.movements.dto.MovementResponse;
 import jyrs.dev.vivesbank.movements.models.Movement;
-import jyrs.dev.vivesbank.products.bankAccounts.models.BankAccount;
 import java.io.File;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -27,27 +26,19 @@ public interface MovementsService {
 
     MovementResponse createMovement(String senderClientId, MovementRequest movementRequest);
 
+
+
+    List<MovementResponse> getAllMovements ();
+
+
     /**
-     * Revierte un movimiento bancario previamente realizado.
-     * @param movementId El ID del movimiento que se desea revertir.
+     * Obtiene una lista de los movimientos realizados por un cliente específico.
+     * @param clientId El ID del cliente cuyos movimientos se desean obtener.
+     * @return Lista de movimientos realizados por el cliente.
      * @since 1.0
      */
 
-
-    MovementResponse reverseMovement(String movementId);
-
-    /**
-     * Obtiene todos los movimientos bancarios.
-     * @return Lista de todos los movimientos.
-     * @since 1.0
-     */
-
-    List<MovementResponse>  getAllMovements(Long clientId);
-
-    /**
-     *
-     */
-    List<MovementResponse> getAllMyMovements(Long clientId);
+    List<MovementResponse>  getAllMovementsById(String clientId);
 
 
     /**
@@ -61,16 +52,7 @@ public interface MovementsService {
      *
      */
 
-    List<MovementResponse> getAllReceivedMovements(String clientId);
-
-    /**
-     * Obtiene una lista de los movimientos realizados por un cliente específico.
-     * @param clientId El ID del cliente cuyos movimientos se desean obtener.
-     * @return Lista de movimientos realizados por el cliente.
-     * @since 1.0
-     */
-
-    List<MovementResponse> getMovementsByClientId(String clientId);
+    List<MovementResponse> getAllRecipientMovements(String clientId);
 
 
     /**
@@ -113,6 +95,7 @@ public interface MovementsService {
     File generateAllMeMovementSendPdf(String id);
     File generateAllMeMovementRecepientPdf(String id);
     File generateAllMovementPdf();
+
 }
 
 

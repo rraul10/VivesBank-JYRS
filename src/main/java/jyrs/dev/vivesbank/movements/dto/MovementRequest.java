@@ -24,4 +24,5 @@ public class MovementRequest {
     Double amount;
 
     String typeMovement;
+
 }

@@ -60,7 +60,7 @@ public class MovementsController {
     @GetMapping("/client/{clientId}")
     public ResponseEntity<List<MovementResponse>> getAllMovementsById(@PathVariable String clientId) {
         var movements = movementsService.getAllMovementsById(clientId);
-        System.out.println("Movimientos encontrados por su id: " + movements);
+        System.out.println("Movements fetched: " + movements);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
