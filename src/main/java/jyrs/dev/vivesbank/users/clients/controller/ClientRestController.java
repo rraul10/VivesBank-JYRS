@@ -57,7 +57,7 @@ public class ClientRestController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction,
             HttpServletRequest request) {
-        log.info("Obteniendo tddos los clientes");
+        log.info("Obteniendo todos los clientes");
 
 
         Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name())

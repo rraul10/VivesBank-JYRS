@@ -99,15 +99,12 @@ class StorageServiceImplTest {
     Client senderClient = new Client(1L, "Sender", new ArrayList<>());
     Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
     Movement movement = Movement.builder()
-            .senderClient(senderClient)
-            .recipientClient(recipientClient)
-            .origin(origin)
-            .destination(destination)
+            .SenderClient(senderClient.getUser().getGuuid())
+            .RecipientClient(recipientClient.getUser().getGuuid())
+            .BankAccountOrigin(origin.getIban())
+            .BankAccountDestination(destination.getIban())
             .typeMovement(typeMovement)
             .amount(amount)
-            .balance(1000.0 - amount)
-            .isReversible(true)
-            .transferDeadlineDate(LocalDateTime.now().plusDays(7))
             .build();
 
     @Mock
@@ -120,7 +117,6 @@ class StorageServiceImplTest {
     private ProductServices productServices;
     @Mock
     private MovementsService movementsService;
-
     @Mock
     private ClientsRepository clientsRepository;
     @Mock
@@ -138,14 +134,33 @@ class StorageServiceImplTest {
     private BackupServiceImpl storageService;
 
 
-
     @Test
     void exportToZip() throws IOException {
         File zipFile = new File("testExport.zip");
-        List<Client> clients = List.of(cliente);
-        List<User> users = List.of(user);
-        List<BankAccount> accounts = List.of(account);
-        List<Product> products = List.of(product);
+
+        User mockUser = mock(User.class);
+        when(mockUser.getGuuid()).thenReturn("mock-guuid");
+
+        Client mockClient = mock(Client.class);
+        when(mockClient.getUser()).thenReturn(mockUser);
+
+        BankAccount mockAccount = mock(BankAccount.class);
+        Product mockProduct = mock(Product.class);
+        Movement mockMovement = mock(Movement.class);
+
+        Movement movement = Movement.builder()
+                .SenderClient(mockClient.getUser().getGuuid())
+                .RecipientClient(mockClient.getUser().getGuuid())
+                .BankAccountOrigin(mockAccount.getIban())
+                .BankAccountDestination(mockAccount.getIban())
+                .typeMovement("TRANSFER")
+                .amount(100.0)
+                .build();
+
+        List<Client> clients = List.of(mockClient);
+        List<User> users = List.of(mockUser);
+        List<BankAccount> accounts = List.of(mockAccount);
+        List<Product> products = List.of(mockProduct);
         List<Movement> movements = List.of(movement);
 
         when(clientsRepository.findAll()).thenReturn(clients);
@@ -165,6 +180,9 @@ class StorageServiceImplTest {
         assertTrue(zipFile.exists());
         zipFile.delete();
     }
+
+
+
 
     @Test
     void importFromZip() throws IOException {

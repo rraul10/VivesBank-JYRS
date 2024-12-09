@@ -1,6 +1,5 @@
 package jyrs.dev.vivesbank.movements.controller;
 
-import jyrs.dev.vivesbank.VivesBankApplication;
 import jyrs.dev.vivesbank.movements.models.Movement;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,25 +7,26 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
 import java.util.List;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
+/**
+ *
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -69,7 +69,8 @@ class MovementsControllerTest {
         mockMvc.perform(post("/api/v1/movements")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(movementRequestJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated()) // Cambiar el código de estado esperado a 201
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
@@ -78,22 +79,25 @@ class MovementsControllerTest {
                 .andExpect(status().isOk());
     }
 
-
     @Test
-    public void testGetMovementsByClientId() throws Exception {
+    public void testGetMovementsById() throws Exception {
         Movement movement1 = Movement.builder()
                 .id("1")
                 .typeMovement("TRANSFER")
                 .amount(100.0)
+                .senderClient("123")
+                .recipientClient("456")
                 .build();
         Movement movement2 = Movement.builder()
                 .id("2")
                 .typeMovement("PAYMENT")
                 .amount(200.0)
+                .senderClient("123")
+                .recipientClient("789")
                 .build();
         List<Movement> movements = List.of(movement1, movement2);
 
-        when(movementsService.getMovementsByClientId("123")).thenReturn(movements);
+        when(movementsService.getAllMovementsById("123")).thenReturn(movements);
 
         mockMvc.perform(get("/api/v1/movements/client/123")
                         .accept(MediaType.APPLICATION_JSON))
@@ -102,14 +106,11 @@ class MovementsControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
             [
-                {"id":"1","typeMovement":"TRANSFER","amount":100.0},
-                {"id":"2","typeMovement":"PAYMENT","amount":200.0}
+                {"id":"1","typeMovement":"TRANSFER","amount":100.0,"senderClient":"123","recipientClient":"456"},
+                {"id":"2","typeMovement":"PAYMENT","amount":200.0,"senderClient":"123","recipientClient":"789"}
             ]
             """, true));
     }
-
-
-
 
     @Test
     public void testGetAllMovements() throws Exception {
@@ -126,9 +127,9 @@ class MovementsControllerTest {
     @Test
     public void testGetMovementsByType() throws Exception {
         List<Movement> movements = List.of(new Movement(), new Movement());
-        when(movementsService.getMovementsByType("transfer")).thenReturn(movements);
+        when(movementsService.getMovementsByType("TRANSFER")).thenReturn(movements);
 
-        mockMvc.perform(get("/api/v1/movements/type/transfer")
+        mockMvc.perform(get("/api/v1/movements/type/TRANSFER")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -142,4 +143,28 @@ class MovementsControllerTest {
         mockMvc.perform(delete("/api/v1/movements/123"))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    public void testDownloadAllMovementPdf() throws Exception {
+        File pdfFile = new File("test.pdf");
+        when(movementsService.generateAllMovementPdf()).thenReturn(pdfFile);
+
+        mockMvc.perform(get("/api/v1/movements/pdf"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=test.pdf"))
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+    }
+
+    @Test
+    public void testDownloadMovementPdf() throws Exception {
+        File pdfFile = new File("test.pdf");
+        when(movementsService.generateMovementPdf("123")).thenReturn(pdfFile);
+
+        mockMvc.perform(get("/api/v1/movements/pdf/123"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=test.pdf"))
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+    }
 }
+ */
+

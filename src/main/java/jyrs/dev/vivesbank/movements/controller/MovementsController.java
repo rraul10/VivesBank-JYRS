@@ -1,14 +1,14 @@
 package jyrs.dev.vivesbank.movements.controller;
 
 import jyrs.dev.vivesbank.movements.dto.MovementRequest;
-import jyrs.dev.vivesbank.movements.models.Movement;
+import jyrs.dev.vivesbank.movements.dto.MovementResponse;
 import jyrs.dev.vivesbank.movements.services.MovementsService;
-import jyrs.dev.vivesbank.users.clients.dto.ClientResponse;
 import jyrs.dev.vivesbank.users.models.User;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,10 +26,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/movements")
-@RequiredArgsConstructor
+@Slf4j
 public class MovementsController {
 
     private final MovementsService movementsService;
+
+    public MovementsController(MovementsService movementsService) {
+        this.movementsService = movementsService;
+    }
 
     /**
      * Crea un movimiento a partir de los datos proporcionados en el cuerpo de la solicitud.
@@ -38,30 +42,12 @@ public class MovementsController {
      * @since 1.0
      */
 
-//    @PostMapping
-//    public ResponseEntity<Void> createMovement(@RequestBody MovementRequest movementRequest) {
-//        movementsService.createMovement(
-//                movementRequest.getClientRecipientId(),
-//                movementRequest.getBankAccountOrigin(),
-//                movementRequest.getTypeMovement(),
-//                movementRequest.getAmount(),
-//                movementRequest.getTypeMovement(),
-//                movementRequest.getAmount()
-//        );
-//        return ResponseEntity.ok().build();
-//    }
-
-    /**
-     * Revertir un movimiento identificado por su id.
-     * @param id El id del movimiento a revertir
-     * @return ResponseEntity con el estado HTTP de la respuesta (200 OK)
-     * @since 1.0
-     */
-
-    @PostMapping("/{id}/reverse")
-    public ResponseEntity<Void> reverseMovement(@PathVariable String id) {
-        movementsService.reverseMovement(id);
-        return ResponseEntity.ok().build();
+    @PostMapping
+    public ResponseEntity<MovementResponse> createMovement(@AuthenticationPrincipal User user, @RequestBody MovementRequest movementRequest) {
+        var movementResponse = movementsService.createMovement(user.getGuuid(), movementRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movementResponse);
     }
 
     /**
@@ -71,29 +57,88 @@ public class MovementsController {
      * @since 1.0
      */
 
-    @GetMapping("/client/{clientId}")
-    public ResponseEntity<List<Movement>> getMovementsByClientId(@PathVariable String clientId) {
-        var movements = movementsService.getMovementsByClientId(clientId);
-        System.out.println("Movements fetched: " + movements); // Depuración
+    @GetMapping("/movement/admin/client/{clientId}")
+    public ResponseEntity<List<MovementResponse>> getAllMovementsById(@PathVariable String clientId) {
+        var movements = movementsService.getAllMovementsById(clientId);
+        System.out.println("Movimientos encontrados por su id: " + movements);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/me/movements/")
+    public ResponseEntity<List<MovementResponse>> getMeAllMovements(@AuthenticationPrincipal User user) {
+        var movements = movementsService.getAllMovementsById(user.getGuuid());
+        System.out.println("Movimientos encontrados por su id: " + movements);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
     }
 
 
+    @GetMapping("/movements/admin/{movementId}")
+    public ResponseEntity<MovementResponse> getMovementById(@PathVariable String movementId, String clientId) {
+        var movement = movementsService.getMovementById(movementId, clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movement);
+    }
+
+    @GetMapping("/me/{clientId}/{movementId}")
+    public ResponseEntity<MovementResponse> getMovementById(@AuthenticationPrincipal User user, @PathVariable String movementId, String clientId) {
+        var movement = movementsService.getMovementById(movementId, clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movement);
+    }
+
+
     /**
-     * Obtener todos los movimientos registrados.
+     * Obtener todos los movimientos registrados independientemente de su cliente.
      * @return ResponseEntity con la lista de todos los movimientos
      * @since 1.0
      */
 
-//    @GetMapping
-//    public ResponseEntity<List<Movement>> getAllMovements() {
-//        var movements = movementsService.getAllMovements();
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .body(movements);
-//    }
+
+    @GetMapping("/movements/admin/")
+    public ResponseEntity<List<MovementResponse>> getAllMovements() {
+        var movements = movementsService.getAllMovements();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/movements/admin/RecipientMovements/{clientId}")
+    public ResponseEntity<List<MovementResponse>> getAllRecipientMovements(@PathVariable String clientId) {
+        var movements = movementsService.getAllRecipientMovements(clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/me/RecipientMovements")
+    public ResponseEntity<List<MovementResponse>> getMeAllRecipientMovements(@AuthenticationPrincipal User user) {
+        var movements = movementsService.getAllRecipientMovements(user.getGuuid());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/movements/admin/SentMovements/{clientId}")
+    public ResponseEntity<List<MovementResponse>> getAllSentMovements(@PathVariable String clientId) {
+        var movements = movementsService.getAllSentMovements(clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/me/SentMovements")
+    public ResponseEntity<List<MovementResponse>> getMeAllSentMovements(@AuthenticationPrincipal User user) {
+        var movements = movementsService.getAllSentMovements(user.getGuuid());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
 
     /**
      * Obtener los movimientos filtrados por tipo.
@@ -102,26 +147,50 @@ public class MovementsController {
      * @since 1.0
      */
 
-    @GetMapping("/type/{typeMovement}")
-    public ResponseEntity<List<Movement>> getMovementsByType(@PathVariable String typeMovement) {
-        var movements = movementsService.getMovementsByType(typeMovement);
+    @GetMapping("/movements/admin/type/{clientId}/{typeMovement}")
+    public ResponseEntity<List<MovementResponse>> getMovementsByType(@PathVariable String typeMovement, String clientId) {
+        var movements = movementsService.getMovementsByType(typeMovement, clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movements);
+    }
+
+    @GetMapping("/me/movement/type/{typeMovement}")
+    public ResponseEntity<List<MovementResponse>> getMeMovementsByType(@AuthenticationPrincipal User user, @PathVariable String typeMovement) {
+        var movements = movementsService.getMovementsByType(typeMovement, user.getGuuid());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
     }
 
     /**
-     * Eliminar un movimiento identificado por su id.
-     * @param id El id del movimiento que se desea eliminar
+     * Eliminar un movimiento identificado por su id (admin).
+     * @param movimientId El id del movimiento que se desea eliminar
      * @return ResponseEntity con el estado HTTP de la respuesta (204 No Content)
      * @since 1.0
      */
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMovement(@PathVariable String id) {
-        movementsService.deleteMovement(id);
+    @DeleteMapping("/movements/admin/{movimientId}")
+    public ResponseEntity<MovementResponse> deleteMovement(@PathVariable String movimientId) {
+        log.info("Eliminando movimiento con id{}", movimientId);
+        movementsService.deleteMovement(movimientId);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Eliminar un movimiento identificado por su id (admin).
+     * @param user
+     * @return ResponseEntity con el estado HTTP de la respuesta (204 No Content)
+     * @since 1.0
+     */
+
+    @DeleteMapping("/me/movement/{movementId}")
+    public ResponseEntity<MovementResponse> deleteMeMovement(@AuthenticationPrincipal User user, @PathVariable String movementId) {
+        log.info("Eliminando movimiento con id{}", user.getGuuid());
+        movementsService.deleteMovement(user.getGuuid());
+        return ResponseEntity.noContent().build();
+    }
+
 
     @GetMapping("/pdf")
     public ResponseEntity<Resource> downloadAllMovementPdf() {

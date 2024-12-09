@@ -13,22 +13,19 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MovementResponse {
+    String idMovement;
 
-    private String dni;
+    String senderName;
 
-    private String senderName;
+    String recipientName;
 
-    private String recipientName;
+    String bankAccountOrigin;
 
-    private String bankAccountOrigin;
+    String bankAccountDestination;
 
-    private String bankAccountDestination;
+    String typeMovement;
 
-    private String typeMovement;
+    Double amount;
 
-    private Double amount;
-
-    private String message;
-
-    private LocalDateTime date;
+    String date;
 }

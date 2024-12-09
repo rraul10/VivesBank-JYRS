@@ -16,31 +16,18 @@ import java.util.List;
 @Repository
 public interface MovementsRepository extends MongoRepository<Movement, String> {
 
-    /**
-     * Encuentra los movimientos realizados por un cliente específico, identificado por su ID.
-     * @param clientId El ID del cliente que ha enviado los movimientos.
-     * @return Lista de movimientos realizados por el cliente.
-     * @since 1.0
-     */
-
     List<Movement> findBySenderClient_Id(String clientId);
-
-    /**
-     * Encuentra los movimientos recibidos por un cliente específico, identificado por su ID.
-     * @param clientId El ID del cliente que ha recibido los movimientos.
-     * @return Lista de movimientos recibidos por el cliente.
-     * @since 1.0
-     */
 
     List<Movement> findByRecipientClient_Id(String clientId);
 
-    /**
-     * Encuentra los movimientos por tipo de movimiento (ejemplo: transferencia, pago, etc.).
-     * @param typeMovement El tipo de movimiento que se desea buscar.
-     * @return Lista de movimientos con el tipo de movimiento especificado.
-     * @since 1.0
-     */
-
     List<Movement> findByTypeMovement(String typeMovement);
+
+    List<Movement> findByBankAccountOrigin (String bankAccountOrigin);
+
+    List<Movement> findByBankAccountDestination (String bankAccountDestination);
+
+    List<Movement> findAll(String movementId);
+
+    List<Movement> findBySenderClient_IdOrRecipientClient_Id(String clientId, String clientId1);
 }
 

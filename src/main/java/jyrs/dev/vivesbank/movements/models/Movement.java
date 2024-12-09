@@ -54,14 +54,14 @@ public class Movement {
      * @since 1.0
      */
 
-    private String ClientSenderClient;
+    private String SenderClient;
 
     /**
      * Cliente que recibe el dinero.
      * @since 1.0
      */
 
-    private String ClientRecipientClient;
+    private String RecipientClient;
 
     /**
      * Fecha y hora en que se realizó el movimiento.
@@ -77,44 +77,6 @@ public class Movement {
 
     private Double amount;
 
-    /**
-     * Balance actualizado después de realizar el movimiento.
-     * @since 1.0
-     */
-
-    private Double balance;
-
-    /**
-     * Indica si el movimiento puede ser revertido o no.
-     * @since 1.0
-     */
-
-    private Boolean isReversible;
-
-    /**
-     * Fecha límite para completar la transferencia.
-     * @since 1.0
-     */
-
-    private LocalDateTime transferDeadlineDate;
-
-    /**
-     * Constructor vacío por defecto.
-     * @since 1.0
-     */
-
     public Movement(String sent1) {
-    }
-
-    /**
-     * Constructor alternativo con parámetros para inicializar el movimiento.
-     * @param i Valor entero que podría representar un código o tipo
-     * @param origin1 String representando el origen del movimiento
-     * @param destination1 String representando el destino del movimiento
-     * @param v Monto asociado al movimiento
-     * @since 1.0
-     */
-
-    public Movement(int i, String origin1, String destination1, double v) {
     }
 }

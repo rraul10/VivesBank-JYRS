@@ -105,6 +105,7 @@ public class ClientsServiceImpl implements ClientsService {
         var cliente = repository.getByUser_Guuid(user).orElseThrow(() -> new ClientNotFound(user));
         return mapper.toResponse(cliente);
     }
+
     @Override
     public ClientResponse getByDni(String dni) {
         String redisKey = "client:dni:" + dni;
