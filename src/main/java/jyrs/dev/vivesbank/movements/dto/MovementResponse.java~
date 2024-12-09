@@ -28,7 +28,4 @@ public class MovementResponse {
     Double amount;
 
     String date;
-
-    public MovementResponse(String number, String transfer, double v, String number1, String number2) {
-    }
 }

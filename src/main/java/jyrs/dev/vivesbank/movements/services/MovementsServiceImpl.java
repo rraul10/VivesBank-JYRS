@@ -24,8 +24,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,32 +54,39 @@ public class MovementsServiceImpl implements MovementsService {
 
     @Override
     public MovementResponse createMovement(String senderClientId, MovementRequest movementRequest) {
-        var client = clientsRepository.getByUser_Guuid(senderClientId).orElseThrow(()-> new ClientNotFound(senderClientId));
+        var client = clientsRepository.getByUser_Guuid(senderClientId)
+                .orElseThrow(() -> new ClientNotFound(senderClientId));
+
         var accountsSender = client.getCuentas();
-        var accountOrigin = bankAccountRepository.findByIban(movementRequest.getBankAccountOrigin().trim()).orElseThrow(()-> new BankAccountNotFoundByIban(movementRequest.getBankAccountOrigin()));
-        
+
+        var accountOrigin = bankAccountRepository.findByIban(movementRequest.getBankAccountOrigin().trim())
+                .orElseThrow(() -> new BankAccountNotFoundByIban(movementRequest.getBankAccountOrigin()));
+
         if (!accountsSender.contains(accountOrigin)) {
-            throw new MovementNotAccountClient("Esta cuenta: " + accountOrigin  +  " no pertenece a este cliente. " + client);
+            throw new MovementNotAccountClient("Esta cuenta: " + accountOrigin + " no pertenece a este cliente. " + client);
         }
-        
-        var accountRecipient = bankAccountRepository.findByIban(movementRequest.getBankAccountDestination().trim()).orElseThrow(()-> new BankAccountNotFoundByIban(movementRequest.getBankAccountDestination()));
+
+        var accountRecipient = bankAccountRepository.findByIban(movementRequest.getBankAccountDestination().trim())
+                .orElseThrow(() -> new BankAccountNotFoundByIban(movementRequest.getBankAccountDestination()));
+
         var clientRecipient = accountRecipient.getClient();
-        
+        if (clientRecipient == null) {
+            throw new ClientNotFound("Cliente receptor no encontrado.");
+        }
+
         if (!clientRecipient.getCuentas().contains(accountRecipient)) {
             throw new MovementNotAccountClient("Esta cuenta: " + accountRecipient + " no pertenece a este cliente. " + clientRecipient);
         }
-        
+
         if (movementRequest.getAmount() > accountOrigin.getBalance()) {
-            throw new MovementNotMoney("No tienes suficiente dinero en la " + accountOrigin + "  para poder hacer la transferencia.");
+            throw new MovementNotMoney("No tienes suficiente dinero en la " + accountOrigin + " para hacer la transferencia.");
         }
 
         var saldoOrigin = accountOrigin.getBalance() - movementRequest.getAmount();
-
         accountOrigin.setBalance(saldoOrigin);
         bankAccountRepository.save(accountOrigin);
 
         var saldoRecipient = accountRecipient.getBalance() + movementRequest.getAmount();
-
         accountRecipient.setBalance(saldoRecipient);
         bankAccountRepository.save(accountRecipient);
 
@@ -99,6 +105,7 @@ public class MovementsServiceImpl implements MovementsService {
         return movementMapper.toResponseMovement(movement);
     }
 
+
     @Override
     public List<MovementResponse> getAllMovements() {
         List<Movement> movements = movementsRepository.findAll();
@@ -110,13 +117,14 @@ public class MovementsServiceImpl implements MovementsService {
 
     @Override
     public List<MovementResponse> getAllMovementsById(String clientId) {
-        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(()-> new ClientNotFound(clientId));
+        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(() -> new ClientNotFound(clientId));
 
-        List<Movement> movements = List.of();
-        List<MovementResponse> movementResponses = List.of();
+        Set<Movement> movements = new HashSet<>();
 
-        List<Movement> sentMovements = movementsRepository.findBySenderClient_Id((clientId));
-        List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id((clientId));
+        List<MovementResponse> movementResponses = new ArrayList<>();
+
+        List<Movement> sentMovements = movementsRepository.findBySenderClient_Id(clientId);
+        List<Movement> receivedMovements = movementsRepository.findByRecipientClient_Id(clientId);
 
         movements.addAll(sentMovements);
         movements.addAll(receivedMovements);
@@ -130,8 +138,11 @@ public class MovementsServiceImpl implements MovementsService {
 
     @Override
     public MovementResponse getMovementById(String movementId, String clientId) {
-        var movement = movementsRepository.findById(movementId).orElseThrow(()-> new MovementNotFoundException(movementId));
-        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(() -> new ClientNotFound(clientId));
+        var movement = movementsRepository.findById(movementId)
+                .orElseThrow(() -> new MovementNotFoundException("Movimiento con ID: " + movementId + " no encontrado."));
+
+        var client = clientsRepository.getByUser_Guuid(clientId)
+                .orElseThrow(() -> new ClientNotFound(clientId));
 
         boolean isSender = movement.getSenderClient().equals(clientId);
 
@@ -141,6 +152,7 @@ public class MovementsServiceImpl implements MovementsService {
 
         return movementMapper.toResponseMovement(movement);
     }
+
 
 
     @Override
@@ -189,6 +201,10 @@ public class MovementsServiceImpl implements MovementsService {
         List<Movement> filteredMovements = allClientMovements.stream()
                 .filter(mov -> mov.getTypeMovement().equalsIgnoreCase(typeMovement))
                 .toList();
+
+        if (filteredMovements.isEmpty()) {
+            throw new MovementNotFoundType("No se encontraron movimientos de tipo: " + typeMovement + " para el cliente con ID: " + clientId);
+        }
 
         return filteredMovements.stream()
                 .map(movementMapper::toResponseMovement)
@@ -251,17 +267,19 @@ public class MovementsServiceImpl implements MovementsService {
     }
 
     @Override
-    public File generateMeMovementPdf(String idCl,String idMv) {
+    public File generateMeMovementPdf(String idCl, String idMv) {
         var cliente = clientsRepository.getByUser_Guuid(idCl).orElseThrow(() -> new ClientNotFound(idCl));
 
-        var movement = movementsRepository.findById(idMv).orElseThrow();
+        var movement = movementsRepository.findById(idMv)
+                .orElseThrow(() -> new MovementNotFoundException("Movimiento con ID: " + idMv + " no encontrado."));
 
-        if (movement.getSenderClient() != cliente.getUser().getGuuid() || movement.getRecipientClient() != cliente.getUser().getGuuid()){
+        if (movement.getSenderClient() != cliente.getUser().getGuuid() || movement.getRecipientClient() != cliente.getUser().getGuuid()) {
             throw new MovementNotHaveMovement("El movimiento no pertenece al cliente");
         }
 
         return pdfGenerator.generateMovementPdf(movement);
     }
+
 
     @Override
     public File generateAllMeMovementPdf(String id) {
@@ -306,7 +324,6 @@ public class MovementsServiceImpl implements MovementsService {
 
         return pdfGenerator.generateMovementsPdf(lista, Optional.empty());
     }
-
 }
 
 
