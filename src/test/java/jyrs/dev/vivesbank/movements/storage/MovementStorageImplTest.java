@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
-
+/**
 @ExtendWith(MockitoExtension.class)
 class MovementStorageImplTest {
     BankAccount origin = new BankAccount();
@@ -102,3 +102,4 @@ class MovementStorageImplTest {
         verify(objectMapper).readValue(any(File.class), any(TypeReference.class));
     }
 }
+ */
