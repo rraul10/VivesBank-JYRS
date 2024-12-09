@@ -106,9 +106,26 @@ public class SecurityConfig {
 
 
 
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank" + apiVersion + "/movements").hasRole("CLIENT")) // CREATE MOVEMENT
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank" + apiVersion + "/movements/{id}/reverse").hasRole("ADMIN")) // Reverse movement
-                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank" + apiVersion + "/movements/{id}").hasRole("ADMIN")) // DELETE MOVEMENT BY ID
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, "/vivesbank" + apiVersion + "/movements").hasRole("CLIENT")) // Crear movimiento
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank" + apiVersion + "/movements/{id}").hasRole("ADMIN")) // Eliminar movimiento
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/admin/client/{clientId}").hasRole("ADMIN")) // Ver movimientos de un cliente
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/movements/").hasRole("CLIENT")) // Ver movimientos de "mi cuenta"
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/admin/{movementId}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/{clientId}/{movementId}").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/admin/RecipientMovements/{clientId}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/RecipientMovements").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/admin/SentMovements/{clientId}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/SentMovements").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/admin/type/{clientId}/{typeMovement}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/movement/type/{typeMovement}").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank" + apiVersion + "/movements/admin/{movimientId}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.DELETE, "/vivesbank" + apiVersion + "/me/movement/{movementId}").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/pdf").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/movements/pdf/{id}").hasRole("ADMIN"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/pdf").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/pdf/sended").hasRole("CLIENT"))
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/vivesbank" + apiVersion + "/me/pdf/recibied").hasRole("CLIENT"))
+
 
                 //API FRANKFURTER
                 .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.GET, "/currency").permitAll()) // Permitir acceso público a todas las monedas

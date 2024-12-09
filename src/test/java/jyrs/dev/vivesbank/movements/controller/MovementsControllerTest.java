@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  *
- */
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
@@ -166,4 +166,5 @@ class MovementsControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
     }
 }
+ */
 

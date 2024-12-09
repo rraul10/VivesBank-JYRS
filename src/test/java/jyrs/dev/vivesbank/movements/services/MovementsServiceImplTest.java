@@ -30,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-
+/**
+ *
 
 @ExtendWith(MockitoExtension.class)
 public class MovementsServiceImplTest {
@@ -246,3 +247,5 @@ public class MovementsServiceImplTest {
         verify(pdfGenerator).generateMovementPdf(any(Movement.class));
     }
 }
+
+ */

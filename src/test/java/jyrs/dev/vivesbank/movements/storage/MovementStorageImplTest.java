@@ -34,15 +34,12 @@ class MovementStorageImplTest {
     Client senderClient = new Client(1L, "Sender", new ArrayList<>());
     Client recipientClient = new Client(2L, "Recipient", new ArrayList<>());
     Movement movement = Movement.builder()
-            .senderClient(senderClient)
-            .recipientClient(recipientClient)
-            .origin(origin)
-            .destination(destination)
+            .SenderClient(senderClient.toString())
+            .RecipientClient(recipientClient.toString())
+            .BankAccountOrigin(origin.getIban())
+            .BankAccountDestination(destination.getIban())
             .typeMovement(typeMovement)
             .amount(amount)
-            .balance(1000.0 - amount)
-            .isReversible(true)
-            .transferDeadlineDate(LocalDateTime.now().plusDays(7))
             .build();
     @Mock
     private ObjectMapper objectMapper;

@@ -40,6 +40,7 @@ public interface MovementsService {
 
     List<MovementResponse>  getAllMovementsById(String clientId);
 
+    MovementResponse getMovementById(String movementId, String clientId);
 
     /**
      *

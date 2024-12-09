@@ -57,7 +57,7 @@ public class MovementsController {
      * @since 1.0
      */
 
-    @GetMapping("/admin/client/{clientId}")
+    @GetMapping("/movement/admin/client/{clientId}")
     public ResponseEntity<List<MovementResponse>> getAllMovementsById(@PathVariable String clientId) {
         var movements = movementsService.getAllMovementsById(clientId);
         System.out.println("Movimientos encontrados por su id: " + movements);
@@ -66,13 +66,30 @@ public class MovementsController {
                 .body(movements);
     }
 
-    @GetMapping("/client/{clientId}")
-    public ResponseEntity<List<MovementResponse>> getAllMovementsById(@AuthenticationPrincipal User user) {
+    @GetMapping("/me/movements/")
+    public ResponseEntity<List<MovementResponse>> getMeAllMovements(@AuthenticationPrincipal User user) {
         var movements = movementsService.getAllMovementsById(user.getGuuid());
         System.out.println("Movimientos encontrados por su id: " + movements);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
+    }
+
+
+    @GetMapping("/movements/admin/{movementId}")
+    public ResponseEntity<MovementResponse> getMovementById(@PathVariable String movementId, String clientId) {
+        var movement = movementsService.getMovementById(movementId, clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movement);
+    }
+
+    @GetMapping("/me/{clientId}/{movementId}")
+    public ResponseEntity<MovementResponse> getMovementById(@AuthenticationPrincipal User user, @PathVariable String movementId, String clientId) {
+        var movement = movementsService.getMovementById(movementId, clientId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(movement);
     }
 
 
@@ -83,7 +100,7 @@ public class MovementsController {
      */
 
 
-    @GetMapping("/admin/movements")
+    @GetMapping("/movements/admin/")
     public ResponseEntity<List<MovementResponse>> getAllMovements() {
         var movements = movementsService.getAllMovements();
         return ResponseEntity.ok()
@@ -91,15 +108,15 @@ public class MovementsController {
                 .body(movements);
     }
 
-    @GetMapping("/movements/admin/RecipientMovements")
-    public ResponseEntity<List<MovementResponse>> getAllRecipientMovements(String clientId) {
+    @GetMapping("/movements/admin/RecipientMovements/{clientId}")
+    public ResponseEntity<List<MovementResponse>> getAllRecipientMovements(@PathVariable String clientId) {
         var movements = movementsService.getAllRecipientMovements(clientId);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
     }
 
-    @GetMapping("/movements/RecipientMovements")
+    @GetMapping("/me/RecipientMovements")
     public ResponseEntity<List<MovementResponse>> getMeAllRecipientMovements(@AuthenticationPrincipal User user) {
         var movements = movementsService.getAllRecipientMovements(user.getGuuid());
         return ResponseEntity.ok()
@@ -107,15 +124,15 @@ public class MovementsController {
                 .body(movements);
     }
 
-    @GetMapping("/movements/admin/SentMovements")
-    public ResponseEntity<List<MovementResponse>> getAllSentMovements(String clientId) {
+    @GetMapping("/movements/admin/SentMovements/{clientId}")
+    public ResponseEntity<List<MovementResponse>> getAllSentMovements(@PathVariable String clientId) {
         var movements = movementsService.getAllSentMovements(clientId);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(movements);
     }
 
-    @GetMapping("movements/SentMovements")
+    @GetMapping("/me/SentMovements")
     public ResponseEntity<List<MovementResponse>> getMeAllSentMovements(@AuthenticationPrincipal User user) {
         var movements = movementsService.getAllSentMovements(user.getGuuid());
         return ResponseEntity.ok()
@@ -130,7 +147,7 @@ public class MovementsController {
      * @since 1.0
      */
 
-    @GetMapping("/type/admin/{typeMovement}")
+    @GetMapping("/movements/admin/type/{clientId}/{typeMovement}")
     public ResponseEntity<List<MovementResponse>> getMovementsByType(@PathVariable String typeMovement, String clientId) {
         var movements = movementsService.getMovementsByType(typeMovement, clientId);
         return ResponseEntity.ok()
@@ -138,7 +155,7 @@ public class MovementsController {
                 .body(movements);
     }
 
-    @GetMapping("/type/{typeMovement}")
+    @GetMapping("/me/movement/type/{typeMovement}")
     public ResponseEntity<List<MovementResponse>> getMeMovementsByType(@AuthenticationPrincipal User user, @PathVariable String typeMovement) {
         var movements = movementsService.getMovementsByType(typeMovement, user.getGuuid());
         return ResponseEntity.ok()
@@ -147,21 +164,28 @@ public class MovementsController {
     }
 
     /**
-     * Eliminar un movimiento identificado por su id.
-     * @param id El id del movimiento que se desea eliminar
+     * Eliminar un movimiento identificado por su id (admin).
+     * @param movimientId El id del movimiento que se desea eliminar
      * @return ResponseEntity con el estado HTTP de la respuesta (204 No Content)
      * @since 1.0
      */
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<MovementResponse> deleteMovement(@PathVariable String id) {
-        log.info("Eliminando movimiento con id{}", id);
-        movementsService.deleteMovement(id);
+    @DeleteMapping("/movements/admin/{movimientId}")
+    public ResponseEntity<MovementResponse> deleteMovement(@PathVariable String movimientId) {
+        log.info("Eliminando movimiento con id{}", movimientId);
+        movementsService.deleteMovement(movimientId);
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/admin/{id}")
-    public ResponseEntity<MovementResponse> deleteMeMovement(@AuthenticationPrincipal User user) {
+    /**
+     * Eliminar un movimiento identificado por su id (admin).
+     * @param user
+     * @return ResponseEntity con el estado HTTP de la respuesta (204 No Content)
+     * @since 1.0
+     */
+
+    @DeleteMapping("/me/movement/{movementId}")
+    public ResponseEntity<MovementResponse> deleteMeMovement(@AuthenticationPrincipal User user, @PathVariable String movementId) {
         log.info("Eliminando movimiento con id{}", user.getGuuid());
         movementsService.deleteMovement(user.getGuuid());
         return ResponseEntity.noContent().build();

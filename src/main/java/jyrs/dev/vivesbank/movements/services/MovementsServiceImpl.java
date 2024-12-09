@@ -128,6 +128,20 @@ public class MovementsServiceImpl implements MovementsService {
         return movementResponses;
     }
 
+    @Override
+    public MovementResponse getMovementById(String movementId, String clientId) {
+        var movement = movementsRepository.findById(movementId).orElseThrow(()-> new MovementNotFoundException(movementId));
+        var client = clientsRepository.getByUser_Guuid(clientId).orElseThrow(() -> new ClientNotFound(clientId));
+
+        boolean isSender = movement.getSenderClient().equals(clientId);
+
+        if (!isSender) {
+            throw new MovementNotHaveMovement("El movimiento no pertenece al cliente");
+        }
+
+        return movementMapper.toResponseMovement(movement);
+    }
+
 
     @Override
     public List<MovementResponse> getAllSentMovements(String clientId) {
@@ -209,11 +223,6 @@ public class MovementsServiceImpl implements MovementsService {
         List<Movement> movements = storage.importJson(file);
 
         movementsRepository.saveAll(movements);
-    }@DeleteMapping("/admin/{id}")
-    public ResponseEntity<MovementResponse> deleteMovement(@AuthenticationPrincipal User user, String id) {
-        log.info("Eliminando movimiento con id{}", id);
-        movementsService.deleteMovement(id);
-        return ResponseEntity.noContent().build();
     }
 
     @Override
